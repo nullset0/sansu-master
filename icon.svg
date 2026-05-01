@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="star" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景の角丸正方形 -->
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- 中央の星（マスター感） -->
+  <path d="M256 80 L302 200 L432 212 L334 296 L362 424 L256 356 L150 424 L178 296 L80 212 L210 200 Z"
+        fill="url(#star)" stroke="white" stroke-width="8" stroke-linejoin="round"/>
+  <!-- 数式の記号 -->
+  <text x="220" y="298" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">1+2</text>
+</svg>

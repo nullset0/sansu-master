@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6年生 - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>🌟 6年生の算数 🌟</h1>
+  <p>分数のかけ割り・比・円の面積・体積・場合の数</p>
+</header>
+
+<div class="status-bar">
+  <div class="status-card streak"><div class="icon">🔥</div><div class="num" id="streak-num">0</div><div class="label">れんぞく日すう</div></div>
+  <div class="status-card today"><div class="icon">📝</div><div class="num" id="today-num">0</div><div class="label">きょうの のこり</div></div>
+  <div class="status-card master"><div class="icon">🏆</div><div class="num" id="master-num">0</div><div class="label">マスターした問題</div></div>
+  <div class="status-card"><div class="icon">⭐</div><div class="num" id="total-correct">0</div><div class="label">ぜんぶの せいかい数</div></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn daily active" data-target="daily">🧠 きょうのおさらい</button>
+  <button class="nav-btn" data-target="frac">½ 分数のかけ割り</button>
+  <button class="nav-btn" data-target="ratio">🆚 比</button>
+  <button class="nav-btn" data-target="symmetry">🔄 対称</button>
+  <button class="nav-btn" data-target="letter">𝑥 文字式</button>
+  <button class="nav-btn" data-target="circle">⭕ 円の面積</button>
+  <button class="nav-btn" data-target="volume">📦 体積</button>
+  <button class="nav-btn" data-target="proportion">📈 比例・反比例</button>
+  <button class="nav-btn" data-target="scale">🔍 拡大・縮小</button>
+  <button class="nav-btn" data-target="cases">🎲 場合の数</button>
+  <button class="nav-btn" data-target="word">📝 文章題</button>
+  <button class="nav-btn" data-target="progress">📊 きろく</button>
+  <button class="nav-btn" data-target="parent">👨‍👩‍👧 おうちの人へ</button>
+</nav>
+
+<section class="section active" id="daily">
+  <div class="card">
+    <h2>🧠 きょうのおさらい</h2>
+    <div class="tip tip-blue"><strong>のうかがくの きまり：</strong>1日 <span class="big-number">5もん</span>。中学への準備、毎日の積み重ねが効く！</div>
+    <div id="daily-area"></div>
+    <div style="margin-top:24px;"><h3>📦 おぼえ箱</h3><div class="leitner" id="leitner-display"></div></div>
+  </div>
+</section>
+
+<section class="section" id="frac">
+  <div class="card">
+    <h2>½ 分数のかけ算・わり算</h2>
+
+    <div class="tip"><strong>💡 6年生の山場！</strong>
+    分数の加減乗除がぜんぶ できると、中学数学の準備完了。</div>
+
+    <h3>分数のかけ算</h3>
+    <div class="tip tip-blue">
+      <strong>★ 分子どうし、分母どうしを かける！</strong><br>
+      れい：<strong>2/3 × 1/4</strong> = (2×1)/(3×4) = 2/12 = <strong>1/6</strong>
+    </div>
+
+    <h3>整数 × 分数</h3>
+    <div class="tip tip-green">
+      整数を 分母1の分数にして 計算。<br>
+      れい：<strong>3/5 × 10</strong> = 3/5 × 10/1 = 30/5 = <strong>6</strong>
+    </div>
+
+    <h3>分数のわり算（最重要！）</h3>
+    <div class="tip tip-blue">
+      <strong>★ わる数を ひっくり返して × にする！</strong><br>
+      れい：<strong>2/3 ÷ 1/4</strong> = 2/3 × <span style="color:#ec4899;">4/1</span> = 8/3 = <strong>2と2/3</strong>
+    </div>
+
+    <h3>なぜ ひっくり返す？</h3>
+    <div class="tip tip-green">
+      <strong>「1/4でわる」= 「1つを4等分のうちの1つ」でわる</strong><br>
+      → これは <strong>4倍する</strong>のと同じ！<br>
+      （6を1/2でわる = 6を半分でわる = 12 と一致）<br>
+      理由は中学数学で証明できるけど、6年では「ルール」として覚えてOK。
+    </div>
+
+    <h3>計算のコツ</h3>
+    <div class="tip">
+      ▸ 帯分数は <strong>仮分数に直して</strong>から計算<br>
+      ▸ <strong>約分を 先にやる</strong>と 楽（途中で約分OK）<br>
+      ▸ 答えが 仮分数なら 帯分数に 直す（または そのまま）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="ratio">
+  <div class="card">
+    <h2>🆚 比（ひ）</h2>
+
+    <div class="tip"><strong>💡 比とは？</strong>
+    2つ以上の量を「<strong>:（コロン）</strong>」で表したもの。比の関係を保つことが 大事！</div>
+
+    <h3>比の書き方・読み方</h3>
+    <div class="tip tip-blue">
+      <strong>男子15人、女子10人 のクラス</strong><br>
+      → 男子:女子 = <strong>15:10</strong>（じゅうご たい じゅう）<br>
+      → 簡単にすると <strong>3:2</strong>（さん たい に）
+    </div>
+
+    <h3>比を 簡単にする（最簡比）</h3>
+    <div class="tip tip-green">
+      <strong>両方を 同じ数で わる</strong>（最大公約数で）<br>
+      れい：<strong>24:36</strong> → 両方÷12 → <strong>2:3</strong><br>
+      れい：<strong>15:25</strong> → 両方÷5 → <strong>3:5</strong>
+    </div>
+
+    <h3>等しい比</h3>
+    <div class="tip">
+      <strong>同じ数を かける／わる と 比は変わらない！</strong><br>
+      <strong>2:3</strong> = 4:6 = 6:9 = 8:12 = 10:15 ...
+    </div>
+
+    <h3>比の応用：分け方</h3>
+    <div class="tip tip-blue">
+      <strong>例：</strong>30個のあめを 2:3 で 分ける<br>
+      ① 合計 2+3 = <strong>5</strong><br>
+      ② 1つぶん：30÷5 = <strong>6</strong><br>
+      ③ 2:3 → 2×6 と 3×6 → <strong>12個 と 18個</strong>
+    </div>
+
+    <h3>比の式</h3>
+    <div class="tip tip-green">
+      <strong>a:b = c:d → 内項の積 = 外項の積</strong><br>
+      れい：x:6 = 2:3 → x×3 = 6×2 → 3x=12 → <strong>x=4</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="symmetry">
+  <div class="card">
+    <h2>🔄 対称（線対称・点対称）</h2>
+
+    <div class="tip"><strong>💡 対称な 図形＝「ぴったり 重なる」性質を持つ図形</strong></div>
+
+    <h3>線対称（せんたいしょう）</h3>
+    <div class="tip tip-blue">
+      <strong>1本の直線で 折ると ぴったり重なる</strong> 図形<br>
+      → その線を「<strong>対称の軸</strong>」と言う<br>
+      れい：正三角形・長方形・カタカナの「A」「H」「M」
+    </div>
+
+    <h3>点対称（てんたいしょう）</h3>
+    <div class="tip tip-green">
+      <strong>1つの点を中心に 180°回すと ぴったり重なる</strong> 図形<br>
+      → その点を「<strong>対称の中心</strong>」と言う<br>
+      れい：長方形・正六角形・カタカナの「H」「S」「N」
+    </div>
+
+    <h3>両方ある図形</h3>
+    <div class="tip">
+      <strong>線対称 と 点対称 両方 もつ図形：</strong><br>
+      ▸ 正方形（4本の対称軸 + 中心）<br>
+      ▸ 長方形（2本の対称軸 + 中心）<br>
+      ▸ 円（無限の対称軸 + 中心）<br>
+      ▸ カタカナ「H」「I」「O」「X」
+    </div>
+
+    <h3>対称軸の数</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🔺</div><div class="label">正三角形</div><div class="value">3本</div></div>
+      <div class="example"><div class="icon">⬜</div><div class="label">正方形</div><div class="value">4本</div></div>
+      <div class="example"><div class="icon">⬢</div><div class="label">正六角形</div><div class="value">6本</div></div>
+      <div class="example"><div class="icon">⭕</div><div class="label">円</div><div class="value">無限本</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="letter">
+  <div class="card">
+    <h2>𝑥 文字式（中学への準備）</h2>
+
+    <div class="tip"><strong>💡 文字（x, y, a, b...）を使うと、まだ わからない数 も 式にできる！</strong>
+    中学数学の入り口。</div>
+
+    <h3>文字式のルール</h3>
+    <div class="tip tip-blue">
+      ▸ <strong>x × 5 → 5x</strong>（×は省略、数字を 前に書く）<br>
+      ▸ <strong>x × x → x²</strong>（同じ文字は 累乗で）<br>
+      ▸ <strong>a + a + a → 3a</strong>（同じ文字は まとめる）<br>
+      ▸ <strong>x ÷ 2 → x/2</strong>（÷は分数で）
+    </div>
+
+    <h3>文字を使った 例</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🍬</div><div class="label">1個 x円のあめ 5個</div><div class="value">代金 = 5x円</div></div>
+      <div class="example"><div class="icon">📐</div><div class="label">1辺 a cmの正方形のまわり</div><div class="value">4a cm</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">x 才の人の 5年後</div><div class="value">x + 5 才</div></div>
+    </div>
+
+    <h3>方程式（ほうていしき）の入り口</h3>
+    <div class="tip tip-green">
+      <strong>x + 5 = 12 のとき、x は？</strong><br>
+      → 5 を 引けばよい：x = 12 − 5 = <strong>7</strong><br><br>
+      <strong>2x = 14 のとき、x は？</strong><br>
+      → 2 で わる：x = 14 ÷ 2 = <strong>7</strong>
+    </div>
+
+    <h3>中学への つながり</h3>
+    <div class="tip">
+      6年生で 文字に 慣れておくと、中1で 一気に 楽になる！<br>
+      算数 → <strong>数学</strong> への ステップアップ。
+    </div>
+  </div>
+</section>
+
+<section class="section" id="circle">
+  <div class="card">
+    <h2>⭕ 円の面積</h2>
+
+    <div class="tip"><strong>💡 5年で円周、6年で 円の面積！</strong></div>
+
+    <h3>円の面積の公式</h3>
+    <div class="tip tip-blue">
+      <strong>★ 円の面積 = 半径 × 半径 × 3.14</strong><br>
+      （= π × r² と書くこともある）
+    </div>
+
+    <div class="examples">
+      <div class="example"><div class="icon">⭕</div><div class="label">半径5cm</div><div class="value">5×5×3.14 = <strong>78.5cm²</strong></div></div>
+      <div class="example"><div class="icon">⭕</div><div class="label">半径10cm</div><div class="value">10×10×3.14 = <strong>314cm²</strong></div></div>
+      <div class="example"><div class="icon">⭕</div><div class="label">半径3cm</div><div class="value">3×3×3.14 = <strong>28.26cm²</strong></div></div>
+    </div>
+
+    <h3>半円・おうぎ形</h3>
+    <div class="tip tip-green">
+      <strong>半円の面積 = 円の面積 ÷ 2</strong><br>
+      れい：半径4cmの半円 → 4×4×3.14÷2 = <strong>25.12cm²</strong><br><br>
+      <strong>おうぎ形（円の一部）：</strong>角度の比で 面積が決まる<br>
+      → 90°のおうぎ形 = 円の 1/4
+    </div>
+
+    <h3>円周の復習</h3>
+    <div class="tip">
+      <strong>円周 = 直径 × 3.14 = 半径 × 2 × 3.14</strong><br>
+      <strong>円の面積 = 半径 × 半径 × 3.14</strong><br>
+      → 円周は「×2」、面積は「×半径」← ちがいに注意！
+    </div>
+  </div>
+</section>
+
+<section class="section" id="volume">
+  <div class="card">
+    <h2>📦 角柱・円柱の体積</h2>
+
+    <div class="tip"><strong>💡 5年は直方体・立方体だけ。6年では「柱（はしら）の形」全部に対応！</strong></div>
+
+    <h3>共通の公式</h3>
+    <div class="tip tip-blue">
+      <strong>★ 角柱・円柱の体積 = 底面積 × 高さ</strong><br>
+      底面の面積を出して、それに 高さを かける！
+    </div>
+
+    <h3>三角柱の体積</h3>
+    <div class="tip tip-green">
+      <strong>例：</strong>底面が 底辺6cm 高さ4cmの三角形、柱の高さ10cm<br>
+      ① 底面積：6×4÷2 = 12cm²<br>
+      ② 体積：12 × 10 = <strong>120cm³</strong>
+    </div>
+
+    <h3>円柱の体積</h3>
+    <div class="tip">
+      <strong>例：</strong>底面が 半径3cmの円、高さ5cm<br>
+      ① 底面積：3×3×3.14 = 28.26cm²<br>
+      ② 体積：28.26 × 5 = <strong>141.3cm³</strong>
+    </div>
+
+    <h3>身近な円柱</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🥫</div><div class="label">かんジュース</div><div class="value">底面の円 + 高さ</div></div>
+      <div class="example"><div class="icon">🕯️</div><div class="label">ろうそく</div><div class="value">細い円柱</div></div>
+      <div class="example"><div class="icon">🍶</div><div class="label">ビン</div><div class="value">底面が円</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="proportion">
+  <div class="card">
+    <h2>📈 比例・反比例</h2>
+
+    <div class="tip"><strong>💡 2つの量の関係を 数式で表す。中学への 重要な 準備！</strong></div>
+
+    <h3>比例（ひれい）</h3>
+    <div class="tip tip-blue">
+      <strong>x が 2倍・3倍に なると、y も 2倍・3倍に なる関係</strong><br>
+      れい：1個100円のあめを x個 買ったときの 代金 y<br>
+      → y = 100 × x（x=2なら y=200、x=3なら y=300）<br>
+      → 式：<strong>y = a × x</strong>（a は 比例定数）
+    </div>
+
+    <h3>反比例（はんぴれい）</h3>
+    <div class="tip tip-green">
+      <strong>x が 2倍・3倍に なると、y は 1/2・1/3 になる関係</strong><br>
+      れい：12個のあめを x人で 分ける → 1人あたり y個<br>
+      → x×y = 12（一定）<br>
+      → 式：<strong>y = a ÷ x</strong>（または x×y=a）
+    </div>
+
+    <h3>グラフの形</h3>
+    <div class="tip">
+      ▸ <strong>比例</strong> → <strong>原点(0,0)を通る 直線</strong>（右上がり または 右下がり）<br>
+      ▸ <strong>反比例</strong> → <strong>曲線</strong>（双曲線という）
+    </div>
+
+    <h3>例題</h3>
+    <div class="tip tip-blue">
+      <strong>比例：</strong>y=4x で x=7 → y=4×7 = <strong>28</strong><br>
+      <strong>反比例：</strong>x×y=24 で x=4 → y=24÷4 = <strong>6</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="scale">
+  <div class="card">
+    <h2>🔍 拡大図・縮図</h2>
+
+    <div class="tip"><strong>💡 形を 同じ比率で 大きくしたり 小さくしたり する図！</strong></div>
+
+    <h3>拡大図（かくだいず）</h3>
+    <div class="tip tip-blue">
+      <strong>もとの図を 同じ形で 大きくした図</strong><br>
+      ▸ <strong>2倍の拡大図</strong> → 辺の長さが すべて 2倍<br>
+      ▸ 角度は <strong>変わらない</strong>（形は同じ）
+    </div>
+
+    <h3>縮図（しゅくず）</h3>
+    <div class="tip tip-green">
+      <strong>もとの図を 同じ形で 小さくした図</strong><br>
+      ▸ <strong>1/100の縮図</strong> → 辺の長さが すべて 1/100<br>
+      ▸ 地図・設計図に よく使う
+    </div>
+
+    <h3>面積は何倍？</h3>
+    <div class="tip">
+      <strong>★ 辺が 2倍 → 面積は 2×2=4倍！</strong>（長さの 2乗）<br>
+      ▸ 3倍の拡大 → 面積は 9倍<br>
+      ▸ 1/2の縮図 → 面積は 1/4
+    </div>
+
+    <h3>地図と縮図</h3>
+    <div class="tip tip-blue">
+      <strong>例：</strong>1/25000の 地図で、2cmの距離 → 実際は？<br>
+      → 2cm × 25000 = 50000cm = <strong>500m</strong><br><br>
+      <strong>例：</strong>1/100の縮図で 5cmの線分 → 実際は？<br>
+      → 5cm × 100 = 500cm = <strong>5m</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cases">
+  <div class="card">
+    <h2>🎲 場合の数</h2>
+
+    <div class="tip"><strong>💡 「何通りある？」を 数える方法。
+    中学・高校でも 大事な 考え方！</strong></div>
+
+    <h3>並べ方（順序あり）</h3>
+    <div class="tip tip-blue">
+      <strong>例：</strong>A,B,C の 3人を 1列に 並べる<br>
+      ① 1番目 → 3通り<br>
+      ② 2番目 → 残り2通り<br>
+      ③ 3番目 → 残り1通り<br>
+      → <strong>3 × 2 × 1 = 6通り</strong>
+    </div>
+
+    <h3>組み合わせ（順序なし）</h3>
+    <div class="tip tip-green">
+      <strong>例：</strong>4人から 2人を 選ぶ（順序関係なし）<br>
+      ① 4人 × 3人 = 12通り（順序ありなら）<br>
+      ② AB と BA は 同じ → ÷2<br>
+      → <strong>12 ÷ 2 = 6通り</strong>
+    </div>
+
+    <h3>樹形図（じゅけいず）</h3>
+    <div class="tip">
+      <strong>★ まよったら 木の枝のように 全パターンを 書きだす！</strong><br>
+      <pre style="font-family:monospace;font-size:0.9em;">
+コイン2回：
+  ┌─表─表
+表┤
+  └─裏─裏
+  ┌─表
+裏┤
+  └─裏
+→ 4通り（表表/表裏/裏表/裏裏）
+      </pre>
+    </div>
+
+    <h3>確率（かくりつ）の入り口</h3>
+    <div class="tip tip-blue">
+      <strong>確率 = 起こる場合の数 ÷ ぜんぶの場合の数</strong><br>
+      ▸ コインで表が出る確率：1/2<br>
+      ▸ サイコロで6が出る確率：1/6<br>
+      ▸ サイコロで偶数が出る確率：3/6 = 1/2
+    </div>
+
+    <h3>場合の数の公式（参考）</h3>
+    <div class="tip tip-green">
+      ▸ 3人並べる：3! = 3×2×1 = 6通り<br>
+      ▸ 4人並べる：4! = 4×3×2×1 = 24通り<br>
+      ▸ 5人並べる：5! = 5×4×3×2×1 = 120通り<br>
+      （!＝かいじょう、中学で習う）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="word">
+  <div class="card">
+    <h2>📝 文章題（中学準備）</h2>
+
+    <div class="tip"><strong>💡 6年の文章題は、これまでの全部の単元の総まとめ！</strong></div>
+
+    <h3>分数の文章題</h3>
+    <div class="tip tip-blue">
+      <strong>例：</strong>水筒の水の 3/5 を 飲んだら 200mL残った。最初は 何mL？<br>
+      ① 残ったのは 1−3/5 = 2/5 にあたる<br>
+      ② 全体の 2/5 = 200mL → 1/5 = 100mL<br>
+      ③ 全体 = 100×5 = <strong>500mL</strong>
+    </div>
+
+    <h3>比の文章題</h3>
+    <div class="tip tip-green">
+      <strong>例：</strong>姉と妹の年れいの比が 7:5、合計24才。それぞれ何才？<br>
+      ① 合計 7+5 = 12<br>
+      ② 1つぶん：24÷12 = 2<br>
+      ③ 姉 7×2 = <strong>14才</strong>、妹 5×2 = <strong>10才</strong>
+    </div>
+
+    <h3>速さ・割合の応用</h3>
+    <div class="tip">
+      <strong>例：</strong>定価1500円のシャツを 15%引きで 買った。値段は？<br>
+      → 1500 × (1 − 0.15) = 1500 × 0.85 = <strong>1275円</strong>
+    </div>
+
+    <h3>濃度（のうど）の問題</h3>
+    <div class="tip tip-blue">
+      <strong>例：</strong>8%の食塩水 200gに 入っている食塩は？<br>
+      → 食塩 = 食塩水 × 濃度<br>
+      → 200 × 0.08 = <strong>16g</strong>
+    </div>
+
+    <h3>2量の関係（つるかめ算など）</h3>
+    <div class="tip tip-green">
+      <strong>例：</strong>つると かめが 合計10ぴき、足が 26本。つるは何わ？<br>
+      ① 全部つるなら 足は 2×10=20本（足りない6本ぶん）<br>
+      ② かめ1ぴき増えると足が +2 → 6÷2 = <strong>かめ3ぴき</strong>、つる7わ
+    </div>
+  </div>
+</section>
+
+<section class="section" id="progress">
+  <div class="card">
+    <h2>📊 きろく</h2>
+    <h3>たんいごとの じょうたつ</h3>
+    <div class="mastery" id="mastery-display"></div>
+    <h3>きょうの しんちょく</h3>
+    <div class="progress-bar"><div class="progress-bar-fill" id="today-progress"></div></div>
+    <p style="text-align:center;color:#6b7280;font-size:0.9em;" id="today-progress-text"></p>
+    <h3>れんぞく日すう</h3>
+    <div class="celebration"><div class="big">🔥</div><h3 id="streak-display-num">0日</h3><p id="streak-display-msg"></p></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="reset-btn" style="padding:8px 16px;font-size:0.85em;background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;">きろくを リセット</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="parent">
+  <div class="card">
+    <h2>👨‍👩‍👧 おうちの人へ</h2>
+    <div class="parent-section">
+      <h3>🧠 6年生は中学数学の地ならし</h3>
+      <ul>
+        <li>分数のかけ割り、比、円の面積、場合の数。これらは中1の代数・幾何の基礎になる。</li>
+        <li><strong>分数のわり算「ひっくり返してかける」</strong>はパターンとして覚えるだけでOK。理屈は中学で。</li>
+        <li><strong>比</strong>は中学の「比例式」「相似」につながる。「a:b = c:d」の形に慣れる。</li>
+        <li><strong>場合の数</strong>は樹形図を書く習慣を。中学・高校で大いに役立つ。</li>
+        <li>中学受験する場合は別途難易度の高い問題集が必要。このアプリは基礎の確認用に。</li>
+      </ul>
+    </div>
+    <div class="parent-section">
+      <h3>📅 おすすめの使い方</h3>
+      <ul>
+        <li>毎日5分。寝る前30分前後がベスト。</li>
+        <li>苦手な単元があればそこを重点的に。「割合」「速さ」が不安なら5年に戻ってOK。</li>
+        <li>中学準備として「文字式」(x, y) に少し触れておくと中1スタートが楽。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer><p>👨‍👩‍👧 まいにち5もん つづけよう！</p></footer>
+
+</div>
+
+<script>
+window.GRADE_KEY = 'g6';
+window.TAGS = ['分数かけ割り', '比', '円', '体積', '場合の数', '比例', '対称', '文字式', '拡大縮小', '文章題'];
+window.QUESTIONS = [
+  // 分数のかけ算
+  {id:'g6f1', tag:'分数かけ割り', q:'2/3 × 1/4 = ？', opts:['2/12 (=1/6)','3/7','2/7','8/12'], a:0, why:'分子どうし: 2×1=2、分母どうし: 3×4=12。2/12を約分して1/6。'},
+  {id:'g6f2', tag:'分数かけ割り', q:'3/5 × 10 = ？', opts:['3/50','3/15','6','30/5'], a:2, why:'10=10/1。3×10=30、5×1=5。30/5=6。'},
+  {id:'g6f3', tag:'分数かけ割り', q:'2/3 ÷ 1/4 = ？', opts:['2/12','8/3','3/8','2/7'], a:1, why:'わる数をひっくり返してかける。2/3 × 4/1 = 8/3。'},
+  {id:'g6f4', tag:'分数かけ割り', q:'1/2 ÷ 3 = ？', opts:['1/6','1/5','3/2','2/3'], a:0, why:'3=3/1。ひっくり返して 1/2 × 1/3 = 1/6。'},
+  {id:'g6f5', tag:'分数かけ割り', q:'4/9 × 3/8 = ？', opts:['12/72 (=1/6)','7/17','12/17','4/24'], a:0, why:'4×3=12、9×8=72。12/72を約分すると1/6。'},
+  // 比
+  {id:'g6r1', tag:'比', q:'8:12 を 簡単にすると？', opts:['1:1','2:3','4:6','8:12'], a:1, why:'両方を最大公約数4でわる。8÷4=2、12÷4=3。'},
+  {id:'g6r2', tag:'比', q:'a:b = 2:5 で a=10 のとき b は？', opts:['5','15','25','50'], a:2, why:'aは2倍 → 10は2の5倍。だから bも5倍 → 5×5=25。'},
+  {id:'g6r3', tag:'比', q:'30個を 2:3 に分けると？', opts:['10こと20こ','12こと18こ','15こと15こ','5こと25こ'], a:1, why:'合計2+3=5。30÷5=6。2×6=12、3×6=18。'},
+  {id:'g6r4', tag:'比', q:'15:25 を 簡単にすると？', opts:['1:2','3:5','5:15','3:8'], a:1, why:'両方÷5 → 3:5。'},
+  // 円
+  {id:'g6c1', tag:'円', q:'半径10cmの円の面積は？（円周率3.14）', opts:['31.4cm²','62.8cm²','314cm²','100cm²'], a:2, why:'半径×半径×3.14 = 10×10×3.14 = 314cm²。'},
+  {id:'g6c2', tag:'円', q:'直径10cmの円の円周は？', opts:['10cm','15.7cm','31.4cm','62.8cm'], a:2, why:'円周=直径×3.14 = 10×3.14 = 31.4cm。'},
+  {id:'g6c3', tag:'円', q:'半径5cmの円の面積は？', opts:['15.7cm²','31.4cm²','78.5cm²','100cm²'], a:2, why:'5×5×3.14 = 25×3.14 = 78.5cm²。'},
+  {id:'g6c4', tag:'円', q:'円周率は およそ いくつ？', opts:['3','3.14','π','どれも正しい'], a:3, why:'円周率はおよそ3.14、記号で書くとπ（パイ）。どれも正解！'},
+  // 体積
+  {id:'g6v1', tag:'体積', q:'底面積20cm²、高さ5cmの角柱の体積は？', opts:['25cm³','40cm³','100cm³','125cm³'], a:2, why:'体積=底面積×高さ。20×5=100cm³。'},
+  {id:'g6v2', tag:'体積', q:'底面が半径2cmの円、高さ10cmの円柱の体積は？', opts:['12.56cm³','40cm³','125.6cm³','40.8cm³'], a:2, why:'底面積=2×2×3.14=12.56cm²。体積=12.56×10=125.6cm³。'},
+  // 場合の数
+  {id:'g6p1', tag:'場合の数', q:'A,B,C の3人を 1列に並べる方法は？', opts:['3通り','6通り','9通り','12通り'], a:1, why:'3×2×1=6通り。1番目に3人、2番目は残り2人、3番目は残り1人。'},
+  {id:'g6p2', tag:'場合の数', q:'4人から 班長と副班長を 選ぶ方法は？（順序あり）', opts:['4通り','6通り','12通り','24通り'], a:2, why:'班長4人、副班長は残り3人。4×3=12通り。'},
+  {id:'g6p3', tag:'場合の数', q:'5人から 2人を選ぶ組み合わせは？', opts:['5通り','10通り','20通り','25通り'], a:1, why:'順序ありなら5×4=20、順序なしなのでさらに÷2 → 10通り。'},
+  {id:'g6p4', tag:'場合の数', q:'コインを2回投げる。表裏のパターンは？', opts:['2通り','3通り','4通り','6通り'], a:2, why:'1回目（表/裏）×2回目（表/裏）=2×2=4通り。'},
+  // 比例
+  {id:'g6pr1', tag:'比例', q:'yはxに比例。x=3 のとき y=12。x=5なら y は？', opts:['15','20','24','60'], a:1, why:'比例定数=12÷3=4。だから y=4×5=20。'},
+  {id:'g6pr2', tag:'比例', q:'反比例で x×y=24。x=4なら y は？', opts:['4','6','8','24'], a:1, why:'24÷4=6。'},
+  // 分数のかけ割り（追加）
+  {id:'g6f6', tag:'分数かけ割り', q:'3/4 × 2/9 = ？', opts:['6/36 (=1/6)','5/13','6/13','1/4'], a:0, why:'3×2=6、4×9=36。6/36を約分して1/6。'},
+  {id:'g6f7', tag:'分数かけ割り', q:'5/6 ÷ 2/3 = ？', opts:['5/9','5/4','10/18','15/12'], a:1, why:'ひっくり返して 5/6×3/2=15/12=5/4。'},
+  {id:'g6f8', tag:'分数かけ割り', q:'1/3 × 6 = ？', opts:['1/18','6/3','2','1/2'], a:2, why:'6=6/1。1×6=6、3×1=3。6/3=2。'},
+  {id:'g6f9', tag:'分数かけ割り', q:'4/5 ÷ 8 = ？', opts:['1/10','4/40','32/5','5/40'], a:0, why:'8=8/1。ひっくり返して 4/5×1/8=4/40=1/10。'},
+  // 比（追加）
+  {id:'g6r5', tag:'比', q:'24:36 を 簡単にすると？', opts:['1:2','2:3','3:4','12:18'], a:1, why:'最大公約数12でわる。24÷12=2、36÷12=3。'},
+  {id:'g6r6', tag:'比', q:'a:b:c = 1:2:3 で a=4。c は？', opts:['6','8','10','12'], a:3, why:'aが4倍なので b=8、c=12。'},
+  {id:'g6r7', tag:'比', q:'48個を 5:3 に分けると？', opts:['25こと23こ','30こと18こ','30こと20こ','40こと8こ'], a:1, why:'合計5+3=8、48÷8=6。5×6=30、3×6=18。'},
+  {id:'g6r8', tag:'比', q:'2:5 と 同じ比は？', opts:['4:25','6:15','8:20','10:30'], a:2, why:'両方を×4 → 8:20。2×4=8、5×4=20。'},
+  // 円（追加）
+  {id:'g6c5', tag:'円', q:'半径3cmの円の面積は？', opts:['9.42cm²','18.84cm²','28.26cm²','113.04cm²'], a:2, why:'3×3×3.14=9×3.14=28.26cm²。'},
+  {id:'g6c6', tag:'円', q:'円周20cm の円の 直径は？', opts:['約3.14cm','約6.37cm','約10cm','約20cm'], a:1, why:'直径=円周÷3.14=20÷3.14≒6.37cm。'},
+  {id:'g6c7', tag:'円', q:'円の中心から 円周までの長さを なんという？', opts:['直径','半径','円周','面積'], a:1, why:'中心から円周までが半径。直径は半径の2倍。'},
+  // 体積（追加）
+  {id:'g6v3', tag:'体積', q:'底面が 5cm×4cm、高さ10cmの直方体の体積は？', opts:['90cm³','180cm³','200cm³','400cm³'], a:2, why:'底面積=5×4=20。20×10=200cm³。'},
+  {id:'g6v4', tag:'体積', q:'底面の半径3cm、高さ5cmの円柱の体積は？', opts:['28.26cm³','141.3cm³','94.2cm³','45cm³'], a:1, why:'底面積=3×3×3.14=28.26。28.26×5=141.3cm³。'},
+  // 場合の数（追加）
+  {id:'g6p5', tag:'場合の数', q:'4枚のカード(1,2,3,4)から 2枚並べる。何通り？', opts:['6通り','8通り','12通り','16通り'], a:2, why:'1枚目4通り×2枚目3通り=12通り。'},
+  {id:'g6p6', tag:'場合の数', q:'A,B,C,D,Eから3人選ぶ組み合わせは？', opts:['6通り','10通り','20通り','60通り'], a:1, why:'5×4×3÷(3×2×1)=60÷6=10通り。'},
+  {id:'g6p7', tag:'場合の数', q:'サイコロ1個ふって 偶数が出る確率は？', opts:['1/6','1/3','1/2','2/3'], a:2, why:'2,4,6 の3通り。3/6=1/2。'},
+  {id:'g6p8', tag:'場合の数', q:'コイン3回投げて すべて表になるパターンは？', opts:['1通り','2通り','3通り','8通り'], a:0, why:'全パターンは2×2×2=8通り、そのうち全表は1通り。'},
+  // 比例（追加）
+  {id:'g6pr3', tag:'比例', q:'比例で y=3x。x=10のとき y は？', opts:['3','13','30','103'], a:2, why:'y=3×10=30。'},
+  {id:'g6pr4', tag:'比例', q:'反比例 y=12/x。x=2のとき y は？', opts:['2','4','6','12'], a:2, why:'y=12÷2=6。'},
+  // ===== 対称（新タグ）=====
+  {id:'g6sym1', tag:'対称', q:'線対称な図形を 半分におると ぴったり 重なる。○か×？', opts:['○','×','どちらでもない','図による'], a:0, why:'これが線対称の定義。'},
+  {id:'g6sym2', tag:'対称', q:'線対称な図形は？', opts:['正三角形','一般的な四角形','カタカナの「F」','カタカナの「J」'], a:0, why:'正三角形は線対称（3本の対称軸）。'},
+  {id:'g6sym3', tag:'対称', q:'点対称：180°回すと もとと同じになる。例は？', opts:['正三角形','長方形','円','どれも'], a:3, why:'長方形・円・正方形・S・Hなど。'},
+  {id:'g6sym4', tag:'対称', q:'カタカナ「H」は？', opts:['線対称のみ','点対称のみ','両方','どちらでもない'], a:2, why:'H は左右対称（線対称）かつ180°回しても同じ（点対称）。'},
+  {id:'g6sym5', tag:'対称', q:'円の対称軸は何本？', opts:['1本','2本','4本','無限'], a:3, why:'円は中心を通る直線すべてが対称軸。無限本。'},
+  // ===== 文字式（新タグ）=====
+  {id:'g6le1', tag:'文字式', q:'1個 x 円のあめを 5個。代金は？', opts:['x+5','5x','x/5','x×5（=5x）どちらも正解'], a:1, why:'x×5 = 5x（5x と書く）。'},
+  {id:'g6le2', tag:'文字式', q:'a+a+a を かんたんに', opts:['a3','3a','a+3','aaa'], a:1, why:'同じ文字をたすと×に。a×3=3a。'},
+  {id:'g6le3', tag:'文字式', q:'2x = 14 のとき x は？', opts:['7','12','14','28'], a:0, why:'14÷2=7。'},
+  {id:'g6le4', tag:'文字式', q:'x + 5 = 12 のとき x は？', opts:['5','7','12','17'], a:1, why:'x=12−5=7。'},
+  {id:'g6le5', tag:'文字式', q:'1辺 a cmの正方形のまわり', opts:['a+4','4a','a²','a/4'], a:1, why:'まわり=a×4=4a。'},
+  // ===== 拡大図縮図（新タグ）=====
+  {id:'g6sc1', tag:'拡大縮小', q:'2倍に拡大すると 辺の長さは？', opts:['1/2倍','変わらない','2倍','4倍'], a:2, why:'拡大率と同じ。辺は2倍。'},
+  {id:'g6sc2', tag:'拡大縮小', q:'2倍に拡大すると 面積は？', opts:['1/2倍','2倍','4倍','8倍'], a:2, why:'辺2倍×辺2倍=4倍。面積は2乗で増える。'},
+  {id:'g6sc3', tag:'拡大縮小', q:'1/100の縮図で 5cm は 実際何m？', opts:['0.05m','5m','50m','500m'], a:1, why:'5cm×100=500cm=5m。'},
+  // ===== 確率の入り口（場合の数追加）=====
+  {id:'g6p9', tag:'場合の数', q:'コインを3回投げて 全部表になる確率は？', opts:['1/2','1/4','1/6','1/8'], a:3, why:'各回1/2、3回連続=1/2×1/2×1/2=1/8。'},
+  {id:'g6p10', tag:'場合の数', q:'サイコロで 6が出る確率', opts:['1/6','1/3','1/2','2/6'], a:0, why:'6面のうち1面=1/6。'},
+  {id:'g6p11', tag:'場合の数', q:'1から5までの数 並べる方法は？', opts:['5通り','25通り','60通り','120通り'], a:3, why:'5×4×3×2×1=120通り。'},
+  {id:'g6p12', tag:'場合の数', q:'A,B,C,D,E,Fから3人選ぶ方法（順序無視）', opts:['10通り','15通り','20通り','30通り'], a:2, why:'6×5×4÷(3×2×1)=120÷6=20通り。'},
+  // ===== 比（追加・応用）=====
+  {id:'g6r9', tag:'比', q:'男:女=3:5、女が25人のとき男は？', opts:['8人','15人','17人','25人'], a:1, why:'比は同じだから 25÷5×3=15人。'},
+  {id:'g6r10', tag:'比', q:'三角形の角度の比 1:2:3。最大の角は？', opts:['30°','60°','90°','120°'], a:2, why:'合計180°、1+2+3=6に分けると 1=30、2=60、3=90°。'},
+  {id:'g6r11', tag:'比', q:'A:B = 2:3、B=18 のとき A+B は？', opts:['12','24','30','45'], a:2, why:'A=12、A+B=30。'},
+  // ===== 分数（追加・応用）=====
+  {id:'g6f10', tag:'分数かけ割り', q:'2と1/3 × 3/4 = ？', opts:['1と1/2','1と3/4','2','3/12'], a:1, why:'2と1/3=7/3。7/3×3/4=21/12=7/4=1と3/4。'},
+  {id:'g6f11', tag:'分数かけ割り', q:'5/8 ÷ 1/2 = ？', opts:['5/16','5/4','10/8','1と1/4(=5/4)'], a:1, why:'5/8×2/1=10/8=5/4=1と1/4。'},
+  {id:'g6f12', tag:'分数かけ割り', q:'4/5 × 1/2 を 約分すると？', opts:['1/3','2/5','3/10','5/7'], a:1, why:'4×1=4、5×2=10。4/10を約分（÷2）すると 2/5。'},
+  // ===== 円（追加）=====
+  {id:'g6c8', tag:'円', q:'半径4cmの 半円の面積', opts:['12.56cm²','25.12cm²','50.24cm²','78.5cm²'], a:1, why:'円全体=4×4×3.14=50.24。半分=25.12cm²。'},
+  {id:'g6c9', tag:'円', q:'円周率πを使って 半径rの円の面積式', opts:['πr','2πr','πr²','2πr²'], a:2, why:'円の面積=π×r×r=πr²。'},
+  // ===== 体積（追加）=====
+  {id:'g6v5', tag:'体積', q:'底面の半径4cm 高さ8cmの円柱の体積', opts:['100.48cm³','200.96cm³','401.92cm³','502.4cm³'], a:2, why:'底面積=4×4×3.14=50.24、×高さ8=401.92cm³。'},
+  // ===== 比例（追加）=====
+  {id:'g6pr5', tag:'比例', q:'y=4x で x=7 なら y は？', opts:['11','24','28','47'], a:2, why:'y=4×7=28。'},
+  {id:'g6pr6', tag:'比例', q:'反比例 x×y=36。x=9 のとき y は？', opts:['3','4','9','27'], a:1, why:'36÷9=4。'},
+  {id:'g6pr7', tag:'比例', q:'比例のグラフは どんな形？', opts:['原点を通る直線','曲線','水平線','円'], a:0, why:'比例 y=ax は原点(0,0)を通る直線。'},
+  // ===== 文章題（中学準備）=====
+  {id:'g6w1', tag:'文章題', q:'8% の食塩水 200g。食塩は何g？', opts:['8g','12g','16g','24g'], a:2, why:'200×0.08=16g。'},
+  {id:'g6w2', tag:'文章題', q:'時速60km の車が 1.5時間で 進む距離は？', opts:['40km','60km','90km','100km'], a:2, why:'60×1.5=90km。'},
+  {id:'g6w3', tag:'文章題', q:'3:7 の比で 50個を分ける。多い方は何個？', opts:['15個','20個','30個','35個'], a:3, why:'50÷10=5、5×7=35個。'},
+  {id:'g6w4', tag:'文章題', q:'15%引きで 850円のシャツ。元の値段は？', opts:['1000円','1100円','1200円','1500円'], a:0, why:'85%=850 → 100%=1000円。'},
+  {id:'g6w5', tag:'文章題', q:'兄は弟の2倍。あわせて27才。兄は？', opts:['9才','15才','18才','22才'], a:2, why:'弟+2弟=3弟=27、弟=9、兄=18。'},
+];
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

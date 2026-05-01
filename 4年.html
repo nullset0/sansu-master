@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4年生 - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>🌟 4年生の算数 🌟</h1>
+  <p>大きい数・概数・面積・角度・小数分数・単位</p>
+</header>
+
+<div class="status-bar">
+  <div class="status-card streak"><div class="icon">🔥</div><div class="num" id="streak-num">0</div><div class="label">れんぞく日すう</div></div>
+  <div class="status-card today"><div class="icon">📝</div><div class="num" id="today-num">0</div><div class="label">きょうの のこり</div></div>
+  <div class="status-card master"><div class="icon">🏆</div><div class="num" id="master-num">0</div><div class="label">マスターした問題</div></div>
+  <div class="status-card"><div class="icon">⭐</div><div class="num" id="total-correct">0</div><div class="label">ぜんぶの せいかい数</div></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn daily active" data-target="daily">🧠 きょうのおさらい</button>
+  <button class="nav-btn" data-target="bignum">🔢 大きい数</button>
+  <button class="nav-btn" data-target="approx">≈ がい数</button>
+  <button class="nav-btn" data-target="order">🧮 計算順序</button>
+  <button class="nav-btn" data-target="decimal">🔟 小数</button>
+  <button class="nav-btn" data-target="fraction">½ 分数</button>
+  <button class="nav-btn" data-target="area">⬜ 面積</button>
+  <button class="nav-btn" data-target="angle">📐 角度</button>
+  <button class="nav-btn" data-target="solid">📦 立体</button>
+  <button class="nav-btn" data-target="graph">📈 グラフ</button>
+  <button class="nav-btn" data-target="units">📏 単位</button>
+  <button class="nav-btn" data-target="word">📝 文章題</button>
+  <button class="nav-btn" data-target="progress">📊 きろく</button>
+  <button class="nav-btn" data-target="parent">👨‍👩‍👧 おうちの人へ</button>
+</nav>
+
+<section class="section active" id="daily">
+  <div class="card">
+    <h2>🧠 きょうのおさらい</h2>
+    <div class="tip tip-blue"><strong>のうかがくの きまり：</strong>1日 <span class="big-number">5もん</span>。4年生は単元が一気に増えるから、毎日コツコツが効く！</div>
+    <div id="daily-area"></div>
+    <div style="margin-top:24px;"><h3>📦 おぼえ箱</h3><div class="leitner" id="leitner-display"></div></div>
+  </div>
+</section>
+
+<section class="section" id="bignum">
+  <div class="card">
+    <h2>🔢 大きい数（億・兆）</h2>
+
+    <div class="tip"><strong>💡 4けたずつ 区切って読む！</strong><br>
+    日本の数は <span class="big-number">4けた</span>ごとに新しい単位になる。<br>
+    一 → 十 → 百 → 千 → <strong>万</strong> → 十万 → 百万 → 千万 → <strong>億</strong> → 十億 → 百億 → 千億 → <strong>兆</strong></div>
+
+    <h3>くらい（位）の しくみ</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🔢</div><div class="label">1万</div><div class="value">10,000<br>(0が4こ)</div></div>
+      <div class="example"><div class="icon">📊</div><div class="label">1億</div><div class="value">100,000,000<br>(0が8こ)</div></div>
+      <div class="example"><div class="icon">🌍</div><div class="label">1兆</div><div class="value">1,000,000,000,000<br>(0が12こ)</div></div>
+      <div class="example"><div class="icon">🌌</div><div class="label">1京（けい）</div><div class="value">1兆 × 1万<br>(0が16こ)</div></div>
+    </div>
+
+    <div class="tip tip-blue">
+      <strong>📖 みのまわりの 大きい数：</strong><br>
+      • 日本の人口 → 約 <strong>1億2500万人</strong><br>
+      • 国の予算 → 約 <strong>110兆円</strong><br>
+      • 地球から太陽までの距離 → <strong>1億5000万km</strong><br>
+      • 体の細胞の数 → 約 <strong>37兆</strong>個
+    </div>
+
+    <h3>10倍 100倍 1000倍</h3>
+    <div class="tip">
+      <strong>10倍 = 一の位に 0を1つ つける</strong>（または くらいが1つ上がる）<br>
+      れい：35 × 10 = 350<br>
+      <strong>100倍</strong>= 0を2つ、<strong>1000倍</strong>= 0を3つ<br>
+      <strong>10でわる</strong> = 0を1つ消す（小数点を左に1つ）<br>
+      れい：350 ÷ 10 = 35
+    </div>
+
+    <h3>大きい数のひっ算</h3>
+    <div class="tip tip-green">
+      <strong>かけ算ひっ算（3けた×2けた）：</strong><br>
+      234 × 56 = 234×6 + 234×50 = 1404 + 11700 = <strong>13104</strong><br>
+      位ごとに きちんと そろえてかくのが コツ。
+    </div>
+  </div>
+</section>
+
+<section class="section" id="approx">
+  <div class="card">
+    <h2>≈ がい数（およその数）</h2>
+
+    <div class="tip"><strong>💡 がい数とは？</strong><br>
+    こまかい数を「だいたい」で表したもの。買い物の合計、人口、距離などで便利。<br>
+    れい：「3247円のお買い物」→「だいたい <strong>3000円</strong>」</div>
+
+    <h3>四捨五入（ししゃごにゅう）のルール</h3>
+    <div class="tip tip-blue">
+      <strong>1つ下のくらいを見る！</strong><br>
+      ▸ 0,1,2,3,<strong>4</strong> → きりすて（その位そのまま）<br>
+      ▸ <strong>5</strong>,6,7,8,9 → きりあげ（その位 +1）
+    </div>
+
+    <h3>れんしゅう例</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🔢</div><div class="label">3247</div><div class="value">百のくらいまで<br>→ <strong>3200</strong>（十の位が4）</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">3257</div><div class="value">百のくらいまで<br>→ <strong>3300</strong>（十の位が5）</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">8765</div><div class="value">千のくらいまで<br>→ <strong>9000</strong>（百の位が7）</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">12345</div><div class="value">上から1けた<br>→ <strong>10000</strong></div></div>
+    </div>
+
+    <div class="tip">
+      <strong>みつもり（およその計算）：</strong><br>
+      れい：「1個198円のジュースを 5本」<br>
+      → 198を 200にして 200×5 = <strong>約1000円</strong><br>
+      お金の準備にちょうどよい！
+    </div>
+
+    <div class="tip tip-blue">
+      <strong>「以上・以下・未満」のことば：</strong><br>
+      ▸ 100 <strong>以上</strong> → 100を ふくむ（100,101,102...）<br>
+      ▸ 100 <strong>以下</strong> → 100を ふくむ（100,99,98...）<br>
+      ▸ 100 <strong>未満</strong> → 100を ふくまない（99,98...）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="order">
+  <div class="card">
+    <h2>🧮 計算の順序（× ÷ + −と かっこ）</h2>
+
+    <div class="tip"><strong>⚠️ 大事なルール：</strong>
+    左から順に計算しちゃダメ！<strong>順番</strong>がある！</div>
+
+    <h3>計算する順番</h3>
+    <div class="tip tip-blue">
+      <strong>① かっこ ( )</strong><br>
+      <strong>② × ÷</strong>（かけ算・わり算）<br>
+      <strong>③ + −</strong>（たし算・ひき算）<br>
+      （②③のなかでは 左から順に）
+    </div>
+
+    <h3>例題で 確認</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🧮</div><div class="label">2 + 3 × 4</div><div class="value">×が先 → 3×4=12<br>+で 2+12 = <strong>14</strong></div></div>
+      <div class="example"><div class="icon">🧮</div><div class="label">(2 + 3) × 4</div><div class="value">( )が先 → 2+3=5<br>×で 5×4 = <strong>20</strong></div></div>
+      <div class="example"><div class="icon">🧮</div><div class="label">12 − 8 ÷ 2</div><div class="value">÷が先 → 8÷2=4<br>−で 12−4 = <strong>8</strong></div></div>
+      <div class="example"><div class="icon">🧮</div><div class="label">24 ÷ (3 + 5)</div><div class="value">( )が先 → 3+5=8<br>÷で 24÷8 = <strong>3</strong></div></div>
+    </div>
+
+    <h3>計算の きまり（くふう）</h3>
+    <div class="tip tip-green">
+      <strong>分配法則：</strong>(a+b)×c = a×c + b×c<br>
+      れい: 25 × 12 = 25 × (10+2) = 250 + 50 = <strong>300</strong><br>
+      むずかしい かけ算が ラクになる！
+    </div>
+
+    <div class="tip">
+      <strong>こうかんほうそく：</strong>3+5 = 5+3、3×5 = 5×3<br>
+      <strong>けつごうほうそく：</strong>(3+5)+2 = 3+(5+2)<br>
+      順番をかえても答えは同じ（+と×だけ）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="decimal">
+  <div class="card">
+    <h2>🔟 小数（×÷整数）</h2>
+
+    <div class="tip"><strong>💡 小数 × 整数：</strong>
+    整数のかけ算と同じ。最後に小数点を つける位置に気をつける！</div>
+
+    <h3>小数のかけ算（× 整数）</h3>
+    <div class="tip tip-blue">
+      <strong>3.6 × 4 を 計算する手順</strong><br>
+      ① 小数点をいったん 無視 → 36 × 4 = 144<br>
+      ② 小数点を右から1つ移動 → <strong>14.4</strong><br>
+      （小数第一位の数 × 整数 → 答えも小数第一位）
+    </div>
+
+    <h3>小数のわり算（÷ 整数）</h3>
+    <div class="tip tip-blue">
+      <strong>4.8 ÷ 6 を 計算</strong><br>
+      48 ÷ 6 = 8 → 小数点を そのまま下ろして <strong>0.8</strong>
+    </div>
+
+    <h3>10倍・100倍 / 10でわる・100でわる</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">×10</div><div class="label">3.6 × 10</div><div class="value">小数点を右に1つ<br>→ <strong>36</strong></div></div>
+      <div class="example"><div class="icon">×100</div><div class="label">3.6 × 100</div><div class="value">小数点を右に2つ<br>→ <strong>360</strong></div></div>
+      <div class="example"><div class="icon">÷10</div><div class="label">36 ÷ 10</div><div class="value">小数点を左に1つ<br>→ <strong>3.6</strong></div></div>
+      <div class="example"><div class="icon">÷100</div><div class="label">36 ÷ 100</div><div class="value">小数点を左に2つ<br>→ <strong>0.36</strong></div></div>
+    </div>
+
+    <div class="converter">
+      <h3>🔄 やってみよう！</h3>
+      <div class="conv-row">
+        <input type="number" id="dec-input" value="3.6" step="0.1">
+        <select id="dec-from">
+          <option value="x10" selected>× 10</option>
+          <option value="x100">× 100</option>
+          <option value="d10">÷ 10</option>
+          <option value="d100">÷ 100</option>
+        </select>
+        <span class="equals">=</span>
+        <span class="result" id="dec-result">36</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fraction">
+  <div class="card">
+    <h2>½ 分数（帯分数・仮分数）</h2>
+
+    <div class="tip"><strong>💡 3年生の復習：</strong>
+    分数 = ピザを切ったときの「分け前」を表す数<br>
+    <span class="big-number">1/4</span> = 4つに切った 1つぶん</div>
+
+    <h3>3つの分数</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🍕</div><div class="label">真分数</div><div class="value">分子 < 分母<br>1/2、3/4 など</div></div>
+      <div class="example"><div class="icon">🍕🍕</div><div class="label">仮分数</div><div class="value">分子 ≥ 分母<br>5/4、7/3 など</div></div>
+      <div class="example"><div class="icon">🍕+🍕</div><div class="label">帯分数</div><div class="value">整数+真分数<br>1と1/4 など</div></div>
+    </div>
+
+    <h3>帯分数 ⇄ 仮分数 の変換</h3>
+    <div class="tip tip-blue">
+      <strong>仮分数 → 帯分数：</strong>分子を 分母で わる<br>
+      れい：7/3 → 7÷3 = 2あまり1 → <strong>2と1/3</strong>
+    </div>
+    <div class="tip tip-blue">
+      <strong>帯分数 → 仮分数：</strong>整数 × 分母 + 分子<br>
+      れい：2と1/3 → 2×3+1 = 7 → <strong>7/3</strong>
+    </div>
+
+    <h3>同じ分母の たし算・ひき算</h3>
+    <div class="tip tip-green">
+      <strong>分母はそのまま、分子だけ計算！</strong><br>
+      れい：3/7 + 2/7 = <strong>5/7</strong>（分母7のまま、分子 3+2）<br>
+      れい：4/5 − 1/5 = <strong>3/5</strong>
+    </div>
+
+    <div class="tip">
+      <strong>整数+分数：</strong>2と1/3 + 1/3 = 整数2はそのまま、1/3+1/3=2/3 → <strong>2と2/3</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="area">
+  <div class="card">
+    <h2>⬜ 面積（cm²・m²・a・ha）</h2>
+
+    <div class="tip"><strong>💡 面積とは？</strong>
+    広さを 数字で表したもの。1cm² = 1辺1cmの正方形のひろさ。</div>
+
+    <h3>面積の公式</h3>
+    <div class="tip tip-blue">
+      <strong>長方形の面積 = たて × よこ</strong><br>
+      <strong>正方形の面積 = 1辺 × 1辺</strong><br>
+      れい: たて3cm、よこ5cm → 3×5 = <strong>15cm²</strong><br>
+      れい: 1辺7cmの正方形 → 7×7 = <strong>49cm²</strong>
+    </div>
+
+    <h3>身近なものの 面積</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">📱</div><div class="label">スマホ画面</div><div class="value">約100cm²</div></div>
+      <div class="example"><div class="icon">📓</div><div class="label">ノート</div><div class="value">約600cm²</div></div>
+      <div class="example"><div class="icon">🛏️</div><div class="label">ベッド</div><div class="value">約2m²</div></div>
+      <div class="example"><div class="icon">🏫</div><div class="label">教室</div><div class="value">約60m²</div></div>
+      <div class="example"><div class="icon">🏠</div><div class="label">家(マンション)</div><div class="value">約60〜80m²</div></div>
+      <div class="example"><div class="icon">⚽</div><div class="label">サッカー場</div><div class="value">約7000m² = 0.7ha</div></div>
+    </div>
+
+    <h3>面積の単位の階段</h3>
+    <div class="stairs">
+      <div class="step s1"><div class="name">cm²</div><div class="value">1cm×1cm</div></div>
+      <div class="arrow">×10000→</div>
+      <div class="step s3"><div class="name">m²</div><div class="value">1m×1m</div></div>
+      <div class="arrow">×100→</div>
+      <div class="step s4"><div class="name">a</div><div class="value">10m×10m</div></div>
+      <div class="arrow">×100→</div>
+      <div class="step s5"><div class="name">ha</div><div class="value">100m×100m</div></div>
+    </div>
+
+    <div class="tip tip-blue">
+      <strong>⚠️ ちょうい！</strong> 長さは100倍でも、面積は<span class="big-number">10000</span>倍！<br>
+      なぜ？ → たて100倍 × よこ100倍 = 100×100 = 10000倍 だから。<br>
+      これが小4で一番つまずくポイント！
+    </div>
+
+    <h3>大きい面積の単位</h3>
+    <div class="tip tip-green">
+      <strong>1a（アール）</strong> = 10m × 10m = <strong>100m²</strong>（小さな庭ぐらい）<br>
+      <strong>1ha（ヘクタール）</strong> = 100m × 100m = <strong>10,000m²</strong>（東京ドームぐらい）<br>
+      <strong>1km²</strong> = 1000m × 1000m = <strong>1,000,000m²</strong>（100ha）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="angle">
+  <div class="card">
+    <h2>📐 角度（° ど）</h2>
+
+    <div class="tip"><strong>💡 角度の単位：</strong>
+    角の大きさを 表す数。<span class="big-number">°</span>（ど）で表す。1まわり = 360°</div>
+
+    <h3>大事な角度</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">📐</div><div class="label">直角</div><div class="value"><strong>90°</strong>（4分の1まわり）</div></div>
+      <div class="example"><div class="icon">📏</div><div class="label">一直線</div><div class="value"><strong>180°</strong>（半まわり）</div></div>
+      <div class="example"><div class="icon">🔄</div><div class="label">1まわり</div><div class="value"><strong>360°</strong></div></div>
+      <div class="example"><div class="icon">🔻</div><div class="label">正三角形の1つの角</div><div class="value"><strong>60°</strong></div></div>
+    </div>
+
+    <h3>角の しゅるい</h3>
+    <div class="tip tip-blue">
+      <strong>鋭角（えいかく）</strong>：90°より小さい角（0°〜90°）<br>
+      <strong>直角</strong>：ちょうど 90°<br>
+      <strong>鈍角（どんかく）</strong>：90°より大きく180°より小さい（90°〜180°）<br>
+      <strong>反射角</strong>：180°より大きい角
+    </div>
+
+    <h3>三角形の内角の和</h3>
+    <div class="tip tip-green">
+      <strong>★ どんな三角形でも、3つの角の合計は 必ず 180°！</strong><br>
+      れい：1つが30°、もう1つが100°なら、残りは <strong>50°</strong>（180−30−100）<br>
+      正三角形：3つとも 60°（60×3=180）<br>
+      直角三角形：直角90° + 残り2つの和=90°
+    </div>
+
+    <h3>分度器の使い方</h3>
+    <div class="tip">
+      ① 分度器の中心を 角の頂点に合わせる<br>
+      ② 0°の線を 角の1辺に合わせる<br>
+      ③ もう1辺が さしている数を読む<br>
+      ④ 注意：分度器は 0°〜180°まで（1まわりはかれない）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="solid">
+  <div class="card">
+    <h2>📦 立体（直方体・立方体）</h2>
+
+    <div class="tip"><strong>💡 立体とは？</strong>
+    たて・よこ・高さ がある「3次元」の形。たいらな図形（平面）と区別！</div>
+
+    <h3>直方体と立方体</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">📦</div><div class="label">直方体</div><div class="value">6つの長方形でできた箱<br>（ティッシュ箱、本など）</div></div>
+      <div class="example"><div class="icon">🎲</div><div class="label">立方体</div><div class="value">6つの<strong>正方形</strong>でできた箱<br>（サイコロ）</div></div>
+    </div>
+
+    <h3>面・辺・頂点の数</h3>
+    <div class="tip tip-blue">
+      <strong>立方体・直方体 共通：</strong><br>
+      ▸ 面（へいめん）の数 → <strong>6つ</strong><br>
+      ▸ 辺（へん）の数 → <strong>12本</strong><br>
+      ▸ 頂点（ちょうてん、かど）の数 → <strong>8個</strong><br>
+      おぼえ方：<strong>「6・12・8」</strong>（ろく いちに はち）
+    </div>
+
+    <h3>体積（はじめて出てくる）</h3>
+    <div class="tip tip-green">
+      <strong>直方体の体積 = たて × よこ × 高さ</strong><br>
+      れい：たて2cm、よこ3cm、高さ4cm → 2×3×4 = <strong>24cm³</strong><br>
+      （単位は cm³＝立方センチメートル）
+    </div>
+
+    <h3>展開図（てんかいず）</h3>
+    <div class="tip">
+      立体を 切り開いて 平らにした図。<br>
+      立方体は 6つの正方形が つながった 形になる。
+    </div>
+  </div>
+</section>
+
+<section class="section" id="graph">
+  <div class="card">
+    <h2>📈 折れ線グラフ・表</h2>
+
+    <div class="tip"><strong>💡 グラフの使い分け：</strong>
+    数を <strong>くらべる</strong> → ぼうグラフ／<strong>変化を見る</strong> → 折れ線</div>
+
+    <h3>折れ線グラフ（おれせんグラフ）</h3>
+    <div class="tip tip-blue">
+      <strong>時間の流れと一緒に変わる数</strong>を表すのにベスト！<br>
+      れい：1日の気温の変化、せの高さの記録、人口の変化<br>
+      ▸ 右上がり → ふえている<br>
+      ▸ 右下がり → へっている<br>
+      ▸ 平ら → 変わらない<br>
+      ▸ かたむきが大きいほど 変化が大きい
+    </div>
+
+    <h3>表とグラフ</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">📊</div><div class="label">ぼうグラフ</div><div class="value">数を比べる<br>（一番多いのは？）</div></div>
+      <div class="example"><div class="icon">📈</div><div class="label">折れ線</div><div class="value">変化を見る<br>（時間の流れ）</div></div>
+      <div class="example"><div class="icon">🥧</div><div class="label">円グラフ</div><div class="value">わりあいを見る<br>（5年で習う）</div></div>
+      <div class="example"><div class="icon">📋</div><div class="label">表</div><div class="value">正確な数を記録</div></div>
+    </div>
+
+    <div class="tip">
+      <strong>グラフを読むコツ：</strong><br>
+      ① タイトル・たんいをチェック<br>
+      ② たて軸・よこ軸が何を表すか<br>
+      ③ 1めもりがいくつ分か<br>
+      ④ 一番大きい/小さいところを見つける
+    </div>
+  </div>
+</section>
+
+<section class="section" id="word">
+  <div class="card">
+    <h2>📝 文章題のとき方</h2>
+
+    <div class="tip tip-blue"><strong>💡 文章題の3ステップ：</strong>
+    ① <strong>線を引いて 数字に丸</strong>　② <strong>何を聞かれているか確認</strong>　③ <strong>式を立てて計算</strong></div>
+
+    <h3>キーワードで 演算を見分ける</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">＋</div><div class="label">たし算のサイン</div><div class="value">あわせて、ぜんぶで、合計、〜と〜</div></div>
+      <div class="example"><div class="icon">−</div><div class="label">ひき算のサイン</div><div class="value">のこり、ちがい、〜より多い/少ない</div></div>
+      <div class="example"><div class="icon">×</div><div class="label">かけ算のサイン</div><div class="value">〜倍、1個△円が□個、同じ数を集める</div></div>
+      <div class="example"><div class="icon">÷</div><div class="label">わり算のサイン</div><div class="value">分ける、ひとつあたり、何人で</div></div>
+    </div>
+
+    <h3>例題</h3>
+    <div class="tip tip-green">
+      <strong>問題：</strong>1個180円のケーキを 4個買った。1000円札で払うと、おつりは いくら？<br><br>
+      <strong>解き方：</strong><br>
+      ① 4個ぶんの値段 → 180×4 = 720円<br>
+      ② おつり → 1000−720 = <strong>280円</strong>
+    </div>
+
+    <h3>2つ式が必要な問題（応用）</h3>
+    <div class="tip">
+      れい：「Aさんは800円、Bさんは その2倍」→ Bさんは 800×2 = 1600円<br>
+      れい：「ぜんぶで 24個、3人で同じ数ずつ」→ 24÷3 = 8個ずつ<br>
+      <strong>段階的に</strong>計算するのがコツ！
+    </div>
+  </div>
+</section>
+
+<section class="section" id="units">
+  <div class="card">
+    <h2>📏 単位の まとめ</h2>
+    <div class="tip"><strong>単位の階段を 思い出そう！</strong></div>
+    <h3>長さ</h3>
+    <div class="stairs">
+      <div class="step s1"><div class="name">mm</div></div>
+      <div class="arrow">×10→</div>
+      <div class="step s2"><div class="name">cm</div></div>
+      <div class="arrow">×100→</div>
+      <div class="step s4"><div class="name">m</div></div>
+      <div class="arrow">×1000→</div>
+      <div class="step s5"><div class="name">km</div></div>
+    </div>
+    <h3>重さ</h3>
+    <div class="stairs">
+      <div class="step s1"><div class="name">g</div></div>
+      <div class="arrow">×1000→</div>
+      <div class="step s3"><div class="name">kg</div></div>
+      <div class="arrow">×1000→</div>
+      <div class="step s5"><div class="name">t</div></div>
+    </div>
+    <h3>かさ</h3>
+    <div class="stairs">
+      <div class="step s1"><div class="name">mL</div></div>
+      <div class="arrow">×100→</div>
+      <div class="step s3"><div class="name">dL</div></div>
+      <div class="arrow">×10→</div>
+      <div class="step s5"><div class="name">L</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="progress">
+  <div class="card">
+    <h2>📊 きろく</h2>
+    <h3>たんいごとの じょうたつ</h3>
+    <div class="mastery" id="mastery-display"></div>
+    <h3>きょうの しんちょく</h3>
+    <div class="progress-bar"><div class="progress-bar-fill" id="today-progress"></div></div>
+    <p style="text-align:center;color:#6b7280;font-size:0.9em;" id="today-progress-text"></p>
+    <h3>れんぞく日すう</h3>
+    <div class="celebration"><div class="big">🔥</div><h3 id="streak-display-num">0日</h3><p id="streak-display-msg"></p></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="reset-btn" style="padding:8px 16px;font-size:0.85em;background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;">きろくを リセット</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="parent">
+  <div class="card">
+    <h2>👨‍👩‍👧 おうちの人へ</h2>
+    <div class="parent-section">
+      <h3>🧠 4年生は「9歳の壁」と言われる学年</h3>
+      <ul>
+        <li>具体物から抽象概念への橋渡しが起きる年。「がい数」「億」「面積の単位換算」など、頭の中だけで数をイメージする力が問われる。</li>
+        <li>面積の単位（1m²=10000cm²）でつまずく子が非常に多い。「長さは100倍だけど、面積は2回かけるから10000倍」を視覚的に納得させるのが鍵。</li>
+        <li>大きい数は「4桁ずつ区切る」感覚を身につける。新聞の数字を一緒に読むのが効果的。</li>
+        <li>角度は分度器の使い方が大事。家にあるものを測ってみるのが良い練習。</li>
+      </ul>
+    </div>
+    <div class="parent-section">
+      <h3>📅 おすすめの使い方</h3>
+      <ul>
+        <li>毎日5分。寝る前30分前後がベスト（睡眠中に記憶定着）。</li>
+        <li>間違えた問題には「なぜ」を一緒に音読すると定着が倍になります。</li>
+        <li>面積の単位は、新聞紙で1m²を作って体感させると一発で理解できます。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer><p>👨‍👩‍👧 まいにち5もん つづけよう！</p></footer>
+
+</div>
+
+<script>
+window.GRADE_KEY = 'g4';
+window.TAGS = ['大きい数', 'がい数', '面積', '角度', '小数', '分数', '単位', '計算順序', '立体', 'グラフ', '文章題'];
+window.QUESTIONS = [
+  // 大きい数
+  {id:'g4n1', tag:'大きい数', q:'1万 を 10こ あつめると？', opts:['10万','100万','1000万','1億'], a:0, why:'10000×10=100000（10万）。'},
+  {id:'g4n2', tag:'大きい数', q:'1億 は 0が いくつ？', opts:['6こ','7こ','8こ','9こ'], a:2, why:'1億 = 100,000,000。0が8こ。'},
+  {id:'g4n3', tag:'大きい数', q:'1兆 は 1億の なんばい？', opts:['10ばい','100ばい','1000ばい','10000ばい'], a:3, why:'1億→10億→100億→1000億→1兆 と 4けた上がる。10000ばい。'},
+  {id:'g4n4', tag:'大きい数', q:'30000000 のよみかたは？', opts:['3万','30万','300万','3000万'], a:3, why:'右から4けたずつ区切る。3,000万 = 3000万。'},
+  // がい数
+  {id:'g4g1', tag:'がい数', q:'3245 を百のくらいまでの がい数にすると？', opts:['3000','3200','3300','3500'], a:1, why:'十の位の4を見る。4は5未満なのできりすて。3200。'},
+  {id:'g4g2', tag:'がい数', q:'4567 を千のくらいまでの がい数にすると？', opts:['4000','4500','5000','6000'], a:2, why:'百の位の5を見る。5以上なのできりあげ。5000。'},
+  {id:'g4g3', tag:'がい数', q:'四捨五入で「4」は どっち？', opts:['きりすて','きりあげ','どちらでもいい','5にする'], a:0, why:'4以下はきりすて、5以上はきりあげ。だから4はきりすて。'},
+  // 面積
+  {id:'g4a1', tag:'面積', q:'1m² は なんcm²？', opts:['100','1000','10000','100000'], a:2, why:'1m=100cm、面積はたて×よこ。100×100=10000cm²。'},
+  {id:'g4a2', tag:'面積', q:'たて4cm よこ5cm の長方形の面積は？', opts:['9cm²','20cm²','40cm²','45cm²'], a:1, why:'たて×よこ=4×5=20cm²。'},
+  {id:'g4a3', tag:'面積', q:'たて3m よこ6m の部屋の面積は？', opts:['9m²','12m²','18m²','36m²'], a:2, why:'3×6=18m²。'},
+  {id:'g4a4', tag:'面積', q:'1辺が7cmの正方形の面積は？', opts:['14cm²','28cm²','49cm²','56cm²'], a:2, why:'正方形は たて=よこ。7×7=49cm²。'},
+  {id:'g4a5', tag:'面積', q:'1ha は なんm²？', opts:['100','1000','10000','100000'], a:2, why:'1ha = 100m × 100m = 10000m²。サッカー場くらい。'},
+  // 角度
+  {id:'g4d1', tag:'角度', q:'直角は なんど？', opts:['45°','90°','180°','360°'], a:1, why:'直角＝90°。三角定規の大きい角。'},
+  {id:'g4d2', tag:'角度', q:'1まわりは なんど？', opts:['90°','180°','270°','360°'], a:3, why:'1まわり=360°。'},
+  {id:'g4d3', tag:'角度', q:'三角形の3つの角の合計は？', opts:['90°','180°','270°','360°'], a:1, why:'どんな三角形でも 内角の合計は 180°。'},
+  {id:'g4d4', tag:'角度', q:'三角形で 角A=60°、角B=70°、角Cは？', opts:['30°','40°','50°','60°'], a:2, why:'180−60−70=50°。'},
+  // 小数
+  {id:'g4s1', tag:'小数', q:'0.7 × 10 = ？', opts:['0.07','0.7','7','70'], a:2, why:'10をかけると 小数点が右に1つ動く。0.7→7。'},
+  {id:'g4s2', tag:'小数', q:'4.5 ÷ 10 = ？', opts:['0.045','0.45','45','450'], a:1, why:'10でわると 小数点が左に1つ動く。4.5→0.45。'},
+  {id:'g4s3', tag:'小数', q:'2.4 + 1.7 = ？', opts:['3.1','4.1','3.11','41'], a:1, why:'2.4+1.7=4.1。0.1のたんいで 24+17=41 → 4.1。'},
+  // 分数
+  {id:'g4f1', tag:'分数', q:'2/3 + 1/3 = ？', opts:['3/3 = 1','3/6','1/3','2/6'], a:0, why:'分母がおなじときは 分子だけ足す。2+1=3、3/3=1。'},
+  {id:'g4f2', tag:'分数', q:'5/4 を帯分数（たいぶんすう）にすると？', opts:['1と1/4','1と4/5','5と1/4','4/5'], a:0, why:'5÷4=1あまり1。だから1と1/4。'},
+  {id:'g4f3', tag:'分数', q:'1と2/5 を仮分数（かぶんすう）にすると？', opts:['3/5','7/5','12/5','2/5'], a:1, why:'1=5/5、5/5+2/5=7/5。'},
+  // 単位
+  {id:'g4u1', tag:'単位', q:'1kg は なんg？', opts:['10g','100g','1000g','10000g'], a:2, why:'kg = 1000ばい。1kg = 1000g。'},
+  {id:'g4u2', tag:'単位', q:'2500g は なんkg？', opts:['2.5kg','25kg','0.25kg','250kg'], a:0, why:'2500÷1000=2.5kg。'},
+  {id:'g4u3', tag:'単位', q:'1km は なんm？', opts:['100','1000','10000','100000'], a:1, why:'1km = 1000m。100m走を10回ぶん。'},
+  {id:'g4u4', tag:'単位', q:'1.5km は なんm？', opts:['15','150','1500','15000'], a:2, why:'1.5×1000=1500m。'},
+  {id:'g4u5', tag:'単位', q:'1L は なんmL？', opts:['10','100','1000','10000'], a:2, why:'1L = 1000mL。牛乳パックぐらい。'},
+  // 大きい数（追加）
+  {id:'g4n5', tag:'大きい数', q:'1兆は 0が いくつ？', opts:['9こ','10こ','12こ','15こ'], a:2, why:'1,000,000,000,000。0が12こ。'},
+  {id:'g4n6', tag:'大きい数', q:'45億 は 1万を いくつ集めた？', opts:['45','4500','45000','450000'], a:3, why:'1億=1万の1万倍=10000万。45億=45×10000万=450000万 → 1万を 450000こ。'},
+  {id:'g4n7', tag:'大きい数', q:'7300000 のよみかたは？', opts:['7万3千','73万','730万','7千3百万'], a:2, why:'右から4けたずつ区切り。730万。'},
+  // がい数（追加）
+  {id:'g4g4', tag:'がい数', q:'8753 を百のくらいまでの がい数は？', opts:['8000','8700','8800','9000'], a:2, why:'十の位の5を見る → 5以上なのできりあげ。87→88 になるので 8800。'},
+  {id:'g4g5', tag:'がい数', q:'6298 を千のくらいまでの がい数は？', opts:['6000','6300','7000','5000'], a:0, why:'百の位が2 → 5未満なのできりすて。6000。'},
+  {id:'g4g6', tag:'がい数', q:'47×3 のおよその答えは？', opts:['約120','約150','約180','約500'], a:1, why:'47を50、3はそのまま。50×3=150。'},
+  // 面積（追加）
+  {id:'g4a6', tag:'面積', q:'1km² は なんm²？', opts:['1000','10000','100000','1000000'], a:3, why:'1km=1000m。1000×1000=1,000,000m²。'},
+  {id:'g4a7', tag:'面積', q:'長方形のたて5m よこ8m。面積は？', opts:['13m²','30m²','40m²','45m²'], a:2, why:'5×8=40m²。'},
+  {id:'g4a8', tag:'面積', q:'1辺10cmの正方形。面積は？', opts:['10cm²','40cm²','80cm²','100cm²'], a:3, why:'10×10=100cm²。'},
+  {id:'g4a9', tag:'面積', q:'1aは いくつ？', opts:['10m²','100m²','1000m²','10000m²'], a:1, why:'1a=10m×10m=100m²。'},
+  // 角度（追加）
+  {id:'g4d5', tag:'角度', q:'三角定規の45°ではない方の角度は？', opts:['30°と60°','40°と50°','45°と45°','60°と70°'], a:0, why:'三角定規は2種類。1つは45-45-90、もう1つは30-60-90。'},
+  {id:'g4d6', tag:'角度', q:'180°より 大きい 角度は？', opts:['鋭角','直角','鈍角','拡角'], a:2, why:'90°〜180°が鈍角（どんかく）。180°超えは反射角。'},
+  {id:'g4d7', tag:'角度', q:'まっすぐな線（一直線）は なんど？', opts:['90°','180°','270°','360°'], a:1, why:'1直線=180°（半回転）。'},
+  // 小数（追加）
+  {id:'g4s4', tag:'小数', q:'3.6 × 100 = ？', opts:['0.36','3.6','36','360'], a:3, why:'100をかけると 小数点を右に2つ。3.60→360。'},
+  {id:'g4s5', tag:'小数', q:'56 ÷ 100 = ？', opts:['0.056','0.56','5.6','5600'], a:1, why:'100でわると 小数点を左に2つ。56→0.56。'},
+  {id:'g4s6', tag:'小数', q:'7.5 − 2.8 = ？', opts:['4.7','4.8','5.3','5.7'], a:0, why:'0.1のたんいで 75−28=47 → 4.7。'},
+  // 分数（追加）
+  {id:'g4f4', tag:'分数', q:'2と3/4 を 仮分数にすると？', opts:['5/4','8/4','9/4','11/4'], a:3, why:'2=8/4、8/4+3/4=11/4。'},
+  {id:'g4f5', tag:'分数', q:'7/3 を 帯分数にすると？', opts:['1と1/3','2と1/3','2と3/7','7と3'], a:1, why:'7÷3=2あまり1。だから2と1/3。'},
+  // 単位（追加）
+  {id:'g4u6', tag:'単位', q:'2.5L は なんdL？', opts:['2.5dL','25dL','250dL','2500dL'], a:1, why:'1L=10dL なので 2.5×10=25dL。'},
+  {id:'g4u7', tag:'単位', q:'5.5kg は なんg？', opts:['55g','550g','5500g','55000g'], a:2, why:'5.5×1000=5500g。'},
+  // ===== 計算の順序（新タグ）=====
+  {id:'g4o1', tag:'計算順序', q:'2 + 3 × 4 = ？', opts:['11','14','20','24'], a:1, why:'×÷を先に。3×4=12、+2で14。'},
+  {id:'g4o2', tag:'計算順序', q:'(2 + 3) × 4 = ？', opts:['11','14','20','24'], a:2, why:'( )を先に。2+3=5、×4=20。'},
+  {id:'g4o3', tag:'計算順序', q:'12 − 8 ÷ 2 = ？', opts:['2','4','8','10'], a:2, why:'÷が先。8÷2=4、12−4=8。'},
+  {id:'g4o4', tag:'計算順序', q:'(10 − 4) × 3 = ？', opts:['18','22','30','42'], a:0, why:'( )先。10−4=6、×3=18。'},
+  {id:'g4o5', tag:'計算順序', q:'24 ÷ (3 + 5) = ？', opts:['3','5','13','19'], a:0, why:'( )先。3+5=8、24÷8=3。'},
+  {id:'g4o6', tag:'計算順序', q:'順序ルール：何を先に計算する？', opts:['左から','( )→×÷→+−','+−→×÷','右から'], a:1, why:'カッコ→かけ算わり算→たし算ひき算 の順。'},
+  // ===== 立体（新タグ）=====
+  {id:'g4st1', tag:'立体', q:'立方体の 面の数は？', opts:['4面','6面','8面','12面'], a:1, why:'サイコロは6面。立方体は6つの正方形でできる。'},
+  {id:'g4st2', tag:'立体', q:'直方体の 辺の数は？', opts:['4本','6本','8本','12本'], a:3, why:'直方体は12本の辺。たて4・よこ4・高さ4。'},
+  {id:'g4st3', tag:'立体', q:'立方体の 頂点（かど）の数は？', opts:['4個','6個','8個','12個'], a:2, why:'8つのかど。'},
+  {id:'g4st4', tag:'立体', q:'たて2cm よこ3cm 高さ4cmの 直方体の体積は？', opts:['9cm³','12cm³','24cm³','36cm³'], a:2, why:'2×3×4=24cm³。'},
+  // ===== 折れ線グラフ（新タグ）=====
+  {id:'g4gr1', tag:'グラフ', q:'時間とともに 変化する数を 見やすいのは？', opts:['ぼうグラフ','折れ線','円グラフ','表だけ'], a:1, why:'変化の様子は折れ線がベスト。'},
+  {id:'g4gr2', tag:'グラフ', q:'折れ線が右上がりは？', opts:['へっている','ふえている','変わらない','わからない'], a:1, why:'右上がり=ふえている。'},
+  // ===== 大きい数（追加）=====
+  {id:'g4n8', tag:'大きい数', q:'10億は 1万の何ばい？', opts:['100倍','1000倍','1万倍','10万倍'], a:3, why:'1万×10万=10億。'},
+  {id:'g4n9', tag:'大きい数', q:'1億 + 1億 = ？', opts:['2','2億','11億','100億'], a:1, why:'1億+1億=2億。'},
+  {id:'g4n10', tag:'大きい数', q:'500万 × 1000 は？', opts:['5万','5億','50億','500億'], a:2, why:'500万 = 5,000,000。×1000 = 5,000,000,000 = 50億。'},
+  // ===== 概数（追加）=====
+  {id:'g4g7', tag:'がい数', q:'15499 を百のくらいまでの がい数は？', opts:['15400','15500','15000','16000'], a:1, why:'十の位9 → 5以上きりあげ。15500。'},
+  {id:'g4g8', tag:'がい数', q:'8765 を 上から1桁の がい数は？', opts:['8000','9000','8800','10000'], a:1, why:'1桁=千の位だけ。下を四捨五入。8765→9000。'},
+  {id:'g4g9', tag:'がい数', q:'19×4 のおよその答えは？', opts:['約60','約70','約80','約100'], a:2, why:'19を20、20×4=80。'},
+  // ===== 面積（追加・応用）=====
+  {id:'g4a10', tag:'面積', q:'長方形の面積15m²、たて3m。よこは？', opts:['3m','4m','5m','6m'], a:2, why:'よこ=面積÷たて=15÷3=5m。'},
+  {id:'g4a11', tag:'面積', q:'1辺6cmの正方形の面積は？', opts:['12cm²','24cm²','36cm²','60cm²'], a:2, why:'6×6=36cm²。'},
+  {id:'g4a12', tag:'面積', q:'10ha は 何m²？', opts:['1000','10000','100000','1000000'], a:2, why:'1ha=10000m²、×10で100000m²。'},
+  // ===== 角度（追加）=====
+  {id:'g4d8', tag:'角度', q:'三角形の2つの角が 30°と 100°。残りは？', opts:['30°','40°','50°','60°'], a:2, why:'180−30−100=50°。'},
+  {id:'g4d9', tag:'角度', q:'直角の半分は？', opts:['30°','45°','60°','90°'], a:1, why:'90÷2=45°。'},
+  // ===== 小数（追加）=====
+  {id:'g4s7', tag:'小数', q:'2.5 × 3 = ？', opts:['5.5','6.5','7.5','12.5'], a:2, why:'2.5×3=7.5。'},
+  {id:'g4s8', tag:'小数', q:'3.6 ÷ 4 = ？', opts:['0.09','0.9','9','12'], a:1, why:'3.6÷4=0.9。'},
+  {id:'g4s9', tag:'小数', q:'0.7 + 0.5 = ？', opts:['0.12','1.0','1.2','12'], a:2, why:'0.1のたんいで7+5=12 → 1.2。'},
+  // ===== 分数（追加・帯分数仮分数）=====
+  {id:'g4f6', tag:'分数', q:'8/5 を帯分数に。', opts:['1と1/5','1と3/5','2と1/5','3と1/5'], a:1, why:'8÷5=1あまり3。1と3/5。'},
+  {id:'g4f7', tag:'分数', q:'1と4/7 を仮分数に。', opts:['5/7','11/7','7/4','5/4'], a:1, why:'1=7/7、+4/7=11/7。'},
+  {id:'g4f8', tag:'分数', q:'2と1/3 + 1/3 = ？', opts:['2と1/3','2と2/3','3','3と1/3'], a:1, why:'整数2はそのまま、分数 1/3+1/3=2/3 → 2と2/3。'},
+  // ===== 文章題（応用）=====
+  {id:'g4w1', tag:'文章題', q:'1ダース=12こ。3ダース は 何こ？', opts:['15こ','24こ','36こ','120こ'], a:2, why:'12×3=36こ。'},
+  {id:'g4w2', tag:'文章題', q:'お米10kg を 8人で分けると 1人？', opts:['1.0kg','1.25kg','1.5kg','1.8kg'], a:1, why:'10÷8=1.25kg。'},
+  {id:'g4w3', tag:'文章題', q:'1個180円のケーキ4個。1000円出したらおつりは？', opts:['180円','280円','320円','720円'], a:1, why:'180×4=720円。1000−720=280円。'},
+  {id:'g4w4', tag:'文章題', q:'150ページの本を 1日 25ページ。何日で?', opts:['5日','6日','7日','8日'], a:1, why:'150÷25=6日。'},
+  {id:'g4w5', tag:'文章題', q:'長方形の畑：たて 12m、よこ 25m。面積は？', opts:['37m²','75m²','120m²','300m²'], a:3, why:'12×25=300m²。'},
+  {id:'g4w6', tag:'文章題', q:'250kmの距離。1時間に50km進む車。何時間で着く？', opts:['3時間','4時間','5時間','6時間'], a:2, why:'250÷50=5時間。（速さの先取り）'},
+  // ===== 単位（追加）=====
+  {id:'g4u8', tag:'単位', q:'4.2L は 何mL？', opts:['42','420','4200','42000'], a:2, why:'1L=1000mL。4.2×1000=4200mL。'},
+  {id:'g4u9', tag:'単位', q:'3500m は 何km？', opts:['0.35km','3.5km','35km','350km'], a:1, why:'3500÷1000=3.5km。'},
+  {id:'g4u10', tag:'単位', q:'80分 は 何時間何分？', opts:['1時間20分','1時間30分','1時間50分','8時間'], a:0, why:'80−60=20。1時間20分。'},
+];
+// 小数 ×÷10/100 の即席ツール
+function _g4dec() {
+  const v = parseFloat(document.getElementById('dec-input').value) || 0;
+  const m = document.getElementById('dec-from').value;
+  const map = { x10: v*10, x100: v*100, d10: v/10, d100: v/100 };
+  document.getElementById('dec-result').textContent = map[m].toLocaleString('ja-JP', {maximumFractionDigits: 4});
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const di = document.getElementById('dec-input');
+  const df = document.getElementById('dec-from');
+  if (di) { di.addEventListener('input', _g4dec); df.addEventListener('change', _g4dec); _g4dec(); }
+});
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

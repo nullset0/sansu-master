@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1年生 - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>🌟 1年生の算数 🌟</h1>
+  <p>かず・たしざん・ひきざん・とけい</p>
+</header>
+
+<div class="status-bar">
+  <div class="status-card streak"><div class="icon">🔥</div><div class="num" id="streak-num">0</div><div class="label">れんぞく日すう</div></div>
+  <div class="status-card today"><div class="icon">📝</div><div class="num" id="today-num">0</div><div class="label">きょうの のこり</div></div>
+  <div class="status-card master"><div class="icon">🏆</div><div class="num" id="master-num">0</div><div class="label">マスターした問題</div></div>
+  <div class="status-card"><div class="icon">⭐</div><div class="num" id="total-correct">0</div><div class="label">ぜんぶの せいかい数</div></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn daily active" data-target="daily">🧠 きょうのおさらい</button>
+  <button class="nav-btn" data-target="numbers">🔢 かず</button>
+  <button class="nav-btn" data-target="addsub">➕ たしひき</button>
+  <button class="nav-btn" data-target="clock">⏰ とけい</button>
+  <button class="nav-btn" data-target="length">📏 ながさかさ</button>
+  <button class="nav-btn" data-target="shape">🔺 かたち</button>
+  <button class="nav-btn" data-target="mix">🔁 ぐるぐる</button>
+  <button class="nav-btn" data-target="progress">📊 きろく</button>
+  <button class="nav-btn" data-target="parent">👨‍👩‍👧 おうちの人へ</button>
+</nav>
+
+<section class="section active" id="daily">
+  <div class="card">
+    <h2>🧠 きょうのおさらい</h2>
+    <div class="tip tip-blue"><strong>のうかがくの きまり：</strong>1日 <span class="big-number">5もん</span> だけ。まいにち つづけよう！</div>
+    <div id="daily-area"></div>
+    <div style="margin-top:24px;">
+      <h3>📦 おぼえ箱</h3>
+      <div class="leitner" id="leitner-display"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="numbers">
+  <div class="card">
+    <h2>🔢 かず（10まで・100まで）</h2>
+
+    <div class="tip"><strong>💡 10は とくべつ！</strong>
+    ゆびが 10本 あるから、10ずつ かぞえると べんり 🤚🖐️</div>
+
+    <h3>10までの かず</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🍎</div><div class="label">1</div><div class="value">いち</div></div>
+      <div class="example"><div class="icon">🍎🍎🍎</div><div class="label">3</div><div class="value">さん</div></div>
+      <div class="example"><div class="icon">🍎🍎🍎🍎🍎</div><div class="label">5</div><div class="value">ご</div></div>
+      <div class="example"><div class="icon">🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎</div><div class="label">10</div><div class="value">じゅう</div></div>
+    </div>
+
+    <h3>10のともだち（あわせて10）</h3>
+    <div class="tip tip-blue">
+      <strong>このペアは ぜったい おぼえる！</strong><br>
+      • 1 と 9　• 2 と 8　• 3 と 7<br>
+      • 4 と 6　• 5 と 5<br>
+      これが できると くりあがりが ラクになる！
+    </div>
+
+    <h3>100までの かず（くらい）</h3>
+    <div class="tip tip-green">
+      <strong>「十のくらい」と「一のくらい」</strong><br>
+      れい：<strong>3 5</strong><br>
+      ↑十のくらい（10が3こ）<br>
+      ↑一のくらい（1が5こ）<br>
+      → さんじゅう ご = 35
+    </div>
+
+    <div class="examples">
+      <div class="example"><div class="icon">📦</div><div class="label">10が1つ</div><div class="value">10（じゅう）</div></div>
+      <div class="example"><div class="icon">📦📦</div><div class="label">10が2つ</div><div class="value">20（にじゅう）</div></div>
+      <div class="example"><div class="icon">📦📦📦📦📦</div><div class="label">10が5つ</div><div class="value">50（ごじゅう）</div></div>
+      <div class="example"><div class="icon">📦×10</div><div class="label">10が10こ</div><div class="value">100（ひゃく）</div></div>
+    </div>
+
+    <h3>かずの ならべかた</h3>
+    <div class="tip">
+      • 1ずつ ふえる：1, 2, 3, 4, 5...<br>
+      • 1ずつ へる：10, 9, 8, 7, 6...<br>
+      • 2ずつ ふえる：2, 4, 6, 8, 10（ぐうすう）<br>
+      • 2ずつ へる：10, 8, 6, 4, 2
+    </div>
+
+    <h3>大きい・小さい くらべる</h3>
+    <div class="tip tip-blue">
+      <strong>2けたのくらべ方：</strong> まず「十のくらい」を見る！<br>
+      れい：35 と 28 → 十のくらいが 3 vs 2 → 35 のほうが大きい<br>
+      れい：56 と 53 → 十のくらいが 同じ5 → 一のくらい 6 vs 3 → 56 のほうが大きい
+    </div>
+  </div>
+</section>
+
+<section class="section" id="addsub">
+  <div class="card">
+    <h2>➕ たしざん・➖ ひきざん</h2>
+
+    <div class="tip"><strong>💡 たしざん：「あわせる」「ふえる」</strong><br>
+    リンゴ2つに 3つ もらう → 2+3 = <strong>5</strong></div>
+    <div class="tip tip-blue"><strong>💡 ひきざん：「のこり」「ちがい」「とる」</strong><br>
+    リンゴ5つから 2つ 食べる → 5−2 = <strong>3</strong></div>
+
+    <h3>10までの たしざん</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🍎🍎+🍎🍎🍎</div><div class="label">2 + 3</div><div class="value">= 5</div></div>
+      <div class="example"><div class="icon">✋+✊</div><div class="label">5 + 0</div><div class="value">= 5</div></div>
+      <div class="example"><div class="icon">🤚+🤚</div><div class="label">5 + 5</div><div class="value">= 10</div></div>
+    </div>
+
+    <h3>くりあがりの たしざん（10こえる）</h3>
+    <div class="tip tip-green">
+      <strong>★ コツ：「10のともだち」を作る！</strong><br>
+      れい：<strong>8 + 5</strong><br>
+      ① 8の おともだちは 2 → 5 から 2 もらう<br>
+      ② 8 + 2 = 10、のこり 5−2 = 3<br>
+      ③ 10 + 3 = <strong>13</strong>
+    </div>
+    <div class="tip">
+      <strong>もう1つ：</strong><br>
+      <strong>9 + 4</strong> → 9に1あげる → 10 + 3 = <strong>13</strong><br>
+      <strong>7 + 6</strong> → 7に3あげる → 10 + 3 = <strong>13</strong>
+    </div>
+
+    <h3>くりさがりの ひきざん</h3>
+    <div class="tip tip-blue">
+      <strong>★ 10と のこりに 分ける！</strong><br>
+      れい：<strong>13 − 5</strong><br>
+      ① 13 を 10 と 3 に分ける<br>
+      ② 10 − 5 = 5（10のともだちで5）<br>
+      ③ 5 + 3 = <strong>8</strong>
+    </div>
+    <div class="tip">
+      <strong>もう1つ：</strong><br>
+      <strong>15 − 8</strong> → 10−8=2、+5で <strong>7</strong>
+    </div>
+
+    <h3>大きい数の たしざん・ひきざん</h3>
+    <div class="tip tip-green">
+      <strong>10のたばで 計算！</strong><br>
+      • 30 + 40 → 10のたばが 3+4=7 → <strong>70</strong><br>
+      • 50 − 20 → 5−2=3 → <strong>30</strong><br>
+      • 25 + 4 → 一のくらいだけ 5+4=9 → <strong>29</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="clock">
+  <div class="card">
+    <h2>⏰ とけいの よみかた</h2>
+
+    <div class="tip"><strong>💡 とけいの 2本の はり</strong><br>
+    <strong>みじかい はり = じ</strong>（なんじ）<br>
+    <strong>ながい はり = ふん</strong>（なんふん）</div>
+
+    <h3>ちょうどの とき（ぴったりの じ）</h3>
+    <div class="tip tip-blue">
+      <strong>ながい はりが「12」</strong>のとき = ちょうど！<br>
+      みじかい はりの 数字が「○じ」
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">🕒</div><div class="label">3じ</div><div class="value">みじかい3、ながい12</div></div>
+      <div class="example"><div class="icon">🕘</div><div class="label">9じ</div><div class="value">みじかい9、ながい12</div></div>
+      <div class="example"><div class="icon">🕛</div><div class="label">12じ</div><div class="value">どちらも 12</div></div>
+    </div>
+
+    <h3>はん（30ぷん）</h3>
+    <div class="tip">
+      <strong>ながい はりが「6」</strong>のとき = 30ぷん（はん）<br>
+      れい：3じ30ぷん = 3じはん
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">🕞</div><div class="label">3じはん</div><div class="value">3じ30ぷん</div></div>
+      <div class="example"><div class="icon">🕡</div><div class="label">6じはん</div><div class="value">6じ30ぷん</div></div>
+    </div>
+
+    <h3>5ふんずつ よむ</h3>
+    <div class="tip tip-green">
+      <strong>ながい はりが 数字を さしたら、× 5！</strong><br>
+      • 「1」→ 5ふん　• 「2」→ 10ぷん　• 「3」→ 15ふん<br>
+      • 「6」→ 30ぷん　• 「9」→ 45ふん　• 「12」→ 0ふん（ちょうど）
+    </div>
+
+    <h3>1じかん = 60ぷん</h3>
+    <div class="tip tip-blue">
+      ながい はりが <strong>1まわり</strong> したら 1じかん！<br>
+      とけいは <strong>60</strong> でくり上がる（100じゃない）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="length">
+  <div class="card">
+    <h2>📏 ながさ・かさ くらべ</h2>
+
+    <div class="tip"><strong>💡 1年生では「数字なし」で くらべる！</strong>
+    ながいほう・たかいほう・おおいほう を 目で見て くらべる。</div>
+
+    <h3>ながさの くらべかた</h3>
+    <div class="tip tip-blue">
+      <strong>① 直接くらべる</strong>：はしを そろえて おく<br>
+      <strong>② ますめ・ブロックで くらべる</strong>：いくつぶん？<br>
+      <strong>③ 紙テープを使う</strong>：のばして 切って くらべる
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">✏️</div><div class="label">えんぴつ</div><div class="value">ますめ 5こぶん</div></div>
+      <div class="example"><div class="icon">🖍️</div><div class="label">クレヨン</div><div class="value">ますめ 4こぶん</div></div>
+      <div class="example"><div class="icon">📏</div><div class="label">えんぴつのほうが</div><div class="value">ながい！</div></div>
+    </div>
+
+    <h3>かさの くらべかた</h3>
+    <div class="tip tip-green">
+      <strong>「いくつぶん」入る？で くらべる</strong><br>
+      れい：コップ何ばいぶん？ おなじカップで何回？<br>
+      ▸ おおい = かさが多い<br>
+      ▸ すくない = かさが少ない
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">🥛</div><div class="label">ペットボトル</div><div class="value">コップ5はい</div></div>
+      <div class="example"><div class="icon">🥤</div><div class="label">ジュース缶</div><div class="value">コップ2はい</div></div>
+      <div class="example"><div class="icon">⚖️</div><div class="label">ペットボトルのほうが</div><div class="value">多い！</div></div>
+    </div>
+
+    <h3>たかさ・おもさ も同じ考え</h3>
+    <div class="tip">
+      <strong>たかさ</strong>：上にどれくらい とどく？<br>
+      <strong>おもさ</strong>：てんびんで かたむくほうが おもい
+    </div>
+  </div>
+</section>
+
+<section class="section" id="shape">
+  <div class="card">
+    <h2>🔺 かたち</h2>
+
+    <div class="tip"><strong>💡 みのまわりの かたち、知ってる？</strong>
+    丸いもの・四角いもの・三角のもの... まちには かたちが いっぱい！</div>
+
+    <h3>たいらな かたち（平面）</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">⭕</div><div class="label">まる</div><div class="value">えんぴつ／時計の文字盤</div></div>
+      <div class="example"><div class="icon">🔺</div><div class="label">さんかく</div><div class="value">おにぎり／ピザ1切れ</div></div>
+      <div class="example"><div class="icon">⬜</div><div class="label">しかく（正方形）</div><div class="value">おりがみ／ハンカチ</div></div>
+      <div class="example"><div class="icon">▭</div><div class="label">ながしかく（長方形）</div><div class="value">本／ノート／ドア</div></div>
+    </div>
+
+    <h3>立体（3Dの かたち）</h3>
+    <div class="tip tip-blue">
+      <strong>立体は「ふくらんでる」かたち！</strong>
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">⚽</div><div class="label">球（きゅう）</div><div class="value">ボール／みかん</div></div>
+      <div class="example"><div class="icon">🎲</div><div class="label">立方体</div><div class="value">サイコロ／6面とも正方形</div></div>
+      <div class="example"><div class="icon">📦</div><div class="label">直方体</div><div class="value">本／ティッシュ箱</div></div>
+      <div class="example"><div class="icon">🥫</div><div class="label">円柱</div><div class="value">かんジュース／ろうそく</div></div>
+    </div>
+
+    <h3>かたち あそびの コツ</h3>
+    <div class="tip tip-green">
+      ▸ おなじ かたちを集めて 何があるか みる<br>
+      ▸ 同じ かたちでも 「大きさが違う」「色が違う」<br>
+      ▸ つみき（ブロック）で 立体を つくる
+    </div>
+  </div>
+</section>
+
+<section class="section" id="mix">
+  <div class="card">
+    <h2>🔁 ぐるぐる（3つ以上の計算）</h2>
+
+    <div class="tip"><strong>💡 ぐるぐる計算とは？</strong>
+    3つ以上の数をたしたり ひいたり する計算。<strong>左から順に</strong>計算しよう！</div>
+
+    <h3>3つの数の たしざん</h3>
+    <div class="tip tip-blue">
+      <strong>左から 順に：</strong><br>
+      れい：<strong>3 + 4 + 2</strong><br>
+      ① 3 + 4 = 7<br>
+      ② 7 + 2 = <strong>9</strong>
+    </div>
+    <div class="tip tip-green">
+      <strong>★ コツ：「10のともだち」を 先に！</strong><br>
+      れい：<strong>2 + 8 + 5</strong><br>
+      ① 2 + 8 = 10（ともだちペア！）<br>
+      ② 10 + 5 = <strong>15</strong><br>
+      順番をかえても答えは同じ！
+    </div>
+
+    <h3>3つの数の ひきざん</h3>
+    <div class="tip">
+      れい：<strong>10 − 1 − 1 − 1</strong><br>
+      左から1ずつ：10→9→8→7 → 答え <strong>7</strong>
+    </div>
+
+    <h3>たし算と ひき算が まざる</h3>
+    <div class="tip tip-blue">
+      これも <strong>左から 順に</strong>！<br>
+      れい：<strong>10 + 5 − 3</strong><br>
+      ① 10+5=15<br>
+      ② 15−3=<strong>12</strong>
+    </div>
+
+    <h3>同じ数を なんかい も たす（かけ算の準備）</h3>
+    <div class="tip tip-green">
+      <strong>5 + 5 + 5 = 15</strong>（5を3回 = 5×3、2年で習う！）<br>
+      <strong>2 + 2 + 2 + 2 = 8</strong>（2を4回 = 2×4）
+    </div>
+  </div>
+</section>
+
+<section class="section" id="progress">
+  <div class="card">
+    <h2>📊 きろく</h2>
+    <h3>たんいごとの じょうたつ</h3>
+    <div class="mastery" id="mastery-display"></div>
+    <h3>きょうの しんちょく</h3>
+    <div class="progress-bar"><div class="progress-bar-fill" id="today-progress"></div></div>
+    <p style="text-align:center;color:#6b7280;font-size:0.9em;" id="today-progress-text"></p>
+    <h3>れんぞく日すう</h3>
+    <div class="celebration"><div class="big">🔥</div><h3 id="streak-display-num">0日</h3><p id="streak-display-msg"></p></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="reset-btn" style="padding:8px 16px;font-size:0.85em;background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;">きろくを リセット</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="parent">
+  <div class="card">
+    <h2>👨‍👩‍👧 おうちの人へ</h2>
+    <div class="parent-section">
+      <h3>🧠 1年生の学習ポイント</h3>
+      <ul>
+        <li>「数」の概念を体で覚える時期。指やおはじきで数えてOK。</li>
+        <li>「10のともだち」(1+9, 2+8...)が暗算の土台。これを体に染み込ませると2年以降が楽。</li>
+        <li>くり上がり/くり下がりは「10をつくる→残りを足す」が王道。</li>
+        <li>時計は「短い針=時、長い針=分」。アナログ時計を家に置くと自然に覚える。</li>
+      </ul>
+    </div>
+    <div class="parent-section">
+      <h3>📅 おすすめの使い方</h3>
+      <ul>
+        <li>毎日5分。寝る前30分前後がベスト（睡眠中に記憶が定着）。</li>
+        <li>間違えた時の「なぜ」を一緒に音読すると定着率UP。</li>
+        <li>1日5問で十分。やりすぎると逆効果。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer><p>👨‍👩‍👧 まいにち5もん つづけよう！</p></footer>
+
+</div>
+
+<script>
+window.GRADE_KEY = 'g1';
+window.TAGS = ['かず', 'たしざん', 'ひきざん', 'とけい', 'ながさかさ', 'かたち', 'ぐるぐる'];
+window.QUESTIONS = [
+  // かず
+  {id:'g1n1', tag:'かず', q:'🍎🍎🍎🍎🍎🍎🍎 は なんこ？', opts:['5こ','6こ','7こ','8こ'], a:2, why:'1,2,3,4,5,6,7 で 7こ。'},
+  {id:'g1n2', tag:'かず', q:'10と3で いくつ？', opts:['13','30','103','310'], a:0, why:'10のあとに3を つけて 13。十のくらいが1、一のくらいが3。'},
+  {id:'g1n3', tag:'かず', q:'30は 10が いくつ？', opts:['1つ','2つ','3つ','30こ'], a:2, why:'10が3つで30。10、20、30と かぞえる。'},
+  {id:'g1n4', tag:'かず', q:'48の 一のくらいは？', opts:['4','8','40','48'], a:1, why:'右がわが「一のくらい」。48の右は8。'},
+  {id:'g1n5', tag:'かず', q:'100は 10が いくつ？', opts:['1つ','10こ','100こ','5つ'], a:1, why:'10が10こで100。10、20、30...90、100。'},
+  {id:'g1n6', tag:'かず', q:'70の つぎの かずは？', opts:['60','71','80','100'], a:1, why:'70 → 71 → 72 と 1ずつ ふえる。'},
+  // たしざん
+  {id:'g1a1', tag:'たしざん', q:'3 + 4 = ？', opts:['6','7','8','12'], a:1, why:'3に4を たすと 7。指で かぞえても OK！'},
+  {id:'g1a2', tag:'たしざん', q:'5 + 5 = ？', opts:['5','10','15','25'], a:1, why:'5と5は 10のともだち。あわせて10！'},
+  {id:'g1a3', tag:'たしざん', q:'8 + 5 = ？', opts:['12','13','14','15'], a:1, why:'8に2を足して10、のこり3を たして 13。10のともだちを つくろう！'},
+  {id:'g1a4', tag:'たしざん', q:'7 + 6 = ？', opts:['12','13','14','15'], a:1, why:'7に3を足して10、のこり3を たして 13。'},
+  {id:'g1a5', tag:'たしざん', q:'9 + 4 = ？', opts:['12','13','14','15'], a:1, why:'9に1を足して10、のこり3を たして 13。'},
+  {id:'g1a6', tag:'たしざん', q:'20 + 30 = ？', opts:['40','50','60','23'], a:1, why:'10のたばが2つと3つで5つ。だから 50。'},
+  // ひきざん
+  {id:'g1s1', tag:'ひきざん', q:'8 − 3 = ？', opts:['4','5','6','11'], a:1, why:'8から3を ひくと 5。'},
+  {id:'g1s2', tag:'ひきざん', q:'10 − 4 = ？', opts:['4','5','6','7'], a:2, why:'10から4を ひくと 6。10のともだちで 4と6！'},
+  {id:'g1s3', tag:'ひきざん', q:'13 − 5 = ？', opts:['7','8','9','18'], a:1, why:'13を10と3に分ける。10−5=5、それに3を足して 8。'},
+  {id:'g1s4', tag:'ひきざん', q:'15 − 8 = ？', opts:['6','7','8','9'], a:1, why:'15を10と5に分ける。10−8=2、それに5を足して 7。'},
+  {id:'g1s5', tag:'ひきざん', q:'12 − 7 = ？', opts:['4','5','6','19'], a:1, why:'12を10と2に分ける。10−7=3、それに2を足して 5。'},
+  // とけい
+  {id:'g1c1', tag:'とけい', q:'みじかい はりは なにを あらわす？', opts:['ふん','じ','びょう','ひ'], a:1, why:'みじかい はりは「じ」。3にあれば3じ。'},
+  {id:'g1c2', tag:'とけい', q:'ながい はりが「12」、みじかいが「5」。なんじ？', opts:['5じ','12じ','5じ12ふん','12じ5ふん'], a:0, why:'ながいはりが12のときは「ちょうど」。だから5じ。'},
+  {id:'g1c3', tag:'とけい', q:'ながい はりが「6」のとき、なんふん？', opts:['6ふん','30ぷん','60ぷん','12ふん'], a:1, why:'ながいはりは1まわりで60ぷん。6は半分のとこなので 30ぷん。'},
+  {id:'g1c4', tag:'とけい', q:'7じはん は なんじ なんふん？', opts:['7じ15ふん','7じ30ぷん','7じ60ぷん','8じ'], a:1, why:'「はん」は 半分。だから30ぷん。'},
+  // ながさかさ
+  {id:'g1l1', tag:'ながさかさ', q:'えんぴつと けしごむ、どっちが ながい？', opts:['えんぴつ','けしごむ','おなじ','わからない'], a:0, why:'たいてい えんぴつのほうが ながい。みじかい線では くらべよう。'},
+  {id:'g1l2', tag:'ながさかさ', q:'コップ2はい と コップ3ばい、どっちが 多い？', opts:['コップ2はい','コップ3ばい','おなじ','わからない'], a:1, why:'コップが多いほうが かさが 多い。'},
+  {id:'g1l3', tag:'ながさかさ', q:'えんぴつ7本ぶん と 8本ぶん、どっちが ながい？', opts:['7本ぶん','8本ぶん','おなじ','わからない'], a:1, why:'本数が多いほうが ながい。8本ぶんのほう。'},
+  // かず（追加）
+  {id:'g1n7', tag:'かず', q:'56は 十のくらい いくつ？', opts:['5','6','56','十'], a:0, why:'左がわが「十のくらい」。56の左は5。'},
+  {id:'g1n8', tag:'かず', q:'69の つぎは？', opts:['60','70','79','100'], a:1, why:'69の つぎは70。一のくらいの9が0にもどって 十のくらいが1ふえる。'},
+  {id:'g1n9', tag:'かず', q:'10より 5おおきい かずは？', opts:['5','10','15','50'], a:2, why:'10+5=15。'},
+  {id:'g1n10', tag:'かず', q:'20より 3小さい かずは？', opts:['17','18','19','23'], a:0, why:'20−3=17。'},
+  {id:'g1n11', tag:'かず', q:'10が4つで いくつ？', opts:['4','14','40','400'], a:2, why:'10、20、30、40。10が4つで40。'},
+  // たしざん（追加）
+  {id:'g1a7', tag:'たしざん', q:'4 + 6 = ？', opts:['8','9','10','11'], a:2, why:'4と6で10。10のともだち！'},
+  {id:'g1a8', tag:'たしざん', q:'7 + 8 = ？', opts:['13','14','15','16'], a:2, why:'7+8=15。7に3を足して10、5をたして 15。'},
+  {id:'g1a9', tag:'たしざん', q:'6 + 9 = ？', opts:['13','14','15','16'], a:2, why:'6+9=15。9に1を足して10、5をたして 15。'},
+  {id:'g1a10', tag:'たしざん', q:'30 + 40 = ？', opts:['7','34','70','340'], a:2, why:'10のたばで3+4=7、だから 70。'},
+  {id:'g1a11', tag:'たしざん', q:'25 + 30 = ？', opts:['28','55','58','75'], a:1, why:'十のくらい 2+3=5、一のくらい 5+0=5。だから55。'},
+  // ひきざん（追加）
+  {id:'g1s6', tag:'ひきざん', q:'17 − 9 = ？', opts:['7','8','9','10'], a:1, why:'17を10と7に分ける。10−9=1、それに7をたして 8。'},
+  {id:'g1s7', tag:'ひきざん', q:'14 − 6 = ？', opts:['7','8','9','10'], a:1, why:'14を10と4に分ける。10−6=4、それに4をたして 8。'},
+  {id:'g1s8', tag:'ひきざん', q:'50 − 20 = ？', opts:['20','25','30','70'], a:2, why:'10のたばで 5−2=3、だから30。'},
+  {id:'g1s9', tag:'ひきざん', q:'11 − 5 = ？', opts:['4','5','6','7'], a:2, why:'11を10と1に分ける。10−5=5、それに1をたして 6。'},
+  // とけい（追加）
+  {id:'g1c5', tag:'とけい', q:'みじかい はりが「6」と「7」の間、ながい はりが「12」のとき？', opts:['6じ','7じ','6じはん','12じ'], a:0, why:'みじかい はりは「6」をすぎたばかり。ながい はりが12なら ちょうど6じ。'},
+  {id:'g1c6', tag:'とけい', q:'12じはん は？', opts:['12じ0ぷん','12じ12ふん','12じ30ぷん','12じ60ぷん'], a:2, why:'「はん」は半分=30ぷん。'},
+  // ===== さらに追加（合計100問へ）=====
+  // かず（10こうせい・分解・順序）
+  {id:'g1n12', tag:'かず', q:'10は 7と なに？', opts:['1','2','3','13'], a:2, why:'7+3=10。10のともだちで7と3。'},
+  {id:'g1n13', tag:'かず', q:'10は 4と なに？', opts:['4','5','6','14'], a:2, why:'4+6=10。'},
+  {id:'g1n14', tag:'かず', q:'8は 3と なに？', opts:['3','4','5','11'], a:2, why:'3+5=8。'},
+  {id:'g1n15', tag:'かず', q:'45の 十のくらい は？', opts:['4','5','40','45'], a:0, why:'45の左が「十のくらい」。4。'},
+  {id:'g1n16', tag:'かず', q:'90の つぎの つぎは？', opts:['91','92','100','99'], a:1, why:'90→91→92。'},
+  {id:'g1n17', tag:'かず', q:'いちばん 大きい かずは？', opts:['37','73','27','17'], a:1, why:'十のくらいで くらべる。7が一番大きい→73。'},
+  {id:'g1n18', tag:'かず', q:'いちばん 小さい かずは？', opts:['52','45','29','38'], a:2, why:'十のくらい：5,4,2,3 → 一番小さいのは2 → 29。'},
+  {id:'g1n19', tag:'かず', q:'10より 1小さい かずは？', opts:['8','9','11','19'], a:1, why:'10−1=9。'},
+  {id:'g1n20', tag:'かず', q:'30と4で いくつ？', opts:['7','34','304','340'], a:1, why:'30+4=34。'},
+  {id:'g1n21', tag:'かず', q:'2,4,6,つぎは？', opts:['7','8','10','5'], a:1, why:'2ずつ ふえている。6+2=8。'},
+  // たしざん（くり上がり徹底）
+  {id:'g1a12', tag:'たしざん', q:'8 + 6 = ？', opts:['12','13','14','15'], a:2, why:'8+2で10、のこり4で 14。'},
+  {id:'g1a13', tag:'たしざん', q:'6 + 5 = ？', opts:['10','11','12','13'], a:1, why:'6+4で10、のこり1で 11。'},
+  {id:'g1a14', tag:'たしざん', q:'9 + 5 = ？', opts:['12','13','14','15'], a:2, why:'9+1で10、のこり4で 14。'},
+  {id:'g1a15', tag:'たしざん', q:'9 + 9 = ？', opts:['16','17','18','19'], a:2, why:'9+1で10、のこり8で 18。'},
+  {id:'g1a16', tag:'たしざん', q:'8 + 7 = ？', opts:['13','14','15','16'], a:2, why:'8+2で10、のこり5で 15。'},
+  {id:'g1a17', tag:'たしざん', q:'7 + 4 = ？', opts:['10','11','12','13'], a:1, why:'7+3で10、のこり1で 11。'},
+  {id:'g1a18', tag:'たしざん', q:'40 + 50 = ？', opts:['9','45','90','450'], a:2, why:'10のたばで 4+5=9、だから 90。'},
+  {id:'g1a19', tag:'たしざん', q:'15 + 4 = ？', opts:['11','19','51','54'], a:1, why:'一のくらい 5+4=9、十は1のまま → 19。'},
+  {id:'g1a20', tag:'たしざん', q:'34 + 5 = ？', opts:['9','39','84','85'], a:1, why:'一のくらい 4+5=9、十は3のまま → 39。'},
+  // たしざん 文章題
+  {id:'g1a21', tag:'たしざん', q:'りんごが 3こ。みかんが 4こ。あわせて なんこ？', opts:['3こ','4こ','7こ','12こ'], a:2, why:'3+4=7こ。「あわせて」は たしざん。'},
+  {id:'g1a22', tag:'たしざん', q:'バスに 6人 のっています。3人 のってきました。いま なん人？', opts:['3人','9人','18人','12人'], a:1, why:'6+3=9人。「ふえる」は たしざん。'},
+  // ひきざん（くり下がり徹底）
+  {id:'g1s10', tag:'ひきざん', q:'13 − 4 = ？', opts:['7','8','9','17'], a:2, why:'13を10と3に。10−4=6、+3で 9。'},
+  {id:'g1s11', tag:'ひきざん', q:'16 − 9 = ？', opts:['5','6','7','25'], a:2, why:'16を10と6に。10−9=1、+6で 7。'},
+  {id:'g1s12', tag:'ひきざん', q:'14 − 7 = ？', opts:['6','7','8','21'], a:1, why:'14を10と4に。10−7=3、+4で 7。'},
+  {id:'g1s13', tag:'ひきざん', q:'18 − 9 = ？', opts:['8','9','10','27'], a:1, why:'18を10と8に。10−9=1、+8で 9。'},
+  {id:'g1s14', tag:'ひきざん', q:'11 − 4 = ？', opts:['6','7','8','15'], a:1, why:'11を10と1に。10−4=6、+1で 7。'},
+  {id:'g1s15', tag:'ひきざん', q:'70 − 30 = ？', opts:['4','40','50','100'], a:1, why:'10のたばで 7−3=4、だから 40。'},
+  {id:'g1s16', tag:'ひきざん', q:'27 − 5 = ？', opts:['12','22','32','25'], a:1, why:'一のくらい 7−5=2、十は2のまま → 22。'},
+  // ひきざん 文章題
+  {id:'g1s17', tag:'ひきざん', q:'あめが 12こ あります。5こ たべました。のこりは？', opts:['5こ','7こ','12こ','17こ'], a:1, why:'12−5=7こ。「たべた」は ひきざん。'},
+  {id:'g1s18', tag:'ひきざん', q:'クラスに 9人。男の子は 4人。女の子は なん人？', opts:['4人','5人','9人','13人'], a:1, why:'9−4=5人。「ぜんたい−男の子」で女の子。'},
+  // とけい（追加）
+  {id:'g1c7', tag:'とけい', q:'ながい はりが「3」のとき なんふん？', opts:['3ぷん','15ふん','30ぷん','45ふん'], a:1, why:'1めもり=5ふん。3×5=15ふん。'},
+  {id:'g1c8', tag:'とけい', q:'ながい はりが「9」のとき なんふん？', opts:['9ふん','15ふん','30ぷん','45ふん'], a:3, why:'1めもり=5ふん。9×5=45ふん。'},
+  {id:'g1c9', tag:'とけい', q:'5じ から 6じ までは なんじかん？', opts:['1じかん','5じかん','6じかん','60じかん'], a:0, why:'5じ→6じ で1じかん。'},
+  {id:'g1c10', tag:'とけい', q:'2じ30ぷん の 30ぷん あとは？', opts:['2じ60ぷん','3じ','3じ30ぷん','2じ'], a:1, why:'30+30=60ぷん=1じかん。だから 3じ。'},
+  // ながさかさ（追加）
+  {id:'g1l4', tag:'ながさかさ', q:'けしごむが ますめ 3こぶん、のりが ますめ 5こぶん。どっちが ながい？', opts:['けしごむ','のり','おなじ','わからない'], a:1, why:'ますめが多いほうが ながい。のり。'},
+  {id:'g1l5', tag:'ながさかさ', q:'コップ7はいと 4はい、ちがいは？', opts:['1ぱい','2はい','3ばい','4はい'], a:2, why:'7−4=3ばい。'},
+  // 図形（新タグ）
+  {id:'g1sh1', tag:'かたち', q:'まる の おさらと さんかく の おにぎり、まるは いくつ？(おさらが3つ、おにぎりが4つ)', opts:['1つ','2つ','3つ','4つ'], a:2, why:'おさらが「まる」、3つある。'},
+  {id:'g1sh2', tag:'かたち', q:'サイコロは どんな かたち？', opts:['まる','さんかく','しかく（立方体）','ながい'], a:2, why:'サイコロは6面の しかく(立方体)。'},
+  {id:'g1sh3', tag:'かたち', q:'ボールは どんな かたち？', opts:['まる（球）','さんかく','しかく','ぼう'], a:0, why:'ボールは「球」（まるい立体）。'},
+  {id:'g1sh4', tag:'かたち', q:'カレンダーの かみは どんな かたち？', opts:['まる','さんかく','しかく','まる三角'], a:2, why:'カレンダーは ながしかく（長方形）。'},
+  // ぐるっとさんすう（応用・パターン）
+  {id:'g1m1', tag:'ぐるぐる', q:'5+5+5 は？', opts:['10','15','20','55'], a:1, why:'5を3こ。5+5=10、+5で15。'},
+  {id:'g1m2', tag:'ぐるぐる', q:'10−1−1−1 は？', opts:['6','7','8','11'], a:1, why:'10から1ずつ3回ひく。10−3=7。'},
+  {id:'g1m3', tag:'ぐるぐる', q:'3+4+2 は？', opts:['8','9','10','12'], a:1, why:'3+4=7、+2で 9。'},
+  {id:'g1m4', tag:'ぐるぐる', q:'10より 5おおきく、3小さい かずは？', opts:['7','8','12','15'], a:2, why:'10+5=15、−3で 12。'},
+  {id:'g1m5', tag:'ぐるぐる', q:'2+8+5 は？', opts:['12','13','14','15'], a:3, why:'2+8=10、+5で 15。10のともだちを先に！'},
+  // 増量2:数の感覚
+  {id:'g1n22', tag:'かず', q:'13 と 30 では どっちが 大きい？', opts:['13','30','おなじ','わからない'], a:1, why:'十のくらいで くらべる。3>1だから30が大きい。'},
+  {id:'g1n23', tag:'かず', q:'81 と 18 では どっちが 大きい？', opts:['81','18','おなじ','わからない'], a:0, why:'十のくらい 8>1なので 81のほうが 大きい。'},
+  {id:'g1n24', tag:'かず', q:'56 の あとに くる かずは？', opts:['55','57','60','66'], a:1, why:'56の つぎは 57。'},
+  // 文章題ミックス
+  {id:'g1m6', tag:'ぐるぐる', q:'ねこが 4ひき と いぬが 3びき。あわせて なんびき？', opts:['1ぴき','7ひき','12ひき','43ひき'], a:1, why:'4+3=7ひき。'},
+  {id:'g1m7', tag:'ぐるぐる', q:'おかしが 15こ。9こ たべると のこりは？', opts:['4こ','5こ','6こ','24こ'], a:2, why:'15−9=6こ。'},
+];
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

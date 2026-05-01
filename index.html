@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算数マスター 〜小学校ぜんがくねん〜</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🌟 算数マスター 🌟</h1>
+  <p>1日5もんで、算数をペラペラに！</p>
+  <div id="header-mascot" style="margin-top:8px;"></div>
+  <div id="hero-features" class="hero-features">
+    <span>🧠 のうかがく</span>
+    <span>🎵 音声よみあげ</span>
+    <span>📝 手書きメモ</span>
+    <span>🤖 AI先生</span>
+  </div>
+</header>
+
+<div class="card">
+  <h2 style="text-align:center;font-size:1.3em;color:#374151;margin-bottom:8px;">🎯 学年を えらぼう</h2>
+  <p style="text-align:center;color:#6b7280;font-size:0.9em;margin-bottom:16px;">下の学年カードを タップ → 5問にちょうせん！</p>
+  <div class="grade-grid" id="grade-grid">
+    <a href="1年.html" class="grade-card g1" data-grade="g1">
+      <div class="grade-num">1年</div>
+      <div class="grade-label">しょうがく いちねん</div>
+      <div class="grade-topics">かず・たしざん・ひきざん・とけい・かたち</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+    <a href="2年.html" class="grade-card g2" data-grade="g2">
+      <div class="grade-num">2年</div>
+      <div class="grade-label">しょうがく にねん</div>
+      <div class="grade-topics">九九・ひっさん・長さ・かさ・時刻と時間</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+    <a href="3年.html" class="grade-card g3" data-grade="g3">
+      <div class="grade-num">3年</div>
+      <div class="grade-label">小学 さんねん</div>
+      <div class="grade-topics">わり算・小数・分数入門・重さ・円</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+    <a href="4年.html" class="grade-card g4" data-grade="g4">
+      <div class="grade-num">4年</div>
+      <div class="grade-label">小学 よねん</div>
+      <div class="grade-topics">大きい数・概数・面積・角度・小数分数</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+    <a href="5年.html" class="grade-card g5" data-grade="g5">
+      <div class="grade-num">5年</div>
+      <div class="grade-label">小学 ごねん</div>
+      <div class="grade-topics">倍数約数・割合・速さ・体積・分数</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+    <a href="6年.html" class="grade-card g6" data-grade="g6">
+      <div class="grade-num">6年</div>
+      <div class="grade-label">小学 ろくねん</div>
+      <div class="grade-topics">分数のかけ割り・比・円の面積・場合の数</div>
+      <div class="grade-stats">
+        <span>🔥 <strong data-stat="streak">0</strong>日</span>
+        <span>🏆 <strong data-stat="master">0</strong>こ</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <h2>🧠 この算数アプリの ひみつ</h2>
+  <div class="tip tip-blue">
+    <strong>のうかがくの ちから：</strong><br>
+    「1日5もんだけ、まいにち つづける」ほうが、まとめて1時間やるよりも 5ばい おぼえやすい！
+  </div>
+  <div class="tip">
+    <strong>4つの しくみ：</strong><br>
+    🔄 <strong>くりかえし</strong> — 1日後・3日後・1週間後…と じょじょに 間をあけて 出題<br>
+    💡 <strong>「なぜ」</strong> — まちがえた時に かならず りゆうを 教えてくれる<br>
+    🔥 <strong>れんぞく日すう</strong> — まいにちやるとドキドキするから つづく<br>
+    🏆 <strong>マスター箱</strong> — おぼえた もんだいが 見える！
+  </div>
+  <div class="tip tip-green">
+    <strong>👨‍👩‍👧 おうちの人へ：</strong>
+    各学年のページにある「おうちの人へ」タブに、脳科学ベースの設計と使い方ガイドがあります。<br>
+    <strong>ベストタイミングは寝る前30分</strong>（睡眠中に記憶が定着）。1日5問で十分です。
+  </div>
+</div>
+
+<div class="card" id="install-card" style="display:none;">
+  <h2>📱 ホーム画面に追加</h2>
+  <p style="color:#6b7280;margin-bottom:12px;">アプリのように起動できる！オフラインでも動くよ。</p>
+  <div id="install-ios" style="display:none;">
+    <div class="tip tip-blue">
+      <strong>iPhone / iPadの場合：</strong><br>
+      ① Safari で このページを開く<br>
+      ② 下の <strong>共有ボタン 􀈂</strong> を タップ<br>
+      ③ 「<strong>ホーム画面に追加</strong>」を 選ぶ
+    </div>
+  </div>
+  <div id="install-android" style="display:none;">
+    <button id="install-btn" class="big-btn" style="max-width:340px;margin:8px auto;">
+      📲 アプリを インストール
+    </button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📤 友達・家族に シェア</h2>
+  <p style="color:#6b7280;margin-bottom:12px;">「いっしょに 算数やろう！」 LINEや メールで 送れるよ。</p>
+  <button id="share-btn" class="big-btn" style="max-width:340px;margin:8px auto;background:linear-gradient(135deg,#10b981,#3b82f6);">
+    🔗 リンクを コピー / シェア
+  </button>
+  <p id="share-msg" style="text-align:center;color:#10b981;font-weight:bold;display:none;margin-top:8px;">✅ コピーしました！</p>
+</div>
+
+<footer>
+  <p>👨‍👩‍👧 おうちの人と いっしょに 毎日5もん つづけよう！</p>
+</footer>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+// ヘッダーにマスコット
+document.getElementById('header-mascot').innerHTML = `
+  <div class="mascot-row">
+    <div class="speech-bubble">こんにちは！ピカりんだよ✨ なでてくれる？</div>
+    ${mascotSVG('happy', 130, 'idle')}
+  </div>
+`;
+// 各学年カードに進捗を表示
+document.querySelectorAll('.grade-card').forEach(card => {
+  const g = card.dataset.grade;
+  const p = window.SansuIndex.getGradeProgress(g);
+  card.querySelector('[data-stat="streak"]').textContent = p.streak;
+  card.querySelector('[data-stat="master"]').textContent = p.master;
+});
+
+// ===== シェア機能 =====
+document.getElementById('share-btn').addEventListener('click', async () => {
+  const url = location.href.replace(/index\.html$/, '');
+  const text = '🌟 算数マスター — 1日5問、脳科学ベースの算数アプリ。';
+  const msg = document.getElementById('share-msg');
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '算数マスター', text, url });
+    } catch(e) { /* キャンセルOK */ }
+  } else if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(url);
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 2500);
+    } catch(e) {
+      prompt('このリンクを コピーしてください:', url);
+    }
+  } else {
+    prompt('このリンクを コピーしてください:', url);
+  }
+});
+
+// ===== PWA インストール案内 =====
+const installCard = document.getElementById('install-card');
+const installAndroid = document.getElementById('install-android');
+const installIos = document.getElementById('install-ios');
+const installBtn = document.getElementById('install-btn');
+
+// すでにスタンドアロンならカード自体を 表示しない
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+if (!isStandalone) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    installCard.style.display = 'block';
+    installIos.style.display = 'block';
+  } else {
+    // Android Chromeなどは beforeinstallprompt を待つ
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installCard.style.display = 'block';
+      installAndroid.style.display = 'block';
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installCard.style.display = 'none';
+    });
+  }
+}
+</script>
+</body>
+</html>

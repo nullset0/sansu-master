@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3年生 - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>🌟 3年生の算数 🌟</h1>
+  <p>わり算・小数・分数入門・重さ・円</p>
+</header>
+
+<div class="status-bar">
+  <div class="status-card streak"><div class="icon">🔥</div><div class="num" id="streak-num">0</div><div class="label">れんぞく日すう</div></div>
+  <div class="status-card today"><div class="icon">📝</div><div class="num" id="today-num">0</div><div class="label">きょうの のこり</div></div>
+  <div class="status-card master"><div class="icon">🏆</div><div class="num" id="master-num">0</div><div class="label">マスターした問題</div></div>
+  <div class="status-card"><div class="icon">⭐</div><div class="num" id="total-correct">0</div><div class="label">ぜんぶの せいかい数</div></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn daily active" data-target="daily">🧠 きょうのおさらい</button>
+  <button class="nav-btn" data-target="bignum">🔢 大きい数</button>
+  <button class="nav-btn" data-target="div">➗ わり算</button>
+  <button class="nav-btn" data-target="decimal">🔟 小数</button>
+  <button class="nav-btn" data-target="fraction">½ 分数</button>
+  <button class="nav-btn" data-target="weight">⚖️ 重さ</button>
+  <button class="nav-btn" data-target="time">⏰ 時間</button>
+  <button class="nav-btn" data-target="circle">⭕ 円・球</button>
+  <button class="nav-btn" data-target="graph">📊 表とグラフ</button>
+  <button class="nav-btn" data-target="word">📝 文章題</button>
+  <button class="nav-btn" data-target="progress">📊 きろく</button>
+  <button class="nav-btn" data-target="parent">👨‍👩‍👧 おうちの人へ</button>
+</nav>
+
+<section class="section active" id="daily">
+  <div class="card">
+    <h2>🧠 きょうのおさらい</h2>
+    <div class="tip tip-blue"><strong>のうかがくの きまり：</strong>1日 <span class="big-number">5もん</span>。新しい単元が増える3年は、毎日の積み重ねが効く！</div>
+    <div id="daily-area"></div>
+    <div style="margin-top:24px;"><h3>📦 おぼえ箱</h3><div class="leitner" id="leitner-display"></div></div>
+  </div>
+</section>
+
+<section class="section" id="bignum">
+  <div class="card">
+    <h2>🔢 大きい数（〜1億）</h2>
+
+    <div class="tip"><strong>💡 3年生で習う数：</strong>
+    2年で1万まで → 3年では <strong>1億</strong>まで（0が8こ）！</div>
+
+    <h3>くらいの 階段</h3>
+    <div class="tip tip-blue">
+      一 → 十 → 百 → 千 → <strong>万</strong> → 十万 → 百万 → 千万 → <strong>1億</strong><br>
+      4けたで 1つの ブロック！
+    </div>
+
+    <div class="examples">
+      <div class="example"><div class="icon">🔢</div><div class="label">1万</div><div class="value">10000（1000が10こ）</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">10万</div><div class="value">100000</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">100万</div><div class="value">1000000</div></div>
+      <div class="example"><div class="icon">🔢</div><div class="label">1億</div><div class="value">100000000（0が8こ）</div></div>
+    </div>
+
+    <h3>10倍 100倍 / 10でわる</h3>
+    <div class="tip tip-green">
+      <strong>10倍 = 0を1つ つける</strong>（一の位に0が入る）<br>
+      れい：35 × 10 = 350<br>
+      <strong>100倍 = 0を2つ つける</strong>　れい：35 × 100 = 3500<br>
+      <strong>10でわる = 0を1つ消す</strong>　れい：350 ÷ 10 = 35
+    </div>
+
+    <h3>大きい数のたし算ひっ算（4けた以上）</h3>
+    <div class="tip">
+      くらいを そろえて 一の位から計算。<br>
+      れい：2356 + 1844 = <strong>4200</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="div">
+  <div class="card">
+    <h2>➗ わり算</h2>
+
+    <div class="tip"><strong>💡 わり算は 九九のうらがえし！</strong>
+    15 ÷ 3 = ？ → 「3 × 何 = 15？」と考えて → 3×5=15 だから <strong>5</strong></div>
+
+    <h3>わり算の意味（2つある）</h3>
+    <div class="tip tip-blue">
+      <strong>① 等分除（同じ数ずつ 分ける）</strong><br>
+      れい：12個のあめを 3人で分ける → 1人 何個？ → 12÷3=4個<br><br>
+      <strong>② 包含除（何人に わたせる？）</strong><br>
+      れい：12個のあめを 1人に4個ずつ → 何人に わたせる？ → 12÷4=3人
+    </div>
+    <div class="examples">
+      <div class="example"><div class="icon">🍎🍎🍎<br>🍎🍎🍎</div><div class="label">6 ÷ 2</div><div class="value">2人で同じだけ → <strong>3</strong></div></div>
+      <div class="example"><div class="icon">🍪×12</div><div class="label">12 ÷ 4</div><div class="value">4箱に分ける → <strong>3</strong></div></div>
+    </div>
+
+    <h3>あまりのある わり算</h3>
+    <div class="tip tip-green">
+      <strong>あまり＝割り切れずに残る数</strong><br>
+      れい：14 ÷ 3 → 3×4=12、14−12=<strong>2</strong> → 「4 あまり 2」<br>
+      あまりは「わる数」より小さい。
+    </div>
+
+    <h3>0 のわり算</h3>
+    <div class="tip">
+      <strong>0 ÷ 何でも = 0</strong>（なにもないものは 分けても なにもない）<br>
+      ⚠️ <strong>何 ÷ 0 は できない</strong>（0で分けることは ない）
+    </div>
+
+    <h3>わり算の文章題</h3>
+    <div class="tip tip-blue">
+      「分ける」「同じ数ずつ」「何人で」 → わり算！<br>
+      れい：「24本の えんぴつを 3人で 同じだけ。1人 何本？」<br>
+      → 24÷3 = <strong>8本</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="decimal">
+  <div class="card">
+    <h2>🔟 小数（しょうすう）</h2>
+
+    <div class="tip"><strong>💡 小数とは？</strong>
+    1より 小さい数を 表す方法。<br>
+    <span class="big-number">0.1</span> = 1を 10等分した 1つぶん</div>
+
+    <h3>身近な小数</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🥛</div><div class="label">0.5L</div><div class="value">500mL（半分）</div></div>
+      <div class="example"><div class="icon">📏</div><div class="label">1.5m</div><div class="value">150cm（1m+50cm）</div></div>
+      <div class="example"><div class="icon">⚖️</div><div class="label">2.3kg</div><div class="value">2kg + 300g</div></div>
+      <div class="example"><div class="icon">🌡️</div><div class="label">体温 36.5°</div><div class="value">36と 半分</div></div>
+    </div>
+
+    <h3>くらいの 名前</h3>
+    <div class="tip tip-blue">
+      <strong>3 . 5 7</strong><br>
+      ↑一の位　↑小数第一位　↑小数第二位<br>
+      （小数第一位 = 0.1のくらい、小数第二位 = 0.01のくらい）
+    </div>
+
+    <h3>たし算・ひき算</h3>
+    <div class="tip tip-green">
+      <strong>「0.1のたんい」で計算！</strong><br>
+      れい：<strong>0.3 + 0.4</strong> → 0.1が(3+4)個=7個 → <strong>0.7</strong><br>
+      れい：<strong>1.5 − 0.7</strong> → 0.1が(15−7)個=8個 → <strong>0.8</strong>
+    </div>
+
+    <h3>整数も小数で書ける</h3>
+    <div class="tip">
+      ▸ 5 = 5.0（同じ意味）<br>
+      ▸ 10 = 10.0<br>
+      たし算ひき算で「整数−小数」のときに 役立つ！<br>
+      れい：5 − 0.7 → 5.0 − 0.7 = <strong>4.3</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fraction">
+  <div class="card">
+    <h2>½ 分数（ぶんすう）</h2>
+
+    <div class="tip"><strong>💡 分数は「ピザの切れ方」を あらわす数！</strong>
+    1つを いくつに 分けた、その何個ぶんか。</div>
+
+    <h3>分数の しくみ</h3>
+    <div class="tip tip-blue">
+      <strong>3/4</strong><br>
+      ↑分子（上：何個ぶん）<br>
+      ↑分母（下：いくつに分けた）<br>
+      → 4つに切ったうちの 3つぶん
+    </div>
+
+    <div class="examples">
+      <div class="example"><div class="icon">🍕</div><div class="label">1/2</div><div class="value">半分</div></div>
+      <div class="example"><div class="icon">🍕</div><div class="label">1/4</div><div class="value">4つに切って1つ</div></div>
+      <div class="example"><div class="icon">🍕🍕🍕</div><div class="label">3/4</div><div class="value">4つに切って3つ</div></div>
+      <div class="example"><div class="icon">🍕🍕🍕🍕</div><div class="label">4/4 = 1</div><div class="value">ぜんぶ＝1</div></div>
+    </div>
+
+    <h3>分数のくらべ方</h3>
+    <div class="tip tip-green">
+      <strong>分母が 同じなら → 分子で くらべる</strong><br>
+      れい：3/5 と 4/5 → 4/5 のほうが大きい<br><br>
+      <strong>分子が 同じなら → 分母が 小さいほうが 大きい！</strong>（びっくり）<br>
+      れい：1/2 と 1/4 → 1/2 のほうが大きい（分け前が大きい）
+    </div>
+
+    <h3>同じ分母の たし算・ひき算</h3>
+    <div class="tip">
+      <strong>分母はそのまま、分子だけ 計算！</strong><br>
+      れい：3/7 + 2/7 = <strong>5/7</strong>（分母は7のまま）<br>
+      れい：5/8 − 2/8 = <strong>3/8</strong>
+    </div>
+
+    <h3>分数 と 小数</h3>
+    <div class="tip tip-blue">
+      ▸ 1/2 = 0.5（半分）<br>
+      ▸ 1/4 = 0.25<br>
+      ▸ 1/10 = 0.1<br>
+      → 同じ数の 違う書き方！
+    </div>
+  </div>
+</section>
+
+<section class="section" id="weight">
+  <div class="card">
+    <h2>⚖️ 重さ（g・kg・t）</h2>
+
+    <div class="tip"><strong>💡 重さの単位：</strong> 1kg = <span class="big-number">1000g</span>、1t = <span class="big-number">1000kg</span></div>
+
+    <h3>単位の階段</h3>
+    <div class="stairs">
+      <div class="step s1"><div class="name">g</div><div class="value">グラム</div></div>
+      <div class="arrow">×1000→</div>
+      <div class="step s3"><div class="name">kg</div><div class="value">キログラム</div></div>
+      <div class="arrow">×1000→</div>
+      <div class="step s5"><div class="name">t</div><div class="value">トン</div></div>
+    </div>
+
+    <h3>身のまわりの 重さ</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">🪙</div><div class="label">1円玉</div><div class="value">1g</div></div>
+      <div class="example"><div class="icon">🥚</div><div class="label">たまご1個</div><div class="value">約60g</div></div>
+      <div class="example"><div class="icon">🥛</div><div class="label">牛乳パック</div><div class="value">1kg</div></div>
+      <div class="example"><div class="icon">📚</div><div class="label">ランドセル</div><div class="value">約1kg(中身入りで4-5kg)</div></div>
+      <div class="example"><div class="icon">👦</div><div class="label">小3のキミ</div><div class="value">約25kg</div></div>
+      <div class="example"><div class="icon">🚗</div><div class="label">じどうしゃ</div><div class="value">1〜2t</div></div>
+      <div class="example"><div class="icon">🐘</div><div class="label">ゾウ</div><div class="value">約5t</div></div>
+    </div>
+
+    <h3>はかりのよみ方</h3>
+    <div class="tip tip-blue">
+      ▸ 1めもりが 何g か 確認！（10g？50g？100g？）<br>
+      ▸ はりが 数字と 数字の間 → だいたいの値<br>
+      ▸ 「だいたい○g」と 答えるのもOK
+    </div>
+
+    <h3>重さの計算</h3>
+    <div class="tip tip-green">
+      <strong>単位を そろえて から 計算！</strong><br>
+      れい：500g + 800g = 1300g = <strong>1.3kg</strong><br>
+      れい：2kg − 800g = 2000g − 800g = <strong>1200g（1.2kg）</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="time">
+  <div class="card">
+    <h2>⏰ 時間と時刻（秒・分・時間・日）</h2>
+
+    <div class="tip"><strong>💡 3年で 秒（びょう）が登場！</strong>
+    1分 = 60秒、1時間 = 60分、1日 = 24時間</div>
+
+    <h3>時間の単位</h3>
+    <div class="time-bar">
+      <span>1秒</span><span>×60→</span>
+      <span>1分</span><span>×60→</span>
+      <span>1時間</span><span>×24→</span>
+      <span>1日</span>
+    </div>
+
+    <h3>身近な「秒」</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">👏</div><div class="label">手をパチン</div><div class="value">1秒</div></div>
+      <div class="example"><div class="icon">🌬️</div><div class="label">深呼吸1回</div><div class="value">5秒くらい</div></div>
+      <div class="example"><div class="icon">🏃</div><div class="label">100m走（速い人）</div><div class="value">12秒くらい</div></div>
+      <div class="example"><div class="icon">🚌</div><div class="label">バスのドア開閉</div><div class="value">3秒</div></div>
+    </div>
+
+    <h3>時刻の計算</h3>
+    <div class="tip tip-blue">
+      <strong>○時△分から □時★分までは？</strong><br>
+      れい：10時40分 → 11時10分<br>
+      ① 10:40→11:00 = 20分<br>
+      ② 11:00→11:10 = 10分<br>
+      ③ あわせて <strong>30分</strong>
+    </div>
+
+    <h3>時間の計算（くり上がり注意）</h3>
+    <div class="tip tip-green">
+      <strong>★ 60で くり上がる！</strong><br>
+      れい：50分 + 30分 = 80分 = <strong>1時間20分</strong><br>
+      れい：90秒 = <strong>1分30秒</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="circle">
+  <div class="card">
+    <h2>⭕ 円と球（きゅう）</h2>
+
+    <div class="tip"><strong>💡 円は どんなかたち？</strong>
+    まんなかの点（中心）から 同じ長さの ところを つないだ かたち。</div>
+
+    <h3>円の3つのことば</h3>
+    <div class="tip tip-blue">
+      <strong>① 中心（ちゅうしん）</strong>：円のまんなかの点<br>
+      <strong>② 半径（はんけい）</strong>：中心から円のふちまで<br>
+      <strong>③ 直径（ちょっけい）</strong>：円を まっすぐ つきぬける線（中心を通る）
+    </div>
+
+    <div class="tip tip-green">
+      <strong>★ 直径 = 半径 × 2！</strong><br>
+      れい：半径 5cm → 直径 10cm<br>
+      れい：直径 8cm → 半径 4cm
+    </div>
+
+    <h3>コンパスの 使いかた</h3>
+    <div class="tip">
+      ▸ コンパスの はりを 中心に さす<br>
+      ▸ えんぴつの ほうを 半径の 長さに 開く<br>
+      ▸ クルッと 1まわり → 円の 完成！
+    </div>
+
+    <h3>球（きゅう）</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">⚽</div><div class="label">サッカーボール</div><div class="value">球</div></div>
+      <div class="example"><div class="icon">🌍</div><div class="label">地球</div><div class="value">球</div></div>
+      <div class="example"><div class="icon">🍎</div><div class="label">みかん</div><div class="value">ほぼ球</div></div>
+    </div>
+
+    <div class="tip tip-blue">
+      <strong>球は どこから切っても 切り口が 円！</strong><br>
+      ▸ まんなかで切ると → 一番大きい円<br>
+      ▸ はじっこで切ると → 小さい円<br>
+      ▸ 中心を通って切ると → 直径と同じ大きさの円
+    </div>
+  </div>
+</section>
+
+<section class="section" id="graph">
+  <div class="card">
+    <h2>📊 表とグラフ</h2>
+
+    <div class="tip"><strong>💡 表とグラフの ちがい：</strong>
+    <strong>表</strong> = 数を そのまま記録／<strong>グラフ</strong> = 数を 絵で わかりやすく</div>
+
+    <h3>ぼうグラフ</h3>
+    <div class="tip tip-blue">
+      <strong>「数を くらべる」</strong>のに 一番べんり！<br>
+      ▸ ぼう が 高い ＝ 多い<br>
+      ▸ ぼう が 低い ＝ 少ない<br>
+      れい：好きなくだものランキング、月ごとのおこづかい
+    </div>
+
+    <h3>グラフを 読むコツ</h3>
+    <div class="tip tip-green">
+      ① <strong>タイトル</strong>を 読む（何のグラフ？）<br>
+      ② <strong>たて軸・よこ軸</strong>が 何を 表すか 確認<br>
+      ③ <strong>1めもり</strong> が いくつ ぶん か<br>
+      ④ <strong>一番大きい・小さい</strong> ぼう を 見つける
+    </div>
+
+    <h3>表の使い方</h3>
+    <div class="tip">
+      正確な 数を 記録するのに ベスト。<br>
+      <strong>合計</strong>を 出すと 全体の量がわかる。<br>
+      表 → グラフに する 練習も 大事。
+    </div>
+
+    <h3>「正の字」で 数える</h3>
+    <div class="tip tip-blue">
+      <strong>正</strong>＝5かく の漢字。1人ずつ 1かくずつ書くと 5の倍数で数えやすい！<br>
+      正 = 5、正正 = 10、正正正 = 15... と かぞえる。
+    </div>
+  </div>
+</section>
+
+<section class="section" id="word">
+  <div class="card">
+    <h2>📝 文章題</h2>
+
+    <div class="tip"><strong>💡 文章題の 3ステップ：</strong>
+    ① 文章をよく読み、<strong>数字に〇</strong>　② 何を 聞かれてるか 確認　③ <strong>式</strong>を 立てる</div>
+
+    <h3>キーワードで 演算を見分ける</h3>
+    <div class="examples">
+      <div class="example"><div class="icon">＋</div><div class="label">たし算</div><div class="value">あわせて／ぜんぶで／合計／ふえて</div></div>
+      <div class="example"><div class="icon">−</div><div class="label">ひき算</div><div class="value">のこり／ちがい／○○多い／少ない</div></div>
+      <div class="example"><div class="icon">×</div><div class="label">かけ算</div><div class="value">○倍／○個ずつ△個／同じ数を 集める</div></div>
+      <div class="example"><div class="icon">÷</div><div class="label">わり算</div><div class="value">同じ数で分ける／○あたり／何人で</div></div>
+    </div>
+
+    <h3>例題</h3>
+    <div class="tip tip-green">
+      <strong>問題：</strong>あめが 84こ ある。3人で 同じだけ 分ける。1人 何こ？<br>
+      → 「分ける」「同じだけ」 → わり算！<br>
+      → 84 ÷ 3 = <strong>28こ</strong>
+    </div>
+
+    <div class="tip tip-blue">
+      <strong>問題：</strong>1ふくろ12こ入りの あめ を 7ふくろ買った。ぜんぶで 何こ？<br>
+      → 「○こずつ△ふくろ」 → かけ算！<br>
+      → 12 × 7 = <strong>84こ</strong>
+    </div>
+
+    <h3>2ステップの問題</h3>
+    <div class="tip">
+      <strong>問題：</strong>1個150円のジュースを 4本 買って、1000円札で払うと、おつりは？<br>
+      ① 4本ぶんの値段：150 × 4 = 600円<br>
+      ② おつり：1000 − 600 = <strong>400円</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="progress">
+  <div class="card">
+    <h2>📊 きろく</h2>
+    <h3>たんいごとの じょうたつ</h3>
+    <div class="mastery" id="mastery-display"></div>
+    <h3>きょうの しんちょく</h3>
+    <div class="progress-bar"><div class="progress-bar-fill" id="today-progress"></div></div>
+    <p style="text-align:center;color:#6b7280;font-size:0.9em;" id="today-progress-text"></p>
+    <h3>れんぞく日すう</h3>
+    <div class="celebration"><div class="big">🔥</div><h3 id="streak-display-num">0日</h3><p id="streak-display-msg"></p></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="reset-btn" style="padding:8px 16px;font-size:0.85em;background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;">きろくを リセット</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="parent">
+  <div class="card">
+    <h2>👨‍👩‍👧 おうちの人へ</h2>
+    <div class="parent-section">
+      <h3>🧠 3年生は「分かれ目」の学年</h3>
+      <ul>
+        <li>わり算・小数・分数という新概念が一気に増えます。九九が完璧なら9割解決。</li>
+        <li>わり算で詰まる子は、九九が不安定なケースが多いです。2年の九九問題に戻るのも有効。</li>
+        <li>小数と分数は「同じものの違う表現」。0.5 = 1/2 を体感させると後で楽。</li>
+        <li>「あまりのあるわり算」は概念を絵で描いて確認すると定着します。</li>
+      </ul>
+    </div>
+    <div class="parent-section">
+      <h3>📅 おすすめの使い方</h3>
+      <ul>
+        <li>毎日5分。寝る前30分前後がベスト。</li>
+        <li>料理や買い物で「半分（1/2）」「3つに分けて（1/3）」と日常に分数を持ち込むと理解が深まります。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer><p>👨‍👩‍👧 まいにち5もん つづけよう！</p></footer>
+
+</div>
+
+<script>
+window.GRADE_KEY = 'g3';
+window.TAGS = ['わり算', '小数', '分数', '重さ', '時間', '大きい数', '円', 'グラフ', '文章題'];
+window.QUESTIONS = [
+  // わり算
+  {id:'g3d1', tag:'わり算', q:'12 ÷ 3 = ？', opts:['3','4','5','6'], a:1, why:'3×4=12 だから 12÷3=4。九九のうらがえし。'},
+  {id:'g3d2', tag:'わり算', q:'24 ÷ 6 = ？', opts:['3','4','5','6'], a:1, why:'6×4=24 だから 答えは 4。'},
+  {id:'g3d3', tag:'わり算', q:'45 ÷ 9 = ？', opts:['4','5','6','9'], a:1, why:'9×5=45。'},
+  {id:'g3d4', tag:'わり算', q:'14 ÷ 3 は？（あまり）', opts:['4 あまり 1','4 あまり 2','5 あまり 0','5 あまり 1'], a:1, why:'3×4=12、14−12=2 あまる。だから「4 あまり 2」。'},
+  {id:'g3d5', tag:'わり算', q:'56 ÷ 7 = ？', opts:['7','8','9','6'], a:1, why:'7×8=56。九九で覚えてる！'},
+  {id:'g3d6', tag:'わり算', q:'0 ÷ 5 = ？', opts:['0','1','5','わからない'], a:0, why:'0をどんな数でわっても 0。なんにもないものは 分けても なんにもない。'},
+  // 小数
+  {id:'g3s1', tag:'小数', q:'0.1 が 5こで いくつ？', opts:['0.5','1.5','5.0','50'], a:0, why:'0.1の5こぶん = 0.5。'},
+  {id:'g3s2', tag:'小数', q:'0.3 + 0.4 = ？', opts:['0.07','0.7','7','3.4'], a:1, why:'0.1のたんいで 3+4=7。だから 0.7。'},
+  {id:'g3s3', tag:'小数', q:'1.5 − 0.7 = ？', opts:['0.8','0.7','1.2','2.2'], a:0, why:'0.1のたんいで 15−7=8。だから 0.8。'},
+  {id:'g3s4', tag:'小数', q:'1Lの 10分の1 は？', opts:['0.01L','0.1L','1mL','10mL'], a:1, why:'10分の1 = 0.1。だから 0.1L = 100mL。'},
+  // 分数
+  {id:'g3f1', tag:'分数', q:'ピザを4つに切った1つは？', opts:['1/2','1/3','1/4','4/1'], a:2, why:'4つに分けた 1つ分なので 1/4（よんぶんのいち）。'},
+  {id:'g3f2', tag:'分数', q:'1/2 と 1/4、どっちが大きい？', opts:['1/2','1/4','おなじ','わからない'], a:0, why:'分母が小さいほど 1つの分け前が大きい。1/2 = ピザの半分、1/4 = もっと小さい。'},
+  {id:'g3f3', tag:'分数', q:'2/5 + 1/5 = ？', opts:['3/10','3/5','2/25','3/25'], a:1, why:'分母がおなじときは 分子だけ足す。2+1=3、分母は5のまま → 3/5。'},
+  {id:'g3f4', tag:'分数', q:'5/5 はいくつ？', opts:['0','1/2','1','5'], a:2, why:'5つに分けた5つぶん = ぜんぶ = 1。'},
+  // 重さ
+  {id:'g3w1', tag:'重さ', q:'1kg は なんg？', opts:['10g','100g','1000g','10000g'], a:2, why:'1kg = 1000g。「キロ」は1000ばいの意味。'},
+  {id:'g3w2', tag:'重さ', q:'2500g は なんkg？', opts:['2.5kg','25kg','250kg','0.25kg'], a:0, why:'gをkgにするときは1000でわる。2500÷1000=2.5kg。'},
+  {id:'g3w3', tag:'重さ', q:'1t は なんkg？', opts:['10kg','100kg','1000kg','10000kg'], a:2, why:'1t（トン）= 1000kg。じどうしゃぐらいの重さ。'},
+  {id:'g3w4', tag:'重さ', q:'500g + 800g は？', opts:['1300g','1.3kg','どちらも正しい','1300kg'], a:2, why:'500+800=1300g = 1.3kg。どちらの書き方もOK。'},
+  // 時間
+  {id:'g3t1', tag:'時間', q:'1分 は なん秒？', opts:['10秒','30秒','60秒','100秒'], a:2, why:'1分=60秒。時間は60でくり上がる。'},
+  {id:'g3t2', tag:'時間', q:'9時20分 から 30分後 は？', opts:['9時30分','9時50分','10時00分','10時20分'], a:1, why:'20+30=50分。9時50分。'},
+  {id:'g3t3', tag:'時間', q:'10時40分 から 11時10分 までは？', opts:['10分','20分','30分','40分'], a:2, why:'10時40分→11時=20分、11時→11時10分=10分。あわせて30分。'},
+  // 大きい数
+  {id:'g3n1', tag:'大きい数', q:'10000 は 1000 が いくつ？', opts:['1つ','10こ','100こ','1000こ'], a:1, why:'1000が10こで10000（一万）。'},
+  {id:'g3n2', tag:'大きい数', q:'10000 を 10こ あつめると？', opts:['100000（10万）','1000000（100万）','100','一億'], a:0, why:'10000×10=100000（十万）。'},
+  // わり算（追加）
+  {id:'g3d7', tag:'わり算', q:'36 ÷ 4 = ？', opts:['7','8','9','10'], a:2, why:'4×9=36。'},
+  {id:'g3d8', tag:'わり算', q:'63 ÷ 9 = ？', opts:['6','7','8','9'], a:1, why:'9×7=63。'},
+  {id:'g3d9', tag:'わり算', q:'25 ÷ 4 は？', opts:['5 あまり 5','6 あまり 1','6 あまり 4','7 あまり 0'], a:1, why:'4×6=24、25−24=1。だから 6 あまり 1。'},
+  {id:'g3d10', tag:'わり算', q:'42 ÷ 6 = ？', opts:['5','6','7','8'], a:2, why:'6×7=42。'},
+  {id:'g3d11', tag:'わり算', q:'80 ÷ 8 = ？', opts:['8','9','10','11'], a:2, why:'8×10=80。'},
+  {id:'g3d12', tag:'わり算', q:'48 ÷ 6 = ？', opts:['6','7','8','9'], a:2, why:'6×8=48。'},
+  // 小数（追加）
+  {id:'g3s5', tag:'小数', q:'2.7 + 1.5 = ？', opts:['3.2','4.0','4.2','4.7'], a:2, why:'0.1のたんいで 27+15=42 → 4.2。'},
+  {id:'g3s6', tag:'小数', q:'5 − 0.7 = ？', opts:['4.3','4.7','5.7','0.5'], a:0, why:'5=5.0。50−7=43（0.1のたんい）→4.3。'},
+  {id:'g3s7', tag:'小数', q:'0.5 + 0.5 = ？', opts:['0.10','0.5','1.0','0.55'], a:2, why:'0.5+0.5=1.0。0.1のたんいで 5+5=10。'},
+  // 分数（追加）
+  {id:'g3f5', tag:'分数', q:'4/5 − 1/5 = ？', opts:['3/0','3/5','3/10','5/5'], a:1, why:'分母おなじ→分子だけ 4−1=3。3/5。'},
+  {id:'g3f6', tag:'分数', q:'1/3 と 1/6、どっちが大きい？', opts:['1/3','1/6','おなじ','わからない'], a:0, why:'分母が小さいほど 大きい。1/3=ピザ3つに切った1つ、1/6=もっと小さい。'},
+  {id:'g3f7', tag:'分数', q:'1m の 1/2 は何cm？', opts:['10cm','20cm','50cm','100cm'], a:2, why:'1m=100cm、その半分=50cm。'},
+  // 重さ（追加）
+  {id:'g3w5', tag:'重さ', q:'3kg は なんg？', opts:['30g','300g','3000g','30000g'], a:2, why:'kgからgは1000をかける。3000g。'},
+  {id:'g3w6', tag:'重さ', q:'1kg500g は なんg？', opts:['150g','1050g','1500g','15000g'], a:2, why:'1kg=1000g、+500g=1500g。'},
+  // 時間（追加）
+  {id:'g3t4', tag:'時間', q:'1時間20分 は なん分？', opts:['60分','80分','100分','120分'], a:1, why:'60+20=80分。'},
+  {id:'g3t5', tag:'時間', q:'8時から 11時までは なん時間？', opts:['1時間','2時間','3時間','11時間'], a:2, why:'11−8=3時間。'},
+  // 大きい数（追加）
+  {id:'g3n3', tag:'大きい数', q:'7560 を 10倍すると？', opts:['756','7560','75600','756000'], a:2, why:'10倍は0を1つつける（または小数点を右に1つ）。'},
+  // ===== わり算（追加・筆算・あまり）=====
+  {id:'g3d13', tag:'わり算', q:'72 ÷ 8 = ？', opts:['7','8','9','11'], a:1, why:'8×9=72。'},
+  {id:'g3d14', tag:'わり算', q:'81 ÷ 9 = ？', opts:['7','8','9','10'], a:2, why:'9×9=81。'},
+  {id:'g3d15', tag:'わり算', q:'30 ÷ 5 = ？', opts:['5','6','7','25'], a:1, why:'5×6=30。'},
+  {id:'g3d16', tag:'わり算', q:'70 ÷ 7 = ？', opts:['7','10','17','70'], a:1, why:'7×10=70。'},
+  {id:'g3d17', tag:'わり算', q:'60 ÷ 4 = ？', opts:['12','15','20','24'], a:1, why:'4×15=60。'},
+  {id:'g3d18', tag:'わり算', q:'47 ÷ 5 は？', opts:['8 あまり 7','9 あまり 2','9 あまり 7','10 あまり 3'], a:1, why:'5×9=45、47−45=2。'},
+  {id:'g3d19', tag:'わり算', q:'68 ÷ 9 は？', opts:['7 あまり 5','7 あまり 9','8 あまり 0','8 あまり 4'], a:0, why:'9×7=63、68−63=5。'},
+  {id:'g3d20', tag:'わり算', q:'15個のあめを 4人でわける。1人 何個？（あまりは？）', opts:['3個','4個','3個 あまり 3','4個 あまり 1'], a:2, why:'15÷4=3 あまり3。'},
+  {id:'g3d21', tag:'わり算', q:'文章題：72ページの本を 1日 8ページ。何日でおわる？', opts:['8日','9日','10日','12日'], a:1, why:'72÷8=9日。'},
+  // ===== 小数（追加）=====
+  {id:'g3s8', tag:'小数', q:'2.4 + 3.5 = ？', opts:['5.7','5.9','6.0','6.9'], a:1, why:'整数部 2+3=5、小数部 0.4+0.5=0.9 → 5.9。'},
+  {id:'g3s9', tag:'小数', q:'7 − 2.3 = ？', opts:['4.3','4.7','5.7','3.7'], a:1, why:'7=7.0、7.0−2.3=4.7。'},
+  {id:'g3s10', tag:'小数', q:'0.1 が 12こ で？', opts:['0.12','1.2','12','120'], a:1, why:'0.1×12=1.2。'},
+  {id:'g3s11', tag:'小数', q:'1.0 と 1 は？', opts:['違う','同じ','1.0が大きい','1のほうが大きい'], a:1, why:'1.0と1は 同じ数。1の小数点以下は0と書いても書かなくても同じ。'},
+  // ===== 分数（追加）=====
+  {id:'g3f8', tag:'分数', q:'3/7 + 2/7 = ？', opts:['5/14','5/7','6/7','3/14'], a:1, why:'分母同じ→分子だけたす。3+2=5、5/7。'},
+  {id:'g3f9', tag:'分数', q:'5/8 − 2/8 = ？', opts:['3/0','3/8','7/8','3/16'], a:1, why:'分母同じ→分子だけひく。5−2=3、3/8。'},
+  {id:'g3f10', tag:'分数', q:'1mを 4等分。そのうち1つは何m？', opts:['1/2 m','1/3 m','1/4 m','4 m'], a:2, why:'4つに分けた1つ → 1/4 m。'},
+  {id:'g3f11', tag:'分数', q:'2/3 と 3/3、どっちが大きい？', opts:['2/3','3/3','同じ','わからない'], a:1, why:'分母同じなら分子で比べる。3>2、3/3=1。'},
+  // ===== 重さ（追加）=====
+  {id:'g3w7', tag:'重さ', q:'2kg − 800g は？', opts:['1200g','1.2kg','どちらも正解','2200g'], a:2, why:'2kg=2000g、−800=1200g=1.2kg。'},
+  {id:'g3w8', tag:'重さ', q:'食パン1きん300g。2きんで何g？', opts:['300g','600g','900g','1200g'], a:1, why:'300×2=600g。'},
+  // ===== 円・球（新タグ）=====
+  {id:'g3c1', tag:'円', q:'円のまんなかの点を なんという？', opts:['半径','直径','中心','円周'], a:2, why:'まんなかの点=中心。そこから円周までの長さが「半径」。'},
+  {id:'g3c2', tag:'円', q:'直径10cmの円の 半径は？', opts:['2.5cm','5cm','10cm','20cm'], a:1, why:'半径=直径÷2。10÷2=5cm。'},
+  {id:'g3c3', tag:'円', q:'コンパスは 何を かくときに 使う？', opts:['三角形','正方形','円','直線'], a:2, why:'コンパスは円をきれいにかく道具。'},
+  {id:'g3c4', tag:'円', q:'ボールのような立体を なんという？', opts:['円','球','円柱','立方体'], a:1, why:'まる立体=「球（きゅう）」。'},
+  // ===== 表とグラフ（新タグ）=====
+  {id:'g3g1', tag:'グラフ', q:'ぼうグラフ、いちばん多いのは いつ？（月7、火10、水8、木12）', opts:['月','火','水','木'], a:3, why:'木曜が12で一番大きい。'},
+  {id:'g3g2', tag:'グラフ', q:'5人の身長平均が見やすいグラフは？', opts:['ぼうグラフ','円グラフ','折れ線','表'], a:0, why:'数を比べるなら ぼうグラフ。'},
+  // ===== 文章題（実生活）=====
+  {id:'g3w9', tag:'文章題', q:'ジュース150円 を 4本 買うと？', opts:['450円','500円','550円','600円'], a:3, why:'150×4=600円。'},
+  {id:'g3w10', tag:'文章題', q:'おりがみが 84枚。3人で同じだけ分けると 1人？', opts:['24枚','28枚','30枚','32枚'], a:1, why:'84÷3=28枚。'},
+  {id:'g3w11', tag:'文章題', q:'りんご6こで 480円。1こ何円？', opts:['60円','70円','80円','90円'], a:2, why:'480÷6=80円。'},
+  {id:'g3w12', tag:'文章題', q:'1ふくろ12こ入りの あめを 7ふくろ。ぜんぶで？', opts:['72こ','82こ','84こ','94こ'], a:2, why:'12×7=84こ。'},
+  {id:'g3w13', tag:'文章題', q:'はがきが 250まい。1日 25まい 出すと 何日でなくなる？', opts:['5日','8日','10日','25日'], a:2, why:'250÷25=10日。'},
+  // ===== 大きい数（追加・3桁×2桁の前提）=====
+  {id:'g3n4', tag:'大きい数', q:'10000 は 100が いくつ？', opts:['10こ','100こ','1000こ','10000こ'], a:1, why:'100×100=10000。'},
+  {id:'g3n5', tag:'大きい数', q:'8765 を 10で わると？', opts:['87.65','876.5','876.55','87650'], a:1, why:'10で割ると 小数点を左に1つ → 876.5。'},
+  {id:'g3n6', tag:'大きい数', q:'2356 + 1844 は？', opts:['4100','4200','4300','3200'], a:1, why:'筆算で 2356+1844=4200。'},
+  // ===== 時間（追加・応用）=====
+  {id:'g3t6', tag:'時間', q:'12時5分 から 13時25分 までは？', opts:['1時間20分','1時間30分','30分','25分'], a:0, why:'12:05→13:00=55分、13:00→13:25=25分。合計1時間20分。'},
+  {id:'g3t7', tag:'時間', q:'1分 = 60秒。30秒 は何分？', opts:['30分','3分','0.5分','60秒'], a:2, why:'30÷60=0.5分（半分）。'},
+];
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

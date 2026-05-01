@@ -1,0 +1,33 @@
+services:
+  sansu-master:
+    image: nginx:alpine
+    container_name: sansu-master
+    restart: always
+    volumes:
+      - ./app:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n-compose_default
+      # HTTP用ルーター（→ HTTPSへリダイレクト、priority高めで他の汎用ルーターより優先）
+      - traefik.http.routers.sansu-http.rule=Host(`sansu.ecaiclub.com`)
+      - traefik.http.routers.sansu-http.entrypoints=web
+      - traefik.http.routers.sansu-http.priority=200
+      - traefik.http.routers.sansu-http.middlewares=sansu-redirect@docker
+      # HTTPS用ルーター
+      - traefik.http.routers.sansu.rule=Host(`sansu.ecaiclub.com`)
+      - traefik.http.routers.sansu.entrypoints=websecure
+      - traefik.http.routers.sansu.priority=200
+      - traefik.http.routers.sansu.tls=true
+      - traefik.http.routers.sansu.tls.certresolver=mytlschallenge
+      # HTTPS化ミドルウェア
+      - traefik.http.middlewares.sansu-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.sansu-redirect.redirectscheme.permanent=true
+      - traefik.http.services.sansu.loadbalancer.server.port=80
+
+networks:
+  traefik:
+    name: n8n-compose_default
+    external: true
