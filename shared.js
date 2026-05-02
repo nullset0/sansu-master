@@ -160,8 +160,18 @@ function preprocessSpeech(text) {
   text = text.replace(/(\d+(?:\.\d+)?)\s*‰/g, '$1パーミル');
   // 円
   text = text.replace(/(\d+(?:,\d{3})*)\s*円/g, '$1えん');
-  // 単位（長い順に処理。重複を避けるため、後ろが数字や英字でないことを確認）
-  // 面積・体積（先に）
+  // 複合パターン（先に処理）：1m20cm、1L5dL、1kg500g、1時間30分 等
+  text = text.replace(/(\d+)\s*m\s*(\d+)\s*cm/g, '$1メートル$2センチメートル');
+  text = text.replace(/(\d+)\s*cm\s*(\d+)\s*mm/g, '$1センチメートル$2ミリメートル');
+  text = text.replace(/(\d+)\s*km\s*(\d+)\s*m\b/g, '$1キロメートル$2メートル');
+  text = text.replace(/(\d+)\s*kg\s*(\d+)\s*g\b/g, '$1キログラム$2グラム');
+  text = text.replace(/(\d+)\s*L\s*(\d+)\s*dL/g, '$1リットル$2デシリットル');
+  text = text.replace(/(\d+)\s*L\s*(\d+)\s*mL/g, '$1リットル$2ミリリットル');
+  text = text.replace(/(\d+)\s*時間\s*(\d+)\s*分/g, '$1じかん$2ふん');
+  text = text.replace(/(\d+)\s*分\s*(\d+)\s*秒/g, '$1ふん$2びょう');
+  text = text.replace(/(\d+)\s*じ\s*(\d+)\s*ぷん/g, '$1じ$2ふん');
+
+  // 単位（長い順に処理）面積・体積（先に）
   text = text.replace(/(\d+(?:\.\d+)?)\s*km[²2]/g, '$1へいほうキロメートル');
   text = text.replace(/(\d+(?:\.\d+)?)\s*cm[³3]/g, '$1りっぽうセンチメートル');
   text = text.replace(/(\d+(?:\.\d+)?)\s*cm[²2]/g, '$1へいほうセンチメートル');
@@ -185,6 +195,23 @@ function preprocessSpeech(text) {
   text = text.replace(/(\d+(?:\.\d+)?)\s*L\b/g, '$1リットル');
   // 時間
   text = text.replace(/(\d+(?:\.\d+)?)\s*°/g, '$1ど');
+
+  // 数字なしの単位（「なんcm？」「mmは小さい」等）
+  text = text.replace(/cm[³3]/g, 'りっぽうセンチメートル');
+  text = text.replace(/cm[²2]/g, 'へいほうセンチメートル');
+  text = text.replace(/km[²2]/g, 'へいほうキロメートル');
+  text = text.replace(/m[³3]/g, 'りっぽうメートル');
+  text = text.replace(/m[²2]/g, 'へいほうメートル');
+  text = text.replace(/\bmm\b/g, 'ミリメートル');
+  text = text.replace(/\bcm\b/g, 'センチメートル');
+  text = text.replace(/\bkm\b/g, 'キロメートル');
+  text = text.replace(/\bm\b(?!l|L)/g, 'メートル');
+  text = text.replace(/\bkg\b/g, 'キログラム');
+  text = text.replace(/\bmg\b/g, 'ミリグラム');
+  text = text.replace(/\bmL\b/g, 'ミリリットル');
+  text = text.replace(/\bdL\b/g, 'デシリットル');
+  text = text.replace(/\bL\b/g, 'リットル');
+  text = text.replace(/\bha\b/g, 'ヘクタール');
   // 残った上付き
   text = text.replace(/[²]/g, 'のじじょう');
   text = text.replace(/[³]/g, 'のさんじょう');
