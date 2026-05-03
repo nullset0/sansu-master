@@ -7,8 +7,13 @@
 const SETTINGS_KEY = 'sansu-master-settings';
 function loadSettings() {
   const raw = localStorage.getItem(SETTINGS_KEY);
-  if (raw) try { return JSON.parse(raw); } catch(e) {}
-  return { voice: true, sound: true, autoRead: true, rate: 1.0 };
+  if (raw) try {
+    const s = JSON.parse(raw);
+    if (s.easyMode === undefined) s.easyMode = false;
+    if (s.alwaysShowHint === undefined) s.alwaysShowHint = false;
+    return s;
+  } catch(e) {}
+  return { voice: true, sound: true, autoRead: true, rate: 1.0, easyMode: false, alwaysShowHint: false };
 }
 function saveSettings(s) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
@@ -810,6 +815,12 @@ function injectSettingsPanel() {
   menu.className = 'settings-menu';
   menu.innerHTML = `
     <h4>⚙️ せっていメニュー</h4>
+    <div style="background:#fef3c7;padding:8px;border-radius:8px;margin-bottom:8px;">
+      <label style="font-weight:bold;color:#92400e;"><input type="checkbox" id="opt-easymode"> 🧸 やさしいモード</label>
+      <p style="font-size:0.7em;color:#92400e;margin:2px 0 0 28px;">1日3問・ヒント自動・「ざんねん」を 言わない</p>
+    </div>
+    <label><input type="checkbox" id="opt-hint"> 💡 ヒントを 大きく表示</label>
+    <hr style="margin:8px 0;border:none;border-top:1px solid #e5e7eb;">
     <label><input type="checkbox" id="opt-voice"> 🔊 もんだいを 読み上げる</label>
     <label><input type="checkbox" id="opt-autoread"> ⚡ 自動で 読み上げる</label>
     <label><input type="checkbox" id="opt-sound"> 🎵 こうかおん</label>
@@ -834,6 +845,8 @@ function injectSettingsPanel() {
   const s = document.getElementById('opt-sound');
   const r = document.getElementById('opt-rate');
   const rv = document.getElementById('rate-val');
+  const em = document.getElementById('opt-easymode');
+  const hi = document.getElementById('opt-hint');
 
   function refreshUI() {
     v.checked = SETTINGS.voice;
@@ -841,12 +854,16 @@ function injectSettingsPanel() {
     s.checked = SETTINGS.sound;
     r.value = SETTINGS.rate;
     rv.textContent = SETTINGS.rate.toFixed(1) + 'x';
+    em.checked = !!SETTINGS.easyMode;
+    hi.checked = !!SETTINGS.alwaysShowHint;
   }
   refreshUI();
 
   v.addEventListener('change', () => { SETTINGS.voice = v.checked; saveSettings(SETTINGS); });
   a.addEventListener('change', () => { SETTINGS.autoRead = a.checked; saveSettings(SETTINGS); });
   s.addEventListener('change', () => { SETTINGS.sound = s.checked; saveSettings(SETTINGS); if (s.checked) playClick(); });
+  em.addEventListener('change', () => { SETTINGS.easyMode = em.checked; saveSettings(SETTINGS); });
+  hi.addEventListener('change', () => { SETTINGS.alwaysShowHint = hi.checked; saveSettings(SETTINGS); });
   r.addEventListener('input', () => {
     SETTINGS.rate = parseFloat(r.value);
     rv.textContent = SETTINGS.rate.toFixed(1) + 'x';
@@ -897,7 +914,7 @@ function injectSettingsPanel() {
   const QUESTIONS = window.QUESTIONS || [];
   const TAGS = window.TAGS || [];
   const STORAGE_KEY = 'sansu-master-' + GRADE_KEY;
-  const DAILY_GOAL = 5;
+  const dailyGoal = () => SETTINGS.easyMode ? 3 : 5;
   const BOX_INTERVALS = [0, 1, 3, 7, 14];
   const BOX_NAMES = ['もう一度', '3日後', '1週間後', '2週間後', 'マスター'];
 
@@ -982,10 +999,10 @@ function injectSettingsPanel() {
       }
     }
     due.sort((a, b) => (a._box || 1) - (b._box || 1));
-    let pool = due.slice(0, DAILY_GOAL);
-    if (pool.length < DAILY_GOAL) {
+    let pool = due.slice(0, dailyGoal());
+    if (pool.length < dailyGoal()) {
       shuffle(newOnes);
-      pool = pool.concat(newOnes.slice(0, DAILY_GOAL - pool.length));
+      pool = pool.concat(newOnes.slice(0, dailyGoal() - pool.length));
     }
     return interleave(pool);
   }
@@ -993,6 +1010,7 @@ function injectSettingsPanel() {
   let currentBatch = [];
   let currentIdx = 0;
   let sessionCorrect = 0;
+  let sessionWrongStreak = 0;
 
   function startDaily() {
     currentBatch = getDueQuestions();
@@ -1006,7 +1024,7 @@ function injectSettingsPanel() {
     if (!area) return;
     updateStatus();
 
-    if (state.todayDone >= DAILY_GOAL && currentBatch.length === 0) {
+    if (state.todayDone >= dailyGoal() && currentBatch.length === 0) {
       const hasKey = !!getApiKey();
       area.innerHTML = `
         <div class="celebration">
@@ -1036,6 +1054,7 @@ function injectSettingsPanel() {
     const progress = (currentIdx / currentBatch.length) * 100;
     // 読み上げ用テキスト（preprocessSpeechで整形）
     const speakText = q.q;
+    const showHintInline = SETTINGS.alwaysShowHint || SETTINGS.easyMode;
     area.innerHTML = `
       <div class="progress-bar"><div class="progress-bar-fill" style="width: ${progress}%"></div></div>
       <p style="text-align:center;color:#6b7280;font-size:0.9em;margin-bottom:8px;">
@@ -1046,6 +1065,11 @@ function injectSettingsPanel() {
           <span class="quiz-tag">${q.tag}</span>${q.q}
           <button class="speak-btn" id="speak-${q.id}" title="もんだいを よみあげる">🔊 よむ</button>
         </div>
+        <div class="help-row">
+          <button class="help-btn hint" id="hint-${q.id}">💡 ヒント</button>
+          <button class="help-btn dont-know" id="idk-${q.id}">🤷 わからない・教えて</button>
+        </div>
+        <div class="hint-area" id="hintarea-${q.id}" style="display:${showHintInline ? 'block' : 'none'};"></div>
         <div class="quiz-options" id="opts-${q.id}">
           ${q.opts.map((o, i) => `<button data-i="${i}">${o}</button>`).join('')}
         </div>
@@ -1064,6 +1088,66 @@ function injectSettingsPanel() {
       speakBtn.classList.add('speaking');
       speak(speakText, { force: true, onend: () => speakBtn.classList.remove('speaking') });
     });
+    // ヒントボタン
+    const hintBtn = document.getElementById(`hint-${q.id}`);
+    const hintArea = document.getElementById(`hintarea-${q.id}`);
+    let hintLevel = 0;
+    const showHint = async () => {
+      hintLevel++;
+      hintArea.style.display = 'block';
+      const wrong = q.opts.filter((_, i) => i !== q.a);
+      if (hintLevel === 1) {
+        // レベル1：単元の基本ルール（タグから）
+        hintArea.innerHTML = `<div class="hint-bubble"><strong>💡 ヒント1：</strong>「<strong>${q.tag}</strong>」のもんだいだよ。タブの「${q.tag}」セクションを 思いだしてみて。</div>`;
+        hintBtn.textContent = '💡 もう少し ヒント';
+      } else if (hintLevel === 2) {
+        // レベル2：選択肢を 1つ 消す
+        const skipped = wrong[0];
+        hintArea.innerHTML += `<div class="hint-bubble"><strong>💡 ヒント2：</strong>「<strong>${skipped}</strong>」は ちがうよ。残りから えらんでみて！</div>`;
+        // 該当選択肢を 薄く
+        document.querySelectorAll(`#opts-${q.id} button`).forEach(b => {
+          if (b.textContent === skipped) { b.disabled = true; b.style.opacity = '0.3'; }
+        });
+        hintBtn.textContent = '💡 もっと ヒント';
+      } else if (hintLevel === 3) {
+        // レベル3：もう1つ 消す
+        const skipped = wrong[1];
+        hintArea.innerHTML += `<div class="hint-bubble"><strong>💡 ヒント3：</strong>「<strong>${skipped}</strong>」も ちがうよ。あとは 2つから！</div>`;
+        document.querySelectorAll(`#opts-${q.id} button`).forEach(b => {
+          if (b.textContent === skipped) { b.disabled = true; b.style.opacity = '0.3'; }
+        });
+        hintBtn.textContent = '💡 答え近いヒント';
+      } else if (hintLevel === 4 && getApiKey()) {
+        // レベル4：AIで段階解説
+        hintBtn.textContent = '🤖 考えちゅう...';
+        hintBtn.disabled = true;
+        try {
+          const gradeName = GRADE_NAMES[GRADE_KEY] || '小学生';
+          const text = await claudeApi(
+            `あなたは小学校${gradeName}の算数の先生。子どもに優しく、3〜4文で 考え方の道すじを 教えます。答えそのものは言わずに、ヒントとして 道筋だけ 示してください。`,
+            `問題: ${q.q}\n選択肢: ${q.opts.join(' / ')}\n基本のなぜ: ${q.why}\n\nこの子は答えに たどり着けません。やさしく 考え方を 段階的に教えてください（ただし答えそのものは 言わないで）。`,
+            400
+          );
+          hintArea.innerHTML += `<div class="hint-bubble ai"><strong>🤖 AI先生のヒント：</strong><br>${text.replace(/\n/g, '<br>')}</div>`;
+          hintBtn.style.display = 'none';
+          if (SETTINGS.autoRead && SETTINGS.voice) speak(text);
+        } catch(e) {
+          hintBtn.textContent = '💡 ヒント';
+          hintBtn.disabled = false;
+        }
+      } else {
+        hintBtn.style.display = 'none';
+      }
+      tone(700, 0.05, 'sine', 0.08);
+    };
+    hintBtn.addEventListener('click', showHint);
+    // やさしいモード or 苦戦カードは ヒント1を 自動表示
+    if (SETTINGS.easyMode || (state.cards[q.id] && (state.cards[q.id].wrongCount || 0) >= 2)) {
+      showHint();
+    }
+    // わからないボタン
+    const idkBtn = document.getElementById(`idk-${q.id}`);
+    idkBtn.addEventListener('click', () => giveUpQuestion(q));
     // メモパッドを 選択肢の下に挿入
     const opts = document.getElementById(`opts-${q.id}`);
     const memo = createMemoPad(q.id);
@@ -1073,6 +1157,34 @@ function injectSettingsPanel() {
       setTimeout(() => speak(speakText), 200);
     }
     renderLeitner();
+  }
+
+  // 「わからない」を 押した時：答えを やさしく見せる（不正解扱いしない）
+  function giveUpQuestion(q) {
+    const buttons = document.querySelectorAll(`#opts-${q.id} button`);
+    buttons.forEach(b => b.disabled = true);
+    const correctBtn = buttons[q.a];
+    if (correctBtn) correctBtn.classList.add('correct');
+    const fb = document.getElementById(`feedback-${q.id}`);
+    const next = document.getElementById(`next-${q.id}`);
+    if (!state.cards[q.id]) {
+      state.cards[q.id] = {box: 1, lastSeen: null, correctCount: 0, wrongCount: 0};
+    }
+    const c = state.cards[q.id];
+    c.lastSeen = todayStr();
+    c.box = 1; // もう一度 出る（でも 不正解にはしない）
+    state.todayDone++;
+    saveState();
+    updateStatus();
+    fb.innerHTML = `🌱 これから おぼえよう！<br>こたえは <strong>${q.opts[q.a]}</strong><div class="why"><strong>なぜ：</strong>${q.why}</div>`;
+    fb.className = 'quiz-feedback show ok';
+    fb.style.background = '#fef3c7';
+    fb.style.color = '#92400e';
+    next.style.display = 'block';
+    tone(523.25, 0.18, 'sine', 0.12);
+    if (SETTINGS.autoRead && SETTINGS.voice) {
+      setTimeout(() => speak(`これから おぼえよう。こたえは ${q.opts[q.a]}。${q.why.replace(/<[^>]+>/g, '')}`), 400);
+    }
   }
 
   function answerQuestion(q, i, btn) {
@@ -1091,6 +1203,7 @@ function injectSettingsPanel() {
       c.box = Math.min(5, (c.box || 1) + 1);
       sessionCorrect++;
       state.totalCorrect++;
+      sessionWrongStreak = 0; // 連続不正解 リセット
       fb.innerHTML = `🎉 せいかい！<div class="why"><strong>なぜ：</strong>${q.why}</div>`;
       fb.className = 'quiz-feedback show ok';
       playCorrect();
@@ -1100,8 +1213,18 @@ function injectSettingsPanel() {
       buttons[q.a].classList.add('correct');
       c.wrongCount++;
       c.box = 1;
-      fb.innerHTML = `❌ ざんねん！せいかいは <strong>${q.opts[q.a]}</strong><div class="why"><strong>なぜ：</strong>${q.why}</div>`;
+      sessionWrongStreak++;
+      // やさしいモード or デフォルトでも ソフトな言葉
+      const softMsg = SETTINGS.easyMode
+        ? `🌱 もう少しだったね！<br>こたえは <strong>${q.opts[q.a]}</strong>`
+        : `おしい！こたえは <strong>${q.opts[q.a]}</strong>`;
+      fb.innerHTML = `${softMsg}<div class="why"><strong>なぜ：</strong>${q.why}</div>`;
       fb.className = 'quiz-feedback show ng';
+      if (SETTINGS.easyMode) {
+        // やさしいモードは 「ng」感をなくす
+        fb.style.background = '#fef3c7';
+        fb.style.color = '#92400e';
+      }
       playWrong();
     }
     state.todayDone++;
@@ -1167,7 +1290,62 @@ function injectSettingsPanel() {
     }
   }
 
-  function next() { currentIdx++; renderDaily(); }
+  function next() {
+    // 3問連続まちがえたら クールダウン
+    if (sessionWrongStreak >= 3) {
+      showCooldown();
+      return;
+    }
+    currentIdx++;
+    renderDaily();
+  }
+
+  function showCooldown() {
+    const area = document.getElementById('daily-area');
+    if (!area) return;
+    sessionWrongStreak = 0; // リセット
+    area.innerHTML = `
+      <div class="celebration cooldown bounce-in">
+        <div class="mascot-row">
+          <div class="speech-bubble">むずかしいの きたね！ちょっと 休もう☕</div>
+          ${mascotSVG('thinking', 130, 'idle')}
+        </div>
+        <h3>🌿 ひとやすみ タイム</h3>
+        <p style="margin:12px 0;color:#4b5563;line-height:1.7;">
+          つづけて まちがえたとき は、脳が つかれてるサイン。<br>
+          1分くらい 目を 休めると、急に わかるように なるよ！
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+          <button class="big-btn" onclick="window.SansuApp.continueAfterRest()" style="background:linear-gradient(135deg,#10b981,#3b82f6);">
+            😊 つづける
+          </button>
+          <button class="big-btn" onclick="window.SansuApp.endEarly()" style="background:#9ca3af;font-size:1em;">
+            👋 きょうは ここまで
+          </button>
+        </div>
+      </div>`;
+  }
+
+  function continueAfterRest() {
+    currentIdx++;
+    renderDaily();
+  }
+
+  function endEarly() {
+    // 完了扱いにせず やめる
+    currentBatch = [];
+    const area = document.getElementById('daily-area');
+    if (!area) return;
+    area.innerHTML = `
+      <div class="celebration bounce-in">
+        <div class="mascot-row">
+          <div class="speech-bubble">きょうも がんばったね！またあした✨</div>
+          ${mascotSVG('happy', 130, 'idle')}
+        </div>
+        <h3>👋 おつかれさま！</h3>
+        <p style="color:#6b7280;margin-top:8px;">続きは あした やろう！</p>
+      </div>`;
+  }
 
   function completeSession() {
     const today = todayStr();
@@ -1285,7 +1463,7 @@ function injectSettingsPanel() {
     const sn = document.getElementById('streak-num');
     if (sn) sn.textContent = state.streak;
     const tn = document.getElementById('today-num');
-    if (tn) tn.textContent = Math.max(0, DAILY_GOAL - state.todayDone);
+    if (tn) tn.textContent = Math.max(0, dailyGoal() - state.todayDone);
     const masterCount = Object.values(state.cards).filter(c => c.box >= 5).length;
     const mn = document.getElementById('master-num');
     if (mn) mn.textContent = masterCount;
@@ -1293,9 +1471,9 @@ function injectSettingsPanel() {
     if (tc) tc.textContent = state.totalCorrect;
 
     const tp = document.getElementById('today-progress');
-    if (tp) tp.style.width = Math.min(100, (state.todayDone / DAILY_GOAL) * 100) + '%';
+    if (tp) tp.style.width = Math.min(100, (state.todayDone / dailyGoal()) * 100) + '%';
     const tpt = document.getElementById('today-progress-text');
-    if (tpt) tpt.textContent = state.todayDone >= DAILY_GOAL ? '🎉 きょうの目標 たっせい！' : `あと ${DAILY_GOAL - state.todayDone} もん！`;
+    if (tpt) tpt.textContent = state.todayDone >= dailyGoal() ? '🎉 きょうの目標 たっせい！' : `あと ${dailyGoal() - state.todayDone} もん！`;
 
     const sdn = document.getElementById('streak-display-num');
     if (sdn) sdn.textContent = state.streak + '日';
@@ -1468,7 +1646,7 @@ function injectSettingsPanel() {
   }
 
   // 公開API
-  window.SansuApp = { startDaily, startExtra, next, getState: () => state };
+  window.SansuApp = { startDaily, startExtra, next, getState: () => state, continueAfterRest, endEarly };
 
   document.addEventListener('DOMContentLoaded', () => {
     setupNav();
