@@ -54,6 +54,36 @@ header .back:hover {
   header .back { font-size: 0.8em; padding: 6px 12px; }
 }
 
+.mix-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #fbbf24 0%, #ec4899 50%, #8b5cf6 100%);
+  color: white;
+  border-radius: 20px;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 78px;
+}
+.mix-banner:hover, .mix-banner:active {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(236, 72, 153, 0.4);
+}
+.mix-banner-icon { font-size: 2.4em; }
+.mix-banner-text { flex: 1; }
+.mix-banner-title { font-size: 1.15em; font-weight: bold; margin-bottom: 2px; }
+.mix-banner-sub { font-size: 0.82em; opacity: 0.95; line-height: 1.4; }
+.mix-banner-arrow { font-size: 1.6em; }
+@media (max-width: 600px) {
+  .mix-banner { padding: 14px 16px; gap: 12px; }
+  .mix-banner-icon { font-size: 2em; }
+  .mix-banner-title { font-size: 1.0em; }
+  .mix-banner-sub { font-size: 0.75em; }
+}
+
 .hero-features {
   display: flex;
   flex-wrap: wrap;
@@ -397,11 +427,11 @@ header .back:hover {
   border-radius: 999px;
 }
 
-/* マスタリー */
+/* マスタリー（旧） */
 .mastery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin: 12px 0;
 }
 .mastery-item {
@@ -412,6 +442,66 @@ header .back:hover {
 }
 .mastery-item .label { font-size: 0.95em; font-weight: bold; margin-bottom: 6px; }
 .mastery-item .stars { font-size: 1.2em; letter-spacing: 2px; }
+
+/* 詳細マスター */
+.mastery-detail {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 5px solid #e5e7eb;
+  transition: transform 0.15s;
+}
+.mastery-detail:hover { transform: translateX(2px); }
+.mastery-detail.tier-gold { border-color: #fbbf24; background: linear-gradient(90deg, #fef3c7, #fef9c3); }
+.mastery-detail.tier-silver { border-color: #6ee7b7; background: linear-gradient(90deg, #d1fae5, #ecfdf5); }
+.mastery-detail.tier-bronze { border-color: #93c5fd; background: linear-gradient(90deg, #dbeafe, #eff6ff); }
+.mastery-detail.tier-new { border-color: #d1d5db; }
+.md-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.md-tag { font-size: 1em; font-weight: bold; color: #1f2937; }
+.correct-badge {
+  background: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+.correct-badge strong { color: #ec4899; }
+.correct-badge.new { color: #9ca3af; }
+.md-bar {
+  background: rgba(0,0,0,0.06);
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.md-bar-fill {
+  background: linear-gradient(90deg, #fbbf24, #ec4899, #10b981);
+  height: 100%;
+  transition: width 0.6s ease-out;
+  border-radius: 999px;
+}
+.md-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 0.78em;
+  color: #4b5563;
+  align-items: center;
+}
+.md-pct {
+  margin-left: auto;
+  font-weight: bold;
+  color: #ec4899;
+  font-size: 1.05em;
+}
 
 .big-btn {
   display: block;

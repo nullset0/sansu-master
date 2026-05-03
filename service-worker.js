@@ -1,5 +1,5 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v16';
+const CACHE_NAME = 'sansu-master-v17';
 const ASSETS = [
   './',
   './index.html',
@@ -9,11 +9,18 @@ const ASSETS = [
   './4年.html',
   './5年.html',
   './6年.html',
+  './全学年.html',
   './shared.css',
   './shared.js',
   './qrcode.min.js',
   './manifest.json',
   './icon.svg',
+  './questions/g1.js',
+  './questions/g2.js',
+  './questions/g3.js',
+  './questions/g4.js',
+  './questions/g5.js',
+  './questions/g6.js',
 ];
 
 // インストール時にキャッシュ

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全学年ミックス - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="算数マスター">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>🌟 全学年ミックス 🌟</h1>
+  <p>1〜6年の問題を しゅるい関係なく出題！理解できれば どんどん先へ</p>
+</header>
+
+<div class="status-bar">
+  <div class="status-card streak"><div class="icon">🔥</div><div class="num" id="streak-num">0</div><div class="label">れんぞく日すう</div></div>
+  <div class="status-card today"><div class="icon">📝</div><div class="num" id="today-num">0</div><div class="label">きょうの のこり</div></div>
+  <div class="status-card master"><div class="icon">🏆</div><div class="num" id="master-num">0</div><div class="label">マスターした問題</div></div>
+  <div class="status-card"><div class="icon">⭐</div><div class="num" id="total-correct">0</div><div class="label">ぜんぶの せいかい数</div></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn daily active" data-target="daily">🧠 きょうのおさらい</button>
+  <button class="nav-btn" data-target="howitworks">💡 このモードとは？</button>
+  <button class="nav-btn" data-target="progress">📊 きろく</button>
+</nav>
+
+<section class="section active" id="daily">
+  <div class="card">
+    <h2>🧠 きょうのおさらい</h2>
+    <div class="tip tip-blue">
+      <strong>💡 全学年ミックスモード</strong><br>
+      1〜6年生の <strong>487問</strong> から ランダムに5問出題。<br>
+      理解できれば学年関係なく どんどん難しい問題に進めます。<br>
+      苦手な所は Leitner方式で 何度も 戻ってきます。
+    </div>
+    <div id="daily-area"></div>
+    <div style="margin-top:24px;">
+      <h3>📦 おぼえ箱</h3>
+      <div class="leitner" id="leitner-display"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="howitworks">
+  <div class="card">
+    <h2>💡 全学年ミックスモードとは？</h2>
+
+    <div class="tip">
+      <strong>★ 学年に縛られず 学べる！</strong><br>
+      6年生が 4年生の文章題で苦手を 復習したり、3年生が 5年生の割合に挑戦したり、自由に 進められる。
+    </div>
+
+    <h3>こんな子に おすすめ</h3>
+    <div class="tip tip-blue">
+      ▸ 学年の問題が <strong>かんたんすぎる</strong>子 → 上の学年で挑戦<br>
+      ▸ <strong>苦手な単元</strong>が 過去学年にある子 → 戻って復習<br>
+      ▸ <strong>中学受験</strong>準備したい子 → 全学年から ランダムに<br>
+      ▸ <strong>大人</strong>の脳トレ・算数やり直し
+    </div>
+
+    <h3>仕組み</h3>
+    <div class="tip tip-green">
+      ▸ 1〜6年の全487問が プール<br>
+      ▸ Leitner方式：間違えたら 1日後・3日後・1週間後・2週間後 と復習<br>
+      ▸ 5回連続正解で マスター（出題対象から外れる）<br>
+      ▸ 苦手を 自動検出して AI問題生成 もできる（API設定時）
+    </div>
+
+    <h3>進捗は 学年別と 別管理</h3>
+    <div class="tip">
+      このページで解いた問題の進捗は <strong>「全学年」用に保存</strong>されます。<br>
+      学年ページの進捗とは 別なので、両方使ってもOK。
+    </div>
+  </div>
+</section>
+
+<section class="section" id="progress">
+  <div class="card">
+    <h2>📊 きろく</h2>
+    <h3>たんいごとの じょうたつ（全学年）</h3>
+    <div class="mastery" id="mastery-display"></div>
+    <h3>きょうの しんちょく</h3>
+    <div class="progress-bar"><div class="progress-bar-fill" id="today-progress"></div></div>
+    <p style="text-align:center;color:#6b7280;font-size:0.9em;" id="today-progress-text"></p>
+    <h3>れんぞく日すう</h3>
+    <div class="celebration"><div class="big">🔥</div><h3 id="streak-display-num">0日</h3><p id="streak-display-msg"></p></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="reset-btn" style="padding:8px 16px;font-size:0.85em;background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;">きろくを リセット</button>
+    </div>
+  </div>
+</section>
+
+<footer><p>👨‍👩‍👧 学年に とらわれず、自分のペースで！</p></footer>
+
+</div>
+
+<script src="questions/g1.js"></script>
+<script src="questions/g2.js"></script>
+<script src="questions/g3.js"></script>
+<script src="questions/g4.js"></script>
+<script src="questions/g5.js"></script>
+<script src="questions/g6.js"></script>
+<script>
+window.GRADE_KEY = 'mix';
+// 全学年の TAGS を 統合
+const _allQs = [
+  ...window.G1_QUESTIONS, ...window.G2_QUESTIONS, ...window.G3_QUESTIONS,
+  ...window.G4_QUESTIONS, ...window.G5_QUESTIONS, ...window.G6_QUESTIONS,
+];
+window.TAGS = [...new Set(_allQs.map(q => q.tag))];
+window.QUESTIONS = _allQs;
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

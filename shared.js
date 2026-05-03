@@ -1114,22 +1114,26 @@ function injectSettingsPanel() {
       setTimeout(() => speak(whyText), 600);
     }
     // 「もっとくわしく」ボタン（APIキー設定時のみ）
+    const struggling = (c.wrongCount || 0) >= 2; // 2回以上 まちがえてる = 苦戦中
     if (getApiKey()) {
       const whyEl = fb.querySelector('.why');
       if (whyEl) {
         const moreBtn = document.createElement('button');
         moreBtn.className = 'speak-btn';
         moreBtn.style.cssText = 'background:#ddd6fe;border-color:#a78bfa;margin-top:8px;display:inline-block;';
-        moreBtn.innerHTML = '🤖 AI先生に もっとくわしく聞く';
-        moreBtn.addEventListener('click', async () => {
+        moreBtn.innerHTML = struggling ? '🤖 AI先生が もっとくわしく 教えるよ！' : '🤖 AI先生に もっとくわしく聞く';
+        const askAI = async () => {
           moreBtn.disabled = true;
           moreBtn.innerHTML = '🤖 考えちゅう...';
           try {
             const gradeName = GRADE_NAMES[GRADE_KEY] || '小学生';
+            const struggleNote = struggling
+              ? `\n⚠️ この子は この問題を ${c.wrongCount}回 まちがえています。基本の「なぜ」だけでは 理解できていない可能性が高いです。別のアプローチで、もっと根本から、ステップバイステップで 教えてください。`
+              : '';
             const text = await claudeApi(
-              `あなたは日本の小学校${gradeName}の算数の先生。子どもにやさしく、ふりがな多めで、3〜5文の短い説明をします。`,
-              `この子は次の算数問題に取り組みました。\n\n問題: ${q.q}\n選択肢: ${q.opts.join(' / ')}\n正解: ${q.opts[q.a]}\nこの子の答え: ${q.opts[i]} ${i===q.a?'(正解)':'(不正解)'}\n基本の説明: ${q.why}\n\nこの子が「なるほど！」と納得できるように、もっとくわしく、身近な例え（おやつ、おもちゃ、家族など）を使って説明してください。`,
-              512
+              `あなたは日本の小学校${gradeName}の算数の先生。子どもにやさしく、ふりがな多めで、4〜7文の説明をします。`,
+              `この子は次の算数問題に取り組みました。\n\n問題: ${q.q}\n選択肢: ${q.opts.join(' / ')}\n正解: ${q.opts[q.a]}\nこの子の答え: ${q.opts[i]} ${i===q.a?'(正解)':'(不正解)'}\n基本の説明: ${q.why}${struggleNote}\n\nこの子が「なるほど！」と納得できるように、身近な例え（おやつ、おもちゃ、家族など）を 使って 段階的に 説明してください。`,
+              640
             );
             const div = document.createElement('div');
             div.style.cssText = 'background:#f3f4f6;padding:12px;border-radius:8px;margin-top:8px;text-align:left;font-weight:normal;line-height:1.6;';
@@ -1142,9 +1146,23 @@ function injectSettingsPanel() {
             moreBtn.innerHTML = '🤖 もう一度 try';
             alert('AIエラー：\n' + e.message);
           }
-        });
+        };
+        moreBtn.addEventListener('click', askAI);
         whyEl.appendChild(document.createElement('br'));
         whyEl.appendChild(moreBtn);
+        // 苦戦中＆まちがえた → 自動で AI を 呼ぶ
+        if (struggling && i !== q.a) {
+          setTimeout(askAI, 1500);
+        }
+      }
+    } else if (struggling && i !== q.a) {
+      // APIキー無しでも 苦戦中なら 補足メッセージ
+      const whyEl = fb.querySelector('.why');
+      if (whyEl) {
+        const note = document.createElement('div');
+        note.style.cssText = 'background:#fef3c7;padding:10px;border-radius:8px;margin-top:8px;font-size:0.9em;color:#92400e;';
+        note.innerHTML = `💡 この問題は <strong>${c.wrongCount}回目</strong>のまちがい。⚙️でAPIキーを 設定すると、AI先生が <strong>もっと くわしく</strong> 教えてくれるよ！`;
+        whyEl.appendChild(note);
       }
     }
   }
@@ -1339,20 +1357,45 @@ function injectSettingsPanel() {
     const el = document.getElementById('mastery-display');
     if (!el || TAGS.length === 0) return;
     const all = allQuestions();
-    el.innerHTML = TAGS.map(tag => {
+    // 単元ごとの 詳細
+    const tagData = TAGS.map(tag => {
       const tagQs = all.filter(q => q.tag === tag);
       const total = tagQs.length;
-      if (total === 0) return '';
-      const mastered = tagQs.filter(q => {
+      if (total === 0) return null;
+      let touched = 0, mastered = 0, totalCorrect = 0, totalAnswered = 0;
+      for (const q of tagQs) {
         const c = state.cards[q.id];
-        return c && c.box >= 5;
-      }).length;
-      const stars = Math.round((mastered / total) * 5);
-      const starStr = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
-      return `<div class="mastery-item">
-        <div class="label">${tag}</div>
-        <div class="stars">${starStr}</div>
-        <div style="font-size:0.8em;color:#6b7280;margin-top:4px;">${mastered} / ${total}</div>
+        if (!c) continue;
+        touched++;
+        if ((c.box || 1) >= 5) mastered++;
+        totalCorrect += c.correctCount || 0;
+        totalAnswered += (c.correctCount || 0) + (c.wrongCount || 0);
+      }
+      const masterPct = Math.round(mastered / total * 100);
+      const correctPct = totalAnswered > 0 ? Math.round(totalCorrect / totalAnswered * 100) : 0;
+      return { tag, total, touched, mastered, totalCorrect, totalAnswered, masterPct, correctPct };
+    }).filter(d => d);
+    // マスター度順に
+    tagData.sort((a, b) => b.masterPct - a.masterPct);
+    el.innerHTML = tagData.map(d => {
+      const tier = d.masterPct >= 80 ? 'tier-gold' : d.masterPct >= 50 ? 'tier-silver' : d.masterPct >= 20 ? 'tier-bronze' : 'tier-new';
+      const correctBadge = d.totalAnswered >= 3
+        ? `<span class="correct-badge">正答率 <strong>${d.correctPct}%</strong></span>`
+        : `<span class="correct-badge new">未挑戦</span>`;
+      return `<div class="mastery-detail ${tier}">
+        <div class="md-head">
+          <span class="md-tag">${d.tag}</span>
+          ${correctBadge}
+        </div>
+        <div class="md-bar">
+          <div class="md-bar-fill" style="width:${d.masterPct}%"></div>
+        </div>
+        <div class="md-stats">
+          <span>📚 ${d.total}問</span>
+          <span>🎯 ${d.touched}問やった</span>
+          <span>🏆 ${d.mastered}問マスター</span>
+          <span class="md-pct">${d.masterPct}%</span>
+        </div>
       </div>`;
     }).join('');
   }
