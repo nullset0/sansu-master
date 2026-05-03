@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 算数の おもしろ話 - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<style>
+.story-card {
+  background: white;
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  border-left: 6px solid #fbbf24;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.story-card:hover { transform: translateX(3px); }
+.story-card.expanded { border-left-color: #ec4899; }
+.story-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.story-title { font-size: 1.1em; font-weight: bold; color: #1f2937; flex: 1; }
+.story-tag { font-size: 0.7em; color: #92400e; background: #fef3c7; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.story-summary { color: #6b7280; font-size: 0.9em; margin-top: 6px; }
+.story-body { display: none; margin-top: 14px; line-height: 1.8; color: #374151; }
+.story-card.expanded .story-body { display: block; animation: bounce-in 0.3s; }
+.story-body strong { color: #ec4899; }
+.story-body .visual { background: #f9fafb; padding: 14px; border-radius: 12px; margin: 10px 0; font-family: monospace; font-size: 0.92em; line-height: 1.5; text-align: center; white-space: pre-wrap; }
+.story-body .takeaway { background: linear-gradient(135deg, #d1fae5, #ecfdf5); padding: 12px; border-radius: 12px; margin-top: 12px; border-left: 4px solid #10b981; }
+.story-body .takeaway strong { color: #065f46; }
+.story-body .try { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 12px; border-radius: 12px; margin-top: 8px; border-left: 4px solid #f59e0b; }
+.story-body .try strong { color: #92400e; }
+.story-grid { display: grid; gap: 10px; }
+@media (max-width: 600px) {
+  .story-card { padding: 14px 16px; }
+  .story-title { font-size: 1em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>📖 算数のおもしろ話</h1>
+  <p>歴史・自然・パズル — 算数の不思議な世界へようこそ！</p>
+</header>
+
+<div class="card">
+  <p style="text-align:center;color:#6b7280;margin-bottom:14px;">気になる お話を タップ！</p>
+  <div class="story-grid" id="stories"></div>
+</div>
+
+<footer><p>👨‍👩‍👧 おうちの人と いっしょに 読んでみてね！</p></footer>
+
+</div>
+
+<script>
+const STORIES = [
+  {
+    title: '🤓 ガウス少年の天才ひらめき',
+    tag: '小3〜', summary: '1から100をぜんぶ足すと？7才の天才が一瞬で答えを出した方法',
+    body: `むかしむかし、ドイツの小学校で、先生が こう言いました。<br>
+「1+2+3+...+100 を 計算しなさい！」<br><br>
+みんなが 鉛筆を必死に 動かしている中、7才のガウスは <strong>30秒</strong>で 答えを出した。<br><br>
+彼は 気づいたんです：<div class="visual">  1 + 2 + 3 + ... + 99 + 100
+  ↓
+  1+100 = 101
+  2+99  = 101
+  3+98  = 101
+  ...
+  50+51 = 101
+
+  101 が 50ペア → 101×50 = 5050！</div>
+ガウスは大きくなって <strong>歴史上 最大級の数学者</strong>になった。`,
+    take: 'むずかしい計算には ぜったい かしこい近道がある。',
+    try: '1〜10 を 全部足して みよう。同じやり方で できるよ！(答え：55)',
+  },
+  {
+    title: '🥧 円周率πの 終わりなき旅',
+    tag: '小5〜', summary: 'なぜ円周率は 3.14...と無限につづく？人類は今 何兆桁まで知ってる？',
+    body: `どんな大きさの円でも、<strong>円周 ÷ 直径 = いつも同じ数</strong>になる。<br>
+これが 円周率 <strong>π（パイ）</strong>。<br><br>
+π = 3.1415926535 8979323846 26433...<br>
+4000年前の古代エジプト人も 「3.16くらい」と 知ってた。<br><br>
+すごいのが、<strong>πは 永遠に 終わらない</strong>こと。<br>
+2024年時点で 人類は <strong>100兆桁</strong> まで計算してる！<br>
+（コンピュータで 何ヶ月も かけて）`,
+    take: 'シンプルな図形のなかに 無限の不思議がひそんでいる。',
+    try: 'コップやお皿の 円周と 直径を 紐ではかって 割ってみよう。だいたい3.14になるよ！',
+  },
+  {
+    title: '0️⃣ 0は 後から発明された数',
+    tag: '小2〜', summary: '昔の人類は 0を知らなかった！0を発明したのは...',
+    body: `ローマの数字（I, II, III, IV, V...）を見たことある？<br>
+あの数字には <strong>0が ない</strong>。<br><br>
+0という考えを 発明したのは、<strong>1500年前のインド人</strong>。<br>
+それまで「ない」は 数として認められて いなかった。<br><br>
+0があるおかげで：<br>
+• 100、1000 と 大きい数が書ける<br>
+• 引き算で 5−5 = 0 と書ける<br>
+• 数学が 一気に 進化した<br><br>
+「ない」を「ある（0）」にする発想って、すごい発明！`,
+    take: '当たり前のものは、誰かの大発明の結果かもしれない。',
+    try: '紙に 0を使わずに 「100」を 書けるか やってみよう（答え：めっちゃむずい）',
+  },
+  {
+    title: '⏳ 1兆秒は 何年？',
+    tag: '小4〜', summary: '直感に だまされる 大きい数の感覚',
+    body: `1兆 = 1,000,000,000,000（0が12こ）<br><br>
+じゃあ、<strong>1兆秒は 何年？</strong> 想像してみて。<br>
+100年？ 1000年？<br><br>
+答え：<strong>約 31,710年！</strong><br><br>
+1万秒 = 約2時間46分<br>
+100万秒 = 約11.5日<br>
+10億秒 = 約31.7年（人生の半分くらい）<br>
+<strong>1兆秒 = 約3万年</strong>（マンモスがいた時代から今まで）<br><br>
+人間の感覚って、大きい数になると ぜんぜん 当たらない！`,
+    take: '数字は 1個1個 確かめて 計算するクセを。',
+    try: '「1億円を1日1万円ずつ使うと 何年？」 計算してみよう。(答え：約27年)',
+  },
+  {
+    title: '🌻 フィボナッチと ひまわりの種',
+    tag: '小5〜', summary: '自然の中にひそむ 不思議な数列',
+    body: `1, 1, 2, 3, 5, 8, 13, 21, 34, 55...<br>
+この数列、見たことある？<br><br>
+ルール：<strong>前の2つを 足すと 次の数</strong>。<br>
+1+1=2、1+2=3、2+3=5、3+5=8 ...<br><br>
+これ <strong>フィボナッチ数列</strong>って言うんだけど、<br>
+不思議なのが、<strong>自然のあちこちに 出てくる</strong>こと。<br><br>
+🌻 ひまわりの種の渦巻きの数<br>
+🐚 オウム貝の渦巻き<br>
+🌿 葉っぱのつき方<br>
+🌹 バラの花びらの数（5,8,13...）<br><br>
+誰かが教えたわけじゃないのに、<br>
+植物が 数学を 知っているみたい！`,
+    take: '数学は 自然の言葉。',
+    try: 'まわりの花の花びらを 数えてみよう。フィボナッチ数になってるかも？',
+  },
+  {
+    title: '🏛 黄金比 — 美しさのひみつ',
+    tag: '小6〜', summary: 'モナリザもパルテノン神殿もアップルロゴも...同じ比率',
+    body: `<strong>1 : 1.618</strong><br><br>
+この比率を <strong>黄金比（φ:ファイ）</strong>って言う。<br><br>
+不思議なことに、<br>
+🎨 モナリザの顔の縦横<br>
+🏛 ギリシャのパルテノン神殿<br>
+🍎 Apple のロゴ<br>
+💳 クレジットカードの形<br><br>
+ぜんぶ 黄金比になってる。<br><br>
+人間の脳は 黄金比を「<strong>美しい</strong>」と感じる仕組みらしい。<br>
+2000年以上前から、芸術家・建築家が これを 使ってきた。`,
+    take: '数学と芸術は つながっている。',
+    try: '名刺やクレカの 縦÷横を 計算してみよう。1.6前後になるはず！',
+  },
+  {
+    title: '🎲 じゃんけんの数学',
+    tag: '小4〜', summary: '本当に「3分の1」？意外な戦略',
+    body: `<strong>1人で出すと：</strong>勝つ 1/3、負ける 1/3、あいこ 1/3。<br><br>
+でも実は、<strong>人間は グーを 出す確率が高い</strong>って 統計データがある！<br>
+<div class="visual">グー  35%
+パー  33%
+チョキ 32%</div>
+だから <strong>パーを出すと 統計的に 勝ちやすい</strong>。<br><br>
+さらに：<br>
+• <strong>あいこの後</strong>：人は 違う手に 変える率が高い<br>
+• <strong>負けた後</strong>：勝った手に 変える人 多い<br>
+（負けた人がチョキ → 次は グーに変えがち → 自分はパー）`,
+    take: '統計を知ると ゲームに勝てる！',
+    try: '家族とじゃんけんして「パー」だけ出してみよう。20回中 何回勝てる？',
+  },
+  {
+    title: '🏨 無限ホテルの ふしぎ',
+    tag: '小6〜', summary: '満室なのに 新しい客を 泊められる魔法',
+    body: `「無限ホテル」を 想像して。<br>
+部屋が <strong>無限にある</strong> ホテル。1号室、2号室、3号室、...どこまでも。<br><br>
+ある日、満室。すべての部屋に お客が いる。<br>
+そこに 新しい お客が 1人 やってきた。<br>
+泊まれる？<br><br>
+答え：<strong>泊まれる！</strong><br><div class="visual">1号室の人 → 2号室へ
+2号室の人 → 3号室へ
+3号室の人 → 4号室へ
+...全員 1部屋ずつ ずれる
+→ 1号室が空いた！</div>
+無限の世界では、<br>
+「全員入ってる」のに 「1人ぶん 空きがある」!<br>
+これが 無限の不思議。`,
+    take: '無限は 普通の数とは 違う 振る舞いをする。',
+    try: '「無限+1=無限」って どういうこと？お父さんお母さんに 聞いてみよう。',
+  },
+  {
+    title: '🇪🇬 古代エジプトの分数',
+    tag: '小5〜', summary: '昔の人は 1/2 + 1/3 + 1/12 と書いていた',
+    body: `エジプトの ピラミッドが できる前から、<br>
+人々は 分数を 使ってた。<br><br>
+でも 不思議なことに、<strong>分子は 1だけ</strong>しか 使わなかった。<br>
+（1/2、1/3、1/4、1/5...）<br><br>
+じゃあ <strong>2/5</strong>を 表したい時 どうした？<br><br>
+2/5 = 1/3 + 1/15<br><br>
+このように、<strong>1/○ の足し算</strong>で 表現してた。<br>
+これを 「<strong>エジプト分数</strong>」と 言う。<br><br>
+3/4 なら？ 1/2 + 1/4。<br>
+2/3 なら？ 1/2 + 1/6。`,
+    take: '同じものでも 表し方は ひとつじゃない。',
+    try: '5/6 を 1/○の足し算で 書いてみよう。(ヒント：1/2 + ?)',
+  },
+  {
+    title: '🕐 時計はなぜ 12時間？',
+    tag: '小2〜', summary: '指は10本なのに、時計が 12 + 60 のわけ',
+    body: `普段は 10進法（0〜9）を 使ってる。<br>
+お金も、ものの数も、ほとんど 10ずつ。<br><br>
+でも 時計は：<br>
+• 1日 = <strong>24時間</strong><br>
+• 1時間 = <strong>60分</strong><br>
+• 1分 = <strong>60秒</strong><br><br>
+なんで「10」 や 「100」 じゃないの？<br><br>
+これ、<strong>4000年前のバビロニア</strong>から続いてる。<br>
+60は <strong>1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60</strong> で 割り切れる！<br>
+めっちゃ便利な数。<br><br>
+(10は 1, 2, 5, 10 だけ。少ない)`,
+    take: '昔の人の知恵が 今も生きている。',
+    try: '60の約数を全部書き出してみよう。10の約数と比べてどっちが多い？',
+  },
+  {
+    title: '🚪 モンティ・ホール問題',
+    tag: '小6〜', summary: '直感を裏切る 確率の不思議',
+    body: `<strong>3つのドア</strong>。1つの後ろに 高級車。残り2つは ヤギ。<br><br>
+あなたは ドア1を 選んだ。<br>
+司会者（答えを知ってる）が <strong>ドア3を開けて</strong>「ヤギです」と見せる。<br><br>
+そこで 司会者が言う：<br>
+「<strong>ドア2に変えますか？</strong>そのままドア1ですか？」<br><br>
+直感では「どっちも 1/2 でしょ？」と 思うよね。<br>
+でも 実は <strong>ドア2に変えた方が 2倍 当たりやすい！</strong><br><div class="visual">最初に選んだドア(1)が 当たり：1/3
+最初に選んだドア(1)が ハズレ：2/3
+→ 変えた方が 確率2/3で 当たる！</div>`,
+    take: '直感は 確率では 当てにならない。',
+    try: '紙コップ3つで お父さんと 実験！20回 やって 変えた時と 変えなかった時の 勝率を くらべる。',
+  },
+  {
+    title: '🍕 ピザを6人で 7枚 公平に',
+    tag: '小3〜', summary: '分数の実用！意外と難しい問題',
+    body: `ピザが <strong>7枚</strong>、人が <strong>6人</strong>。<br>
+全員 同じ量を食べたい。1人 何枚？<br><br>
+答え：<strong>7÷6 = 1と1/6 枚 ずつ</strong>。<br><br>
+でも、ピザを 1/6 に 切るのは 大変。<br>
+どうやって 全員 公平に分ける？<br><br>
+コツ：<strong>4枚を 半分に切って 8つに、3枚を3等分して 9つにする</strong>。<br>
+<div class="visual">4枚 → 半分ずつ8つ → 6人に1切れずつ + 2余り
+3枚 → 3等分9つ → 6人に1切れずつ + 3余り
+
+余りを どう分けるか... むずいね！</div>
+別解：全部 1/6 に切る → 7×6 = 42切れ → 1人7切れずつ。`,
+    take: '分数は 実生活の問題解決ツール。',
+    try: 'お皿に 7個のクッキー、3人で公平に 食べる方法は？(答え：2と1/3個ずつ)',
+  },
+  {
+    title: '🧩 タングラム — 7ピースの魔法',
+    tag: '小2〜', summary: '7つのピースで何でも作れる',
+    body: `中国で 1000年以上前に 生まれた パズル。<br><br>
+正方形を <strong>7つの図形</strong>に 切る：<br>
+• 大きい三角形 × 2<br>
+• 中くらい三角形 × 1<br>
+• 小さい三角形 × 2<br>
+• 四角形 × 1<br>
+• 平行四辺形 × 1<br><br>
+この7ピースを 組み合わせると、<br>
+🐈 ねこ、🦅 鳥、🚣 ボート、🏠 家、文字...<br>
+<strong>何千通りもの形</strong>が作れる！<br><br>
+小さな部品から 大きい世界が 生まれる。<br>
+これは <strong>図形・空間認識</strong>の 力を きたえる遊び。`,
+    take: '同じ部品でも 組み合わせで 無限の可能性。',
+    try: '紙を 7つに切って ねこの形 作ってみよう！(検索: タングラム ねこ)',
+  },
+  {
+    title: '♾ メビウスの輪 — ねじれた紙の不思議',
+    tag: '小3〜', summary: '表と裏が消える！紙テープ実験',
+    body: `紙テープを <strong>1回ねじって 輪っか</strong>にする。<br><br>
+できた輪っかを ペンで <strong>真ん中に線</strong>を 書きながら なぞって。<br>
+すると 不思議なことが 起こる：<br><br>
+<strong>戻ってきた時、紙の 表も裏も 全部に 線が ついてる！</strong><br><br>
+普通の輪っかなら、表だけ や 裏だけに 線が つくよね。<br>
+でも メビウスの輪は <strong>表と裏が つながってる</strong>。<br>
+表でも裏でもない、<strong>「面が1つだけ」</strong>の 不思議な物体。<br><br>
+これを 数学では「<strong>トポロジー</strong>」という分野で 研究してる。`,
+    take: '次元や形には 直感を超える世界がある。',
+    try: '紙テープで作って 線を引いてみよう！次は はさみで 真ん中を切ってみて（驚くよ）',
+  },
+  {
+    title: '🌌 大きな数の 比較',
+    tag: '小4〜', summary: '人類80億、星1兆×1兆、細胞37兆...',
+    body: `身の回りの 大きい数：<br><br>
+👥 地球の人口：<strong>80億</strong>（8,000,000,000）<br>
+🐜 地球のアリ：<strong>2京匹</strong>（2,000兆）<br>
+🧬 体の細胞：<strong>37兆個</strong><br>
+🌟 宇宙の星：<strong>1垓 = 100京 個</strong>（10²² 個）<br>
+🔬 1グラムの 水分子：<strong>3垓 個</strong><br><br>
+すごいよね？<br>
+身近なものでも、ミクロな世界では 想像を こえる数が 動いてる。<br><br>
+<strong>10⁰</strong> = 1<br>
+<strong>10⁶</strong> = 100万<br>
+<strong>10⁹</strong> = 10億<br>
+<strong>10¹²</strong> = 1兆<br>
+<strong>10²²</strong> = 100垓`,
+    take: '数学は 宇宙のスケールを 理解する道具。',
+    try: '身体の細胞37兆を 1秒に1個 数えると 何年かかる？(答え：117万年)',
+  },
+  {
+    title: '💡 アルキメデスの「ユーリカ！」',
+    tag: '小5〜', summary: 'お風呂で発見した 体積を測る方法',
+    body: `古代ギリシャの 数学者 アルキメデス。<br>
+ある日、<strong>王様の冠</strong>が 純金か 確かめる仕事を 任された。<br><br>
+冠を こわさずに、純金か どう調べる？<br>
+彼は 困って、お風呂に入った。<br><br>
+湯船に 体を入れた瞬間、<strong>お湯が あふれた</strong>。<br>
+ピーン！と ひらめいた。<br><br>
+「<strong>体を入れた分だけ お湯が あふれる！</strong>」<br>
+→ 物の体積は あふれた水の量で わかる！<br><br>
+うれしくて、裸のまま「ユーリカ！(わかった！)」と 街を走った。<br>
+そして 冠が 純金じゃないと 見破った。`,
+    take: '日常のなにげない瞬間に 発見はある。',
+    try: 'コップに水いっぱい入れて、おもちゃを 沈めてみよう。あふれた水が 体積！',
+  },
+  {
+    title: '🔁 1/3 = 0.333... 永遠につづく',
+    tag: '小4〜', summary: '小数で表すと終わらない分数たち',
+    body: `1 ÷ 3 = ?<br>
+電卓で 計算すると... 0.333333333...<br>
+<strong>3が永遠につづく</strong>。<br><br>
+1 ÷ 7 は もっと不思議：<br>
+0.<strong>142857</strong> 142857 142857...<br>
+<strong>6桁のかたまり</strong>が くりかえし。<br><br>
+じゃあ 1 ÷ 13 は？<br>
+0.<strong>076923</strong> 076923... 同じく6桁。<br><br>
+<strong>1 ÷ 17</strong> は なんと 16桁の くりかえし！<br><br>
+分数は きれいでも、小数にすると ねこの目みたいに 表情が変わる。`,
+    take: '同じ数も 表し方で 顔つきが変わる。',
+    try: '電卓で 1÷9, 1÷11, 1÷81 を 計算。どんな模様？',
+  },
+  {
+    title: '🔢 魔方陣 — 縦横ナナメ ぜんぶ同じ',
+    tag: '小4〜', summary: '3×3に1〜9を並べて すべての列が15',
+    body: `<strong>魔方陣（まほうじん）</strong>って 知ってる？<br><br>
+3×3の マスに 1〜9 の数字を 入れて、<br>
+<strong>タテ・ヨコ・ナナメ ぜんぶ 同じ合計</strong>に なるパズル。<div class="visual">  4 | 9 | 2
+  ─────────
+  3 | 5 | 7
+  ─────────
+  8 | 1 | 6
+全部の列：4+9+2=15 / 3+5+7=15
+            8+1+6=15 / 4+3+8=15
+            9+5+1=15 / 2+7+6=15
+ナナメ：4+5+6=15 / 2+5+8=15</div>
+昔の中国では「<strong>洛書（らくしょ）</strong>」と呼ばれて<br>
+神聖な図形と 思われてた。<br><br>
+4×4、5×5の魔方陣も ある。`,
+    take: '数字の並べ方には 美しいパターンが ひそむ。',
+    try: '上の魔方陣を 自分で書いてみよう。 そして 5を真ん中以外に置けるか試す！',
+  },
+  {
+    title: '🎼 音楽の中の 数学',
+    tag: '小5〜', summary: 'リズム・音階・ハーモニーは数の関係',
+    body: `音楽と 数学は つながってる。<br><br>
+🎵 <strong>リズム</strong>：4分音符・8分音符・16分音符 ぜんぶ 分数<br>
+（4分の1、8分の1、16分の1）<br><br>
+🎹 <strong>音階</strong>：ピアノの「ド」と 1オクターブ上の「ド」、<br>
+振動数（音の波）が ちょうど <strong>2倍</strong>になっている。<br><br>
+🎻 <strong>ハーモニー</strong>：きれいに 響く音は <br>
+振動数の比が 簡単な数：<br>
+• ド と ソ → 2:3<br>
+• ド と ファ → 3:4<br>
+• ド と ミ → 4:5<br><br>
+だから 音楽は 数学的に 「美しい」音が決まってる。`,
+    take: '感覚的なものにも 数学の法則がある。',
+    try: 'ピアノで「ド」と「ソ」を一緒に弾いてみて。 きれいに響く理由は 2:3だから！',
+  },
+  {
+    title: '🏆 数学者の おもしろエピソード',
+    tag: '小5〜', summary: '天才たちの ユニークな人生',
+    body: `<strong>ラマヌジャン（インド）</strong><br>
+26歳まで 学校もまともに 出てない人なのに、<br>
+ノートに <strong>3000以上の公式</strong>を 書いた。<br>
+本人「<strong>女神が夢で 教えてくれた</strong>」<br><br>
+<strong>オイラー（スイス）</strong><br>
+50歳で 視力を 失った。でも 計算は止まらず、<br>
+<strong>頭の中だけで</strong> 大量の数学を生み出した。<br><br>
+<strong>ガロア（フランス）</strong><br>
+20歳で 決闘で死亡。でも 死ぬ前夜に書いた手紙が、<br>
+後の数学を 100年進めた。<br><br>
+<strong>森重文（日本）</strong><br>
+日本人初の フィールズ賞（数学のノーベル賞）受賞。<br>
+今も京都大学で 研究中。`,
+    take: '数学は 国も時代も こえた 共通言語。',
+    try: '気になる数学者の名前を ひとつ 検索してみよう！',
+  },
+];
+
+const wrap = document.getElementById('stories');
+STORIES.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'story-card';
+  el.innerHTML = `
+    <div class="story-head">
+      <div class="story-title">${s.title}</div>
+      <span class="story-tag">${s.tag}</span>
+    </div>
+    <div class="story-summary">${s.summary}</div>
+    <div class="story-body">
+      <div>${s.body}</div>
+      <div class="takeaway"><strong>📌 ポイント：</strong>${s.take}</div>
+      <div class="try"><strong>🎯 やってみよう：</strong>${s.try}</div>
+    </div>
+  `;
+  el.addEventListener('click', () => {
+    el.classList.toggle('expanded');
+  });
+  wrap.appendChild(el);
+});
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>

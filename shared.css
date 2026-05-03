@@ -84,6 +84,39 @@ header .back:hover {
   .mix-banner-sub { font-size: 0.75em; }
 }
 
+.fun-banners {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.fun-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  text-decoration: none;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transition: transform 0.2s;
+  min-height: 76px;
+}
+.fun-banner:hover, .fun-banner:active { transform: translateY(-3px); }
+.fun-banner.story { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.fun-banner.puzzle { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+.fb-icon { font-size: 2.2em; flex-shrink: 0; }
+.fb-text { flex: 1; }
+.fb-title { font-size: 1.05em; font-weight: bold; margin-bottom: 2px; }
+.fb-sub { font-size: 0.78em; opacity: 0.95; line-height: 1.4; }
+@media (max-width: 600px) {
+  .fun-banners { grid-template-columns: 1fr; gap: 10px; }
+  .fun-banner { padding: 14px; }
+  .fb-icon { font-size: 1.8em; }
+  .fb-title { font-size: 0.95em; }
+  .fb-sub { font-size: 0.72em; }
+}
+
 .hero-features {
   display: flex;
   flex-wrap: wrap;

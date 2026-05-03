@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💡 ひらめきパズル - 算数マスター</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#ec4899">
+<style>
+.puzzle-card {
+  background: white;
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  border-left: 6px solid #a78bfa;
+}
+.puzzle-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.puzzle-num {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.puzzle-cat {
+  font-size: 0.7em;
+  color: #5b21b6;
+  background: #ddd6fe;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.puzzle-q {
+  font-size: 1.05em;
+  line-height: 1.7;
+  color: #1f2937;
+  margin: 8px 0 14px;
+}
+.puzzle-q .visual {
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+  font-family: monospace;
+  font-size: 0.95em;
+  margin: 8px 0;
+  white-space: pre-wrap;
+  text-align: center;
+}
+.show-ans-btn {
+  width: 100%;
+  padding: 12px;
+  background: #fef3c7;
+  border: 2px dashed #fcd34d;
+  border-radius: 12px;
+  color: #92400e;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.95em;
+  min-height: 48px;
+}
+.show-ans-btn:hover { background: #fde68a; }
+.puzzle-ans {
+  display: none;
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+  border: 2px solid #6ee7b7;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  line-height: 1.8;
+  color: #065f46;
+  animation: bounce-in 0.3s;
+}
+.puzzle-ans.show { display: block; }
+.puzzle-ans strong { color: #047857; }
+.puzzle-ans .ans-key {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #ec4899;
+  text-align: center;
+  margin: 8px 0;
+  background: white;
+  padding: 8px;
+  border-radius: 10px;
+}
+@media (max-width: 600px) {
+  .puzzle-card { padding: 14px 16px; }
+  .puzzle-q { font-size: 1em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← もどる</a>
+  <h1>💡 ひらめきパズル</h1>
+  <p>論理・推理・パターン — 頭の体操で 応用力アップ！</p>
+</header>
+
+<div class="card">
+  <div class="tip tip-blue" style="text-align:center;">
+    <strong>★ パズルの遊びかた</strong><br>
+    まず自分で考える → 「答えを見る」を タップ → 解説を読む<br>
+    <strong>すぐ見ないで、3分は 考えよう！</strong>
+  </div>
+  <div id="puzzles"></div>
+</div>
+
+<footer><p>👨‍👩‍👧 家族で わいわい 解こう！</p></footer>
+
+</div>
+
+<script>
+const PUZZLES = [
+  {
+    cat: '数列', q: `1, 4, 9, 16, ?, 36 — ?に入る数は？`,
+    ans: '答え: <span class="ans-key">25</span>これは <strong>平方数</strong>(1², 2², 3², 4², 5², 6²) の数列。1×1, 2×2, 3×3, 4×4, 5×5, 6×6。',
+  },
+  {
+    cat: '数列', q: `2, 6, 12, 20, 30, ? — 次は？`,
+    ans: '答え: <span class="ans-key">42</span>差が 4, 6, 8, 10, 12 と 2ずつ ふえる。または n×(n+1) の形。30 + 12 = 42。',
+  },
+  {
+    cat: '論理', q: `お父さん、お母さん、ぼく の 3人。誰が 一番 年下？<br>ヒント1：お母さんは お父さんより 若い<br>ヒント2：ぼくは お母さんより 若い`,
+    ans: '答え: <span class="ans-key">ぼく</span>お父さん > お母さん > ぼく の順。',
+  },
+  {
+    cat: '論理', q: `3つの箱 A, B, C のどれか1つに 金貨が 入っている。<br>A: 「金貨は ぼくの中」<br>B: 「金貨は Cの中」<br>C: 「金貨は Bの中じゃない」<br>1人だけが ホント、2人は ウソを 言ってる。金貨は どこ？`,
+    ans: '<div>A が 本当: 金貨はA。すると Cの「Bじゃない」も本当 → 2人本当でルール違反。<br>B が 本当: 金貨はC。すると C「Bじゃない」も本当 → ルール違反。<br><strong>C が 本当</strong>: 金貨は B以外（A or C）。A は「自分」と言ってウソなので A以外。だから 金貨は <strong>C？</strong>でも C「Bじゃない」も本当のままで OK。</div><div class="ans-key">金貨は C</div>',
+  },
+  {
+    cat: '推理', q: `私の年齢の 2倍は、私の年齢に 12 を 足したのと同じです。私は 何歳？`,
+    ans: '答え: <span class="ans-key">12歳</span>私 × 2 = 私 + 12 → 私 = 12。式：x×2 = x+12、x = 12。',
+  },
+  {
+    cat: '計算', q: `あ + い = 11、あ − い = 7。あ と い はそれぞれ いくつ？`,
+    ans: '<div>2つの式を たすと: あ + い + あ − い = 11 + 7 → <strong>2あ = 18</strong> → あ = 9。い = 11 − 9 = 2。</div><div class="ans-key">あ = 9、い = 2</div>',
+  },
+  {
+    cat: '図形', q: `<div class="visual">マッチ棒で 正方形が 4つ：
+
+   ┌─┬─┐
+   │ │ │
+   ├─┼─┤
+   │ │ │
+   └─┴─┘
+12本のマッチ棒。3本だけ 動かして 正方形を 3つに する方法は？</div>`,
+    ans: 'コの字型に 並べ直すか、十字形を作る。たとえば 真ん中の縦棒2本と 横棒1本を取り除き、外側に並べる→正方形3つ。<div class="ans-key">解は複数あり！紙とマッチで試そう</div>',
+  },
+  {
+    cat: '推理', q: `私が考えてる 数：<br>① 10より大きく 30より小さい<br>② 3で わり切れる<br>③ 5で わり切れる<br>何の数？`,
+    ans: '15 と 30 と 45...のうち 10〜30 → <strong>15</strong> のみ。<div class="ans-key">15</div>3と5の最小公倍数 15。',
+  },
+  {
+    cat: '計算', q: `300円のアイスを 4つ買う。<br>10%引きクーポンを 使うと、いくら？`,
+    ans: '<div>300×4 = 1200円 → 10%引き = 1200×0.9 = <strong>1080円</strong></div><div class="ans-key">1080円</div>(120円 おとく！)',
+  },
+  {
+    cat: '論理', q: `5Lのびんと 3Lのびんが ある。<br>蛇口で 水は いくらでも使える。<br>「ちょうど 4L」を どうやって 量る？`,
+    ans: '<div>① 5Lびんを 満タンに → 5L<br>② 5Lびんから 3Lびんに 注ぐ → 5Lびんに 2L残る<br>③ 3Lびんを 空にする<br>④ 5Lびんの 2L を 3Lびんに 移す → 3Lびんに 2L<br>⑤ 5Lびんを 満タンに → 5L<br>⑥ 5Lびんから 3Lびんを 満タンにする → 3Lびんは あと1L 入るだけ → 5Lびんに <strong>4L 残る！</strong></div><div class="ans-key">かいけつ！</div>',
+  },
+  {
+    cat: '時間', q: `11時23分 の とき、時計の 短い針 と 長い針 の 間の角度は およそ 何度？`,
+    ans: '<div>長針は 23分の位置 → 360/60×23 = <strong>138°</strong>(12時から)<br>短針は 11時23分 → 11×30 + 23×0.5 = 330 + 11.5 = <strong>341.5°</strong><br>差: 341.5 − 138 = <strong>203.5°</strong> → 反対回りなら 360 − 203.5 = <strong>約156.5°</strong></div><div class="ans-key">約 156.5°</div>',
+  },
+  {
+    cat: '確率', q: `さいころを 2個 ふる。出た目の 合計が 7になる確率は？`,
+    ans: '<div>全パターン: 6×6 = 36通り<br>合計7: (1,6)(2,5)(3,4)(4,3)(5,2)(6,1) = <strong>6通り</strong><br>確率: 6/36 = <strong>1/6</strong></div><div class="ans-key">1/6（約 17%）</div>',
+  },
+  {
+    cat: '推理', q: `100まで 数えるとき、「3」が 何回 出てくる？<br>(例: 13には1回、33には2回...)`,
+    ans: '<div>一の位の3：3,13,23,33,43,53,63,73,83,93 → 10回<br>十の位の3：30,31,32,33,34,35,36,37,38,39 → 10回<br>合計 <strong>20回</strong> (33は両方カウント)</div><div class="ans-key">20回</div>',
+  },
+  {
+    cat: '図形', q: `1辺6cmの 正方形を、1辺3cmの正方形 何個に 切れる？`,
+    ans: '<div>面積比で：6×6 / 3×3 = 36/9 = <strong>4</strong></div><div class="ans-key">4個</div>2×2 のマス目に なる',
+  },
+  {
+    cat: '速さ', q: `家から学校まで 1km。<br>行きは 時速4km、帰りは 時速6km。<br>ぜんぶの平均速度 は何km/h？(直感ではなく計算で！)`,
+    ans: '<div>行きの時間：1÷4 = 1/4 時間 = 15分<br>帰りの時間：1÷6 = 1/6 時間 = 10分<br>合計：25分 = 5/12 時間 で 2km<br>平均速度：2 ÷ 5/12 = 24/5 = <strong>4.8km/h</strong></div><div class="ans-key">4.8 km/h</div>(直感だと5km/hだけど ちがう！調和平均の不思議)',
+  },
+  {
+    cat: '推理', q: `兄と弟、年の差は 6才。<br>3年後、兄は 弟の 2倍の年齢。<br>2人は今 何才？`,
+    ans: '<div>3年後：兄 = 弟×2、兄 − 弟 = 6 (年の差は変わらず)<br>弟×2 − 弟 = 6 → 弟（3年後）= 6 才<br>→ 弟は今 <strong>3才</strong>、兄は今 <strong>9才</strong></div><div class="ans-key">弟3才、兄9才</div>',
+  },
+  {
+    cat: 'パターン', q: `三角数：1, 3, 6, 10, 15, ?<br>ボウリングのピンの形のように 三角形に並べた数。次は？`,
+    ans: '<div>差が 2, 3, 4, 5, 6 と 増えていく<br>15 + 6 = <strong>21</strong></div><div class="ans-key">21</div>n×(n+1)/2 の数列',
+  },
+  {
+    cat: '論理', q: `100個の 石。<br>2人が 交互に 1〜3個 取る。<br>最後の石を 取った人が <strong>勝ち</strong>。<br>必ず勝つには 1番目と2番目 どっち？`,
+    ans: '<div>4の倍数を 残せば勝ち。<br>100 = 4×25。1番目が 取ると 99〜97になり、4の倍数残せない。<br><strong>2番目が必勝</strong>：相手が a個取ったら 自分は (4−a)個取る → 必ず4の倍数を残せる。最後の4個も 自分が 取れる。</div><div class="ans-key">2番目が必勝</div>',
+  },
+  {
+    cat: '計算', q: `1から100までの 偶数（2,4,6,...100）を 全部 たすと いくつ？`,
+    ans: '<div>偶数は 50個。最小2、最大100。<br>(2 + 100) × 50 ÷ 2 = 102×25 = <strong>2550</strong></div><div class="ans-key">2550</div>ガウスのテクニック！',
+  },
+  {
+    cat: '図形', q: `4本の直線で、円を 何個に 分けられる？(最大何個か)`,
+    ans: '<div>0本：1個<br>1本：2個<br>2本：4個<br>3本：7個<br>4本：<strong>11個</strong> (n本のとき n×(n+1)/2 +1)</div><div class="ans-key">最大 11個</div>すべての直線が 互いに交わるように 引く',
+  },
+];
+
+const wrap = document.getElementById('puzzles');
+PUZZLES.forEach((p, i) => {
+  const el = document.createElement('div');
+  el.className = 'puzzle-card';
+  const aid = 'ans-' + i;
+  el.innerHTML = `
+    <div class="puzzle-head">
+      <div class="puzzle-num">${i+1}</div>
+      <div style="flex:1;"></div>
+      <span class="puzzle-cat">${p.cat}</span>
+    </div>
+    <div class="puzzle-q">${p.q}</div>
+    <button class="show-ans-btn" data-target="${aid}">🔓 答えを見る</button>
+    <div class="puzzle-ans" id="${aid}">${p.ans}</div>
+  `;
+  wrap.appendChild(el);
+});
+document.querySelectorAll('.show-ans-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const a = document.getElementById(btn.dataset.target);
+    a.classList.add('show');
+    btn.style.display = 'none';
+  });
+});
+</script>
+<script src="shared.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+</body>
+</html>
