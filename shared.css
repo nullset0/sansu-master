@@ -663,6 +663,48 @@ canvas.confetti-canvas {
   z-index: 9998;
 }
 
+/* QRコード モーダル */
+#qr-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadein 0.2s;
+}
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+.qr-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: bounce-in 0.3s ease-out;
+}
+.qr-modal h3 {
+  text-align: center;
+  font-size: 1.3em;
+  color: #ec4899;
+  margin-bottom: 12px;
+}
+.qr-svg-wrap {
+  background: white;
+  padding: 12px;
+  border-radius: 16px;
+  border: 2px solid #f3f4f6;
+  margin: 16px 0 8px;
+}
+.qr-svg-wrap svg {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
 /* メモ（手書き）エリア */
 .memo-area {
   margin: 12px 0;

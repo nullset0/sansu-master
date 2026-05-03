@@ -25,6 +25,80 @@ function setApiKey(key) {
   if (key) localStorage.setItem(API_KEY_STORAGE, key);
   else localStorage.removeItem(API_KEY_STORAGE);
 }
+
+// URLハッシュから APIキーを 受け取って 保存（QR受信側）
+(function handleApiKeyFromHash() {
+  if (!location.hash || !location.hash.startsWith('#apikey=')) return;
+  try {
+    const key = decodeURIComponent(location.hash.slice('#apikey='.length));
+    if (key.startsWith('sk-ant-')) {
+      setApiKey(key);
+      // URLからハッシュを除去
+      history.replaceState(null, '', location.pathname + location.search);
+      // 通知（DOM準備後）
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          alert('✅ APIキーを ほぞんしました！\n右下の ⚙️ で 確認できます。');
+        }, 300);
+      });
+    }
+  } catch(e) { console.warn('apikey parse failed', e); }
+})();
+
+// QRコードを生成（qrcode-generator が読み込まれている前提）
+function generateApiKeyQR() {
+  const key = getApiKey();
+  if (!key) return null;
+  if (typeof qrcode === 'undefined') return null;
+  // URL形式：https://sansu.ecaiclub.com/#apikey=XXX
+  const url = location.origin + location.pathname.replace(/\/[^/]*$/, '/') + '#apikey=' + encodeURIComponent(key);
+  // QR バージョン自動・誤り訂正レベル M
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  return { svg: qr.createSvgTag({ scalable: true, margin: 4 }), url };
+}
+
+async function loadQRLib() {
+  if (typeof qrcode !== 'undefined') return true;
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'qrcode.min.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
+async function showApiKeyQR() {
+  const ok = await loadQRLib();
+  if (!ok) { alert('QRライブラリの読み込みに失敗しました'); return; }
+  const r = generateApiKeyQR();
+  if (!r) { alert('APIキーが設定されていません'); return; }
+  // モーダル表示
+  const overlay = document.createElement('div');
+  overlay.id = 'qr-overlay';
+  overlay.innerHTML = `
+    <div class="qr-modal">
+      <h3>📱 QRコードで 他の端末へ</h3>
+      <p style="color:#6b7280;font-size:0.9em;line-height:1.5;">
+        ① スマホ・タブレットの <strong>カメラ</strong>を ひらく<br>
+        ② このQRに かざす<br>
+        ③ 出てきた リンクを タップ<br>
+        ④ 自動でAPIキーが ほぞんされます！
+      </p>
+      <div class="qr-svg-wrap">${r.svg}</div>
+      <p style="font-size:0.7em;color:#9ca3af;text-align:center;margin-top:6px;">
+        ⚠️ このQRには APIキーが ふくまれます。他人に 見せないでください。
+      </p>
+      <button id="qr-close" style="margin-top:16px;width:100%;padding:14px;background:#374151;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:1em;">とじる</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => {
+    if (e.target.id === 'qr-overlay' || e.target.id === 'qr-close') overlay.remove();
+  });
+}
 async function claudeApi(systemPrompt, userPrompt, maxTokens = 1024) {
   const key = getApiKey();
   if (!key) throw new Error('APIキーが せっていされていません');
@@ -795,11 +869,13 @@ function injectSettingsPanel() {
   function refreshApiStatus() {
     const k = getApiKey();
     if (k) {
-      apiStatus.innerHTML = `✅ せってい済み (${k.slice(0,12)}...) <button id="opt-apikey-clear" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.85em;">けす</button>`;
+      apiStatus.innerHTML = `✅ せってい済み (${k.slice(0,12)}...) <button id="opt-apikey-clear" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.85em;">けす</button><br><button id="opt-apikey-qr" style="margin-top:6px;width:100%;padding:8px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:0.85em;">📱 QRコードで 他端末へ送る</button>`;
       apiInput.value = '';
       apiInput.placeholder = '新しいキーで上書き';
       const clearBtn = document.getElementById('opt-apikey-clear');
       if (clearBtn) clearBtn.addEventListener('click', () => { setApiKey(''); refreshApiStatus(); });
+      const qrBtn = document.getElementById('opt-apikey-qr');
+      if (qrBtn) qrBtn.addEventListener('click', showApiKeyQR);
     } else {
       apiStatus.textContent = 'まだ未設定';
     }
