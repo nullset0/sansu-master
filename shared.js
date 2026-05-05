@@ -3,6 +3,121 @@
 // 使い方: window.GRADE_KEY = 'g4'; window.QUESTIONS = [...]; を先に定義してから読み込む
 // =========================================================
 
+// === バッジシステム ===
+const BADGES_KEY = 'sansu-master-badges';
+const BADGES = [
+  // ストリーク
+  { id:'streak-3', icon:'🔥', tier:'bronze', name:'3日れんぞく', desc:'3日 つづけて 勉強したよ', hint:'3日れんぞくで げっと！', check:s=>s.maxStreak>=3 },
+  { id:'streak-7', icon:'🔥', tier:'silver', name:'1週間れんぞく', desc:'7日 つづけて 勉強した！', hint:'7日れんぞくで げっと！', check:s=>s.maxStreak>=7 },
+  { id:'streak-14', icon:'🔥', tier:'gold', name:'2週間れんぞく', desc:'14日 つづけて すごい！', hint:'14日れんぞくで げっと！', check:s=>s.maxStreak>=14 },
+  { id:'streak-30', icon:'🔥', tier:'gold', name:'1ヶ月れんぞく', desc:'1ヶ月 まいにち！', hint:'30日れんぞくで げっと！', check:s=>s.maxStreak>=30 },
+  { id:'streak-100', icon:'👑', tier:'legend', name:'100日れんぞく', desc:'100日れんぞく！てんさい！', hint:'100日れんぞくで げっと！', check:s=>s.maxStreak>=100 },
+  // 問題数
+  { id:'vol-10', icon:'🌱', tier:'bronze', name:'はじめての10問', desc:'10問 とけたね！', hint:'10問とくで げっと！', check:s=>s.totalCorrect>=10 },
+  { id:'vol-100', icon:'🌟', tier:'silver', name:'100問マスター', desc:'100問 とけた すごい！', hint:'100問とくで げっと！', check:s=>s.totalCorrect>=100 },
+  { id:'vol-500', icon:'💎', tier:'gold', name:'500問とく', desc:'500問！算数マシーン！', hint:'500問とくで げっと！', check:s=>s.totalCorrect>=500 },
+  { id:'vol-1000', icon:'👑', tier:'gold', name:'1000問とく', desc:'1000問！ものすごい！', hint:'1000問とくで げっと！', check:s=>s.totalCorrect>=1000 },
+  { id:'vol-5000', icon:'🚀', tier:'legend', name:'5000問とく', desc:'5000問！LEGEND！', hint:'5000問とくで げっと！', check:s=>s.totalCorrect>=5000 },
+  // マスター
+  { id:'master-10', icon:'🥉', tier:'bronze', name:'10問マスター', desc:'10問を マスター箱へ！', hint:'10問マスターで げっと！', check:s=>s.totalMastered>=10 },
+  { id:'master-50', icon:'🥈', tier:'silver', name:'50問マスター', desc:'50問マスター！', hint:'50問マスターで げっと！', check:s=>s.totalMastered>=50 },
+  { id:'master-100', icon:'🥇', tier:'gold', name:'100問マスター', desc:'100問マスター！すごい！', hint:'100問マスターで げっと！', check:s=>s.totalMastered>=100 },
+  { id:'master-200', icon:'💎', tier:'gold', name:'200問マスター', desc:'200問マスター！てんさい！', hint:'200問マスターで げっと！', check:s=>s.totalMastered>=200 },
+  { id:'master-all', icon:'👑', tier:'legend', name:'全問マスター', desc:'全487問 ぜんぶマスター！LEGEND！', hint:'487問ぜんぶマスターで げっと！', check:s=>s.totalMastered>=487 },
+  // 学習日
+  { id:'days-7', icon:'📅', tier:'bronze', name:'7日勉強', desc:'7日 勉強した！', hint:'7日勉強で げっと！', check:s=>s.studyDays>=7 },
+  { id:'days-30', icon:'📅', tier:'silver', name:'30日勉強', desc:'30日 勉強した！', hint:'30日勉強で げっと！', check:s=>s.studyDays>=30 },
+  { id:'days-100', icon:'📅', tier:'gold', name:'100日勉強', desc:'100日勉強！LEGEND！', hint:'100日勉強で げっと！', check:s=>s.studyDays>=100 },
+  // 達成
+  { id:'perfect-1', icon:'⭐', tier:'bronze', name:'パーフェクト初回', desc:'5問ぜんぶ正解！', hint:'1セッション5問ぜんぶ正解で げっと！', check:(s,b)=>(b.stats.perfectSessions||0)>=1 },
+  { id:'perfect-10', icon:'💪', tier:'silver', name:'パーフェクト10回', desc:'パーフェクト×10！', hint:'パーフェクト10回で げっと！', check:(s,b)=>(b.stats.perfectSessions||0)>=10 },
+  { id:'big10', icon:'🎯', tier:'silver', name:'1日10問', desc:'1日に10問とけた！', hint:'1日に10問とくで げっと！', check:(s,b)=>(b.stats.bigDays||0)>=1 },
+  // AI
+  { id:'ai-1', icon:'🤖', tier:'bronze', name:'AI先生はじめて', desc:'AI先生に質問した！', hint:'AI先生にもっとくわしく聞くで げっと！', check:(s,b)=>(b.stats.aiCalls||0)>=1 },
+  { id:'ai-10', icon:'🧠', tier:'silver', name:'AI先生と仲良し', desc:'AI先生に10回 聞いた！', hint:'AIに10回聞くで げっと！', check:(s,b)=>(b.stats.aiCalls||0)>=10 },
+  { id:'ai-gen', icon:'🚀', tier:'silver', name:'AI問題生成', desc:'AIに 問題を 作ってもらった！', hint:'AIに問題作ってもらうで げっと！', check:(s,b)=>(b.stats.aiGens||0)>=1 },
+  // ピカりん
+  { id:'pet-10', icon:'🎀', tier:'bronze', name:'ピカりんと10回タッチ', desc:'ピカりんと なかよし！', hint:'ピカりんを10回なでるで げっと！', check:(s,b)=>(b.stats.pets||0)>=10 },
+  { id:'pet-100', icon:'💕', tier:'silver', name:'ピカりんと100回タッチ', desc:'ピカりんとベスフレ！', hint:'ピカりんを100回なでるで げっと！', check:(s,b)=>(b.stats.pets||0)>=100 },
+  { id:'pet-500', icon:'💖', tier:'gold', name:'ピカりんと500回タッチ', desc:'ピカりんとがた じゅん！', hint:'ピカりんを500回なでるで げっと！', check:(s,b)=>(b.stats.pets||0)>=500 },
+  // 教養
+  { id:'story-3', icon:'📖', tier:'bronze', name:'おもしろ話3編', desc:'数学のお話 3つ読んだ！', hint:'お話を3つ読むで げっと！', check:(s,b)=>(b.stats.storiesRead||0)>=3 },
+  { id:'story-10', icon:'📚', tier:'silver', name:'おもしろ話10編', desc:'数学のお話 10こ読んだ！', hint:'お話を10こ読むで げっと！', check:(s,b)=>(b.stats.storiesRead||0)>=10 },
+  { id:'puzzle-10', icon:'💡', tier:'silver', name:'ひらめき10問', desc:'パズル10問 解いた！', hint:'パズル10問解くで げっと！', check:(s,b)=>(b.stats.puzzlesSolved||0)>=10 },
+];
+
+function loadBadgeState() {
+  const raw = localStorage.getItem(BADGES_KEY);
+  if (raw) try { const s = JSON.parse(raw); s.earned = s.earned || {}; s.stats = s.stats || {}; return s; } catch(e) {}
+  return { earned: {}, stats: {} };
+}
+function saveBadgeState(b) { localStorage.setItem(BADGES_KEY, JSON.stringify(b)); }
+
+function aggregateAllStats() {
+  let maxStreak = 0, totalCorrect = 0, totalMastered = 0;
+  const allDates = new Set();
+  for (const key of ['g1','g2','g3','g4','g5','g6','mix']) {
+    const raw = localStorage.getItem('sansu-master-' + key);
+    if (!raw) continue;
+    try {
+      const s = JSON.parse(raw);
+      maxStreak = Math.max(maxStreak, s.streak || 0);
+      totalCorrect += s.totalCorrect || 0;
+      (s.studyDates || []).forEach(d => allDates.add(d));
+      totalMastered += Object.values(s.cards || {}).filter(c => (c.box || 1) >= 5).length;
+    } catch(e) {}
+  }
+  return { maxStreak, totalCorrect, totalMastered, studyDays: allDates.size };
+}
+
+function bumpBadgeStat(name, by = 1) {
+  const b = loadBadgeState();
+  b.stats[name] = (b.stats[name] || 0) + by;
+  saveBadgeState(b);
+  checkBadges();
+}
+
+function checkBadges() {
+  const b = loadBadgeState();
+  const s = aggregateAllStats();
+  const newly = [];
+  for (const badge of BADGES) {
+    if (b.earned[badge.id]) continue;
+    try { if (badge.check(s, b)) newly.push(badge); } catch(e) {}
+  }
+  if (newly.length === 0) return;
+  // 1つずつ祝う
+  for (const badge of newly) {
+    b.earned[badge.id] = (new Date()).toISOString().slice(0, 10);
+  }
+  saveBadgeState(b);
+  // 表示は1つずつ間隔をあけて
+  newly.forEach((badge, i) => setTimeout(() => showBadgeWon(badge), i * 2200));
+}
+
+function showBadgeWon(badge) {
+  const overlay = document.createElement('div');
+  overlay.className = 'badge-overlay';
+  overlay.innerHTML = `
+    <div class="badge-modal tier-${badge.tier}">
+      <div class="badge-banner">🎉 NEW BADGE 🎉</div>
+      <div class="badge-icon-big">${badge.icon}</div>
+      <div class="badge-tier-label">${{bronze:'BRONZE',silver:'SILVER',gold:'GOLD',legend:'★ LEGEND ★'}[badge.tier]}</div>
+      <h3 class="badge-name">${badge.name}</h3>
+      <p class="badge-desc">${badge.desc}</p>
+      <button class="big-btn badge-close">やった〜！</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  if (typeof fireConfetti === 'function') fireConfetti(badge.tier === 'legend' ? 3 : badge.tier === 'gold' ? 2 : 1);
+  if (typeof playComplete === 'function') playComplete();
+  overlay.addEventListener('click', (e) => {
+    if (e.target.classList.contains('badge-overlay') || e.target.classList.contains('badge-close')) {
+      overlay.remove();
+    }
+  });
+}
+
 // === グローバル設定（学年共通） ===
 const SETTINGS_KEY = 'sansu-master-settings';
 function loadSettings() {
@@ -107,6 +222,7 @@ async function showApiKeyQR() {
 async function claudeApi(systemPrompt, userPrompt, maxTokens = 1024) {
   const key = getApiKey();
   if (!key) throw new Error('APIキーが せっていされていません');
+  bumpBadgeStat('aiCalls');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -685,6 +801,7 @@ function setupMascotInteraction() {
     const m = e.target.closest('.mascot');
     if (!m) return;
     e.stopPropagation();
+    bumpBadgeStat('pets');
     const rect = m.getBoundingClientRect();
     spawnHearts(rect.left + rect.width / 2, rect.top + rect.height / 3);
     // ジャンプ + 効果音
@@ -1093,6 +1210,7 @@ function injectSettingsPanel() {
     const hintArea = document.getElementById(`hintarea-${q.id}`);
     let hintLevel = 0;
     const showHint = async () => {
+      if (hintLevel === 0) bumpBadgeStat('hints');
       hintLevel++;
       hintArea.style.display = 'block';
       const wrong = q.opts.filter((_, i) => i !== q.a);
@@ -1397,9 +1515,13 @@ function injectSettingsPanel() {
           🤖 AIに もっと 作ってもらう
         </button>` : ''}
       </div>`;
+    // バッジ統計を更新（currentBatch クリア前に判定）
+    if (pct === 100) bumpBadgeStat('perfectSessions');
+    if (state.todayDone >= 10) bumpBadgeStat('bigDays');
     currentBatch = [];
     renderLeitner();
     renderCalendar();
+    setTimeout(checkBadges, 500); // 既存の祝祭演出が落ち着いたら
     // ファンファーレ + 大きい紙吹雪
     playComplete();
     fireConfetti(2.5);
@@ -1445,6 +1567,7 @@ function injectSettingsPanel() {
       if (newQs.length === 0) throw new Error('問題が生成されませんでした');
       const existing = loadAIQuestions(GRADE_KEY);
       saveAIQuestions(GRADE_KEY, [...existing, ...newQs]);
+      bumpBadgeStat('aiGens');
       if (btn) btn.textContent = `✅ ${newQs.length}問できた！スタート！`;
       currentBatch = newQs;
       currentIdx = 0;
@@ -1657,6 +1780,8 @@ function injectSettingsPanel() {
     injectSettingsPanel();
     setupMascotInteraction();
     startDaily();
+    // ロード時に既達バッジをチェック（過去にできてた場合の救済）
+    setTimeout(checkBadges, 1000);
   });
 })();
 

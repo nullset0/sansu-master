@@ -414,8 +414,13 @@ STORIES.forEach((s, i) => {
       <div class="try"><strong>🎯 やってみよう：</strong>${s.try}</div>
     </div>
   `;
+  let counted = false;
   el.addEventListener('click', () => {
     el.classList.toggle('expanded');
+    if (el.classList.contains('expanded') && !counted) {
+      counted = true;
+      if (typeof bumpBadgeStat === 'function') bumpBadgeStat('storiesRead');
+    }
   });
   wrap.appendChild(el);
 });

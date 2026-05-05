@@ -238,6 +238,7 @@ document.querySelectorAll('.show-ans-btn').forEach(btn => {
     const a = document.getElementById(btn.dataset.target);
     a.classList.add('show');
     btn.style.display = 'none';
+    if (typeof bumpBadgeStat === 'function') bumpBadgeStat('puzzlesSolved');
   });
 });
 </script>
