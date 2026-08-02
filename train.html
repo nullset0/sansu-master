@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>れんしゅう — 算数マスター</title>
+<link rel="stylesheet" href="app/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="theme-color" content="#ff8a3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">← ホーム</a>
+    <div style="flex:1;min-width:0;text-align:center">
+      <h1 id="t-title" style="font-size:1.05rem">れんしゅう</h1>
+      <div class="sub" id="t-sub"></div>
+    </div>
+    <a class="back" id="t-learn" href="learn.html" style="background:var(--e-l);color:#a06b00">📖</a>
+  </div>
+  <div id="app"></div>
+</div>
+
+<nav class="tabbar">
+  <a href="index.html"><span class="i">🏠</span>ホーム</a>
+  <a href="train.html?mode=daily" class="on"><span class="i">✏️</span>れんしゅう</a>
+  <a href="learn.html"><span class="i">📖</span>解き方</a>
+  <a href="zukan.html"><span class="i">🏅</span>ずかん</a>
+  <a href="parent.html"><span class="i">👨‍👩‍👧</span>きろく</a>
+</nav>
+
+<script src="app/fig.js"></script>
+<script src="app/chara.js"></script>
+<script src="app/store.js"></script>
+<script src="app/quiz.js"></script>
+<script src="data/core.js"></script>
+<script src="questions/g1.js"></script>
+<script src="questions/g2.js"></script>
+<script src="questions/g3.js"></script>
+<script src="questions/g4.js"></script>
+<script src="questions/g5.js"></script>
+<script src="questions/g6.js"></script>
+<script src="data/elem.js"></script>
+<script src="data/jk-num.js"></script>
+<script src="data/jk-ratio.js"></script>
+<script src="data/jk-toku.js"></script>
+<script src="data/jk-speed.js"></script>
+<script src="data/jk-geo.js"></script>
+<script>
+(() => {
+  const P = new URLSearchParams(location.search);
+  const host = document.getElementById('app');
+  const st = Store.state;
+  const HOME = Store.get('home') || 'g4';
+  const unitId = P.get('unit'), areaId = P.get('area'), mode = P.get('mode') || 'daily';
+  const count = Number(P.get('n')) || Store.get('dailyGoal') || 5;
+
+  let pool = [], title = 'きょうの5問', sub = '', only = null;
+
+  if (unitId) {
+    const u = DATA.unit(unitId);
+    if (!u) { host.innerHTML = '<div class="card">単元が見つかりません。</div>'; return; }
+    pool = DATA.byUnit(unitId);
+    title = `${u.emoji} ${u.name}`;
+    sub = u.tag || '';
+    document.getElementById('t-learn').href = `learn.html#${unitId}`;
+    document.getElementById('t-title').textContent = title;
+    document.getElementById('t-sub').textContent = sub;
+    if (u.teach) {
+      // その単元をはじめてやるときは、先に解き方カードへ誘導
+      const touched = pool.some(q => st.cards[q.id] && st.cards[q.id].seen);
+      if (!touched) {
+        host.innerHTML = `
+          <div class="card">
+            ${Chara.tag('fukurou','thinking', `${u.name} は はじめてだね。先に「解き方」を1分だけ見ておくと、ぐっと楽になるよ。`, 96)}
+            <div class="note"><strong>${u.emoji} ${u.name}</strong><br>${u.tag||''}</div>
+            <div class="keyline" style="background:linear-gradient(180deg,#fff8e6,#fff1cf);border:2.5px dashed var(--e);border-radius:16px;padding:13px 15px;font-weight:800;margin:12px 0">
+              <span style="font-size:.7rem;color:#a06b00;display:block;margin-bottom:3px">かんじんな一言</span>${u.teach.key}</div>
+            <a class="btn wide blue" href="learn.html#${unitId}">📖 解き方を見る</a>
+            <button class="btn ghost wide" id="skip" style="margin-top:10px">いきなり やってみる</button>
+          </div>`;
+        document.getElementById('skip').onclick = () => go();
+        return;
+      }
+    }
+  } else if (areaId) {
+    pool = DATA.qsOfArea(areaId);
+    const a = DATA.AREAS[areaId] || {};
+    title = `${a.emoji||''} ${a.name||areaId}`;
+  } else if (mode === 'wrong') {
+    pool = DATA.all(); only = 'wrong'; title = '🔁 まちがいノート'; sub = '一度まちがえた問題だけ';
+  } else {
+    pool = Store.dailyPool(DATA.all(), HOME);
+    title = '🎯 きょうの5問';
+    sub = 'ふくしゅう優先・単元はまぜて出します';
+  }
+
+  document.getElementById('t-title').textContent = title;
+  document.getElementById('t-sub').textContent = sub;
+
+  function go() {
+    Quiz.start({ pool, count, host, unitId, only, title });
+  }
+  go();
+})();
+</script>
+</body>
+</html>

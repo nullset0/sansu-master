@@ -1,40 +1,29 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v20';
+const CACHE_NAME = 'sansu-master-v31';
 const ASSETS = [
-  './',
-  './index.html',
-  './1年.html',
-  './2年.html',
-  './3年.html',
-  './4年.html',
-  './5年.html',
-  './6年.html',
-  './全学年.html',
-  './お話.html',
-  './ひらめき.html',
-  './バッジ.html',
-  './shared.css',
-  './shared.js',
-  './qrcode.min.js',
-  './manifest.json',
-  './icon.svg',
-  './questions/g1.js',
-  './questions/g2.js',
-  './questions/g3.js',
-  './questions/g4.js',
-  './questions/g5.js',
-  './questions/g6.js',
+  './', './index.html', './train.html', './learn.html', './zukan.html', './parent.html',
+  './manifest.json', './icon.svg',
+  './app/style.css', './app/fig.js', './app/chara.js', './app/store.js', './app/quiz.js', './app/home.js',
+  './data/core.js', './data/elem.js',
+  './data/jk-num.js', './data/jk-ratio.js', './data/jk-toku.js', './data/jk-speed.js', './data/jk-geo.js',
+  './questions/g1.js', './questions/g2.js', './questions/g3.js',
+  './questions/g4.js', './questions/g5.js', './questions/g6.js',
+  // 旧バージョン（残してある）
+  './shared.css', './shared.js',
+  './1年.html', './2年.html', './3年.html', './4年.html', './5年.html', './6年.html',
+  './全学年.html', './お話.html', './ひらめき.html', './バッジ.html',
 ];
 
-// インストール時にキャッシュ
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      // 1つでも失敗したら全部落ちるのを防ぐ
+      Promise.all(ASSETS.map((a) => cache.add(a).catch(() => null)))
+    )
   );
   self.skipWaiting();
 });
 
-// 古いキャッシュを削除
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -44,20 +33,18 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// キャッシュ優先（オフラインでも動く）
+// stale-while-revalidate：すぐ表示しつつ、裏で最新に入れ替える
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  if (new URL(req.url).origin !== location.origin) return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        // 同じオリジンならキャッシュに追加
-        if (response.ok && new URL(event.request.url).origin === location.origin) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => caches.match('./index.html'));
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cached = await cache.match(req);
+      const network = fetch(req)
+        .then((res) => { if (res && res.ok) cache.put(req, res.clone()); return res; })
+        .catch(() => cached || cache.match('./index.html'));
+      return cached || network;
     })
   );
 });

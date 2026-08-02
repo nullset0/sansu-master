@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>図エンジン確認（開発用）</title>
+<link rel="stylesheet" href="app/style.css">
+</head><body><div class="wrap"><div class="card"><h2>図エンジン 全種チェック</h2><div id="o"></div></div>
+<div class="card"><h2>キャラクター</h2><div id="c"></div></div></div>
+<script src="app/fig.js"></script><script src="app/chara.js"></script>
+<script>
+const SPECS = [
+ {type:'segment', caption:'線分図（和差算）', rows:[
+   {label:'兄',parts:[{v:21,text:'21',fill:'b'},{v:8,text:'差8',fill:'d'}]},
+   {label:'弟',parts:[{v:21,text:'21',fill:'b'}]}], braces:[{row:0,from:0,to:1,text:'合計50',side:'top'}], max:29},
+ {type:'segment', caption:'線分図（3本・差の矢印）', rows:[
+   {label:'兄',parts:[{v:32,text:'32',fill:'b'},{v:18,text:'+18',fill:'d'}]},
+   {label:'弟',parts:[{v:32,text:'32',fill:'b'},{v:8,text:'+8',fill:'d'}]},
+   {label:'妹',parts:[{v:32,text:'32',fill:'b'}]}], max:50},
+ {type:'areaModel', caption:'面積図（つるかめ）', blocks:[
+   {w:8,h:2,label:'つる',fill:'b',wLabel:'8羽',hLabel:'2本'},
+   {w:7,h:2,label:'',fill:'b',wLabel:'7匹',h2:4,label2:'差14本'}], xLabel:'15匹', yLabel:'足', height:280},
+ {type:'balance', caption:'てんびん（濃度）', points:[{x:4,w:400,label:'4%',fill:'b'},{x:10,w:200,label:'10%',fill:'a'}], fulcrum:6, xLabel:'濃度(%)', armLeft:'2', armRight:'4'},
+ {type:'travel', caption:'ダイヤグラム', xMax:20,yMax:1800,xStep:5,yStep:600,xLabel:'分',yLabel:'m',
+   lines:[{pts:[[0,0],[20,1400]],label:'A',color:'a'},{pts:[[0,1800],[20,200]],label:'B',color:'b',anchor:'end'}], marks:[{x:12,y:840,label:'出会い'}]},
+ {type:'numline', caption:'数直線', min:0,max:100,step:20,subStep:10,ticks:[{v:35,label:'?'}],spans:[{from:0,to:35,label:'35'}]},
+ {type:'ratioBar', caption:'割合の帯', parts:[{v:40,top:'40%',label:'1回目',fill:'a'},{v:15,top:'15%',label:'2回目',fill:'e'},{v:45,top:'45%',label:'540円',fill:'c'}], topTotal:'100%'},
+ {type:'poly', caption:'多角形（台形・高さ）', pts:[[0,0],[10,0],[7,6],[3,6]], names:'ABCD',
+   sides:[{i:0,label:'下底10cm'},{i:2,label:'上底4cm'}], segs:[[[3,0],[3,6]]], texts:[{p:[2.1,3],text:'高さ6',color:'d'}], fillC:'a', height:280},
+ {type:'poly', caption:'三角形（角・直角・等長マーク）', pts:[[0,0],[6,0],[3,6]], names:'BCA',
+   angles:[{i:2,label:'40°'},{i:0,label:'?'}], sides:[{i:1,ticks:1},{i:2,ticks:1}], fillC:'c', height:260},
+ {type:'poly', caption:'正五角形', pts:[[0,1],[0.951,0.309],[0.588,-0.809],[-0.588,-0.809],[-0.951,0.309]], angles:[{i:0,label:'108°'}], fillC:'f', height:250},
+ {type:'circle', caption:'おうぎ形120°', r:6,R:100,sector:[0,120],angleLabel:'120°',rLabel:'6cm',rAt:0,fillC:'a',arcLabel:'弧'},
+ {type:'circle', caption:'ドーナツ', r:6,R:100,innerR:4,fillC:'f',rLabel:'6cm'},
+ {type:'circle', caption:'弓形（弦）', r:10,R:100,sector:[0,90],fillC:'b',chord:true,rLabel:'10cm',rAt:0},
+ {type:'grid', caption:'方眼（L字）', w:8,h:6, shapes:[{pts:[[0,0],[8,0],[8,3],[5,3],[5,6],[0,6]],fill:'a'}], height:270},
+ {type:'grid', caption:'道順（書きこみ）', w:3,h:2, height:250,
+   labels:[{x:0,y:0,text:'1'},{x:1,y:0,text:'1'},{x:2,y:0,text:'1'},{x:3,y:0,text:'1'},
+           {x:0,y:1,text:'1'},{x:1,y:1,text:'2'},{x:2,y:1,text:'3'},{x:3,y:1,text:'4'},
+           {x:0,y:2,text:'1'},{x:1,y:2,text:'3'},{x:2,y:2,text:'6'},{x:3,y:2,text:'10'}]},
+ {type:'solid', caption:'直方体', shape:'cuboid', w:5,d:4,h:3, labels:{w:'5cm',d:'4cm',h:'3cm'}, height:300},
+ {type:'solid', caption:'円柱', shape:'cylinder', r:3,h:5, labels:{r:'3cm',h:'5cm'}, height:300},
+ {type:'solid', caption:'円すい', shape:'cone', r:3,h:4, labels:{r:'3cm',h:'4cm'}, height:290},
+ {type:'solid', caption:'角すい', shape:'pyramid', w:4,d:4,h:5, labels:{h:'9cm'}, height:290},
+ {type:'solid', caption:'三角柱', shape:'prism', w:5,d:4,h:4, labels:{h:'4cm'}, height:290},
+ {type:'net', caption:'展開図', gw:4,gh:3, cells:[[1,0,'⑤','e'],[0,1,'①','a'],[1,1,'②','b'],[2,1,'③','c'],[3,1,'④','f'],[1,2,'⑥','e']]},
+ {type:'clock', caption:'時計（4時20分・角度）', h:4,m:20, showAngle:true},
+ {type:'clock', caption:'時計（3時ちょうど）', h:3,m:0, showAngle:true},
+ {type:'frac', caption:'分数（帯）', kind:'bar', rows:[{den:4,num:3,label:'3/4'},{den:8,num:6,label:'6/8',fill:'b'}]},
+ {type:'frac', caption:'分数（円）', kind:'pie', rows:[{den:4,num:4,label:'1'},{den:4,num:1,label:'1/4',fill:'b'}]},
+ {type:'tree', caption:'樹形図', levels:[{label:'1回目',items:['表','裏']},{label:'2回目',items:['表','裏']},{label:'3回目',items:['表','裏']}], height:340},
+ {type:'venn', caption:'ベン図', a:{label:'3の倍数',n:27}, b:{label:'5の倍数',n:14}, both:6, outside:'53', total:100},
+ {type:'tank', caption:'水そう', w:30,h:50, water:[{x0:0,x1:30,y0:0,y1:35}], dims:[{dir:'h',from:0,to:30,at:0,label:'よこ30cm'},{dir:'v',from:0,to:50,at:0,label:'50cm'}], height:280},
+ {type:'table', caption:'表（数列）', head:['番目','1','2','3','4','5'], rows:[['数','1','2','4','7','11'],['差','','1','2','3','4']]},
+ {type:'chart', caption:'ぼうグラフ', cats:['4月','5月','6月','7月'], values:[12,18,15,21], yMax:25,yStep:5,yLabel:'人'},
+ {type:'chart', caption:'折れ線', kind:'line', cats:['4月','5月','6月','7月','8月'], values:[15,20,23,30,32], yMax:35,yStep:5,yLabel:'℃',color:'a'},
+ {type:'dots', caption:'ドット', n:12, cols:4, rings:[{from:0,to:4},{from:4,to:8},{from:8,to:12}]},
+ {type:'eqs', caption:'消去算の式', rows:[
+   {terms:[{label:'りんご×2',fill:'d'},{label:'みかん×3',fill:'a'}], right:'460円', tag:'①'},
+   {terms:[{label:'りんご×2',fill:'d'},{label:'みかん×5',fill:'a'}], right:'620円', tag:'②'}]},
+];
+document.getElementById('o').innerHTML = SPECS.map(s =>
+  `<div style="margin-bottom:6px;font-weight:800;font-size:.8rem;color:#6b7a90">${s.type}</div>` + Fig.render(s)).join('');
+document.getElementById('c').innerHTML = Chara.list().map(w =>
+  `<div style="margin:14px 0"><b>${Chara.info(w).name}</b><div style="display:flex;gap:6px;flex-wrap:wrap">` +
+  ['normal','happy','excited','wink','thinking','sad','sleep','wow'].map(e =>
+    `<div style="text-align:center"><div style="font-size:.65rem;color:#888">${e}</div>${Chara.svg(w,e,92)}</div>`).join('') +
+  `</div></div>`).join('');
+</script></body></html>

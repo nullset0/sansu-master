@@ -1,15 +1,18 @@
 {
   "name": "算数マスター",
   "short_name": "算数マスター",
-  "description": "1日5問で算数をマスター。脳科学ベースの間隔反復学習アプリ。小学校1〜6年対応。",
+  "description": "1日5問で算数をマスター。間隔反復＋正確な図で、小学1〜6年から中学受験（特殊算・速さ・図形）まで。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fef3c7",
-  "theme_color": "#ec4899",
+  "background_color": "#fbf7ef",
+  "theme_color": "#ff8a3d",
   "lang": "ja",
-  "categories": ["education", "kids"],
+  "categories": [
+    "education",
+    "kids"
+  ],
   "icons": [
     {
       "src": "icon.svg",

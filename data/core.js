@@ -1,0 +1,47 @@
+/* =========================================================
+   算数マスター v2 — データ登録所 (core.js)
+   単元 = { id, name, area, emoji, lv, tag, teach, qs }
+   ========================================================= */
+window.DATA = (() => {
+'use strict';
+const units = [], byId = new Map(), qAll = [], qByUnit = new Map();
+
+const AREAS = {
+  'g1': {name:'1年生', emoji:'🍎', kind:'grade', order:1},
+  'g2': {name:'2年生', emoji:'🐣', kind:'grade', order:2},
+  'g3': {name:'3年生', emoji:'🐬', kind:'grade', order:3},
+  'g4': {name:'4年生', emoji:'🚀', kind:'grade', order:4},
+  'g5': {name:'5年生', emoji:'🔭', kind:'grade', order:5},
+  'g6': {name:'6年生', emoji:'🎓', kind:'grade', order:6},
+  'jk-num':   {name:'数の性質と規則', emoji:'🔢', kind:'juken', order:11},
+  'jk-ratio': {name:'割合と比',       emoji:'⚖️', kind:'juken', order:12},
+  'jk-toku':  {name:'特殊算',         emoji:'🧩', kind:'juken', order:13},
+  'jk-speed': {name:'速さ',           emoji:'🏃', kind:'juken', order:14},
+  'jk-geo':   {name:'図形',           emoji:'📐', kind:'juken', order:15},
+};
+
+function addUnit(u) {
+  if (byId.has(u.id)) return;
+  units.push(u); byId.set(u.id, u);
+  const list = (u.qs || []).map((q,i) => Object.assign({
+    unit: u.id, lv: q.lv || u.lv || 1, tag: q.tag || u.name,
+    pattern: q.pattern !== undefined ? q.pattern : (u.area.startsWith('jk') ? u.name : null),
+  }, q, { id: q.id || `${u.id}-${i+1}` }));
+  qByUnit.set(u.id, list);
+  list.forEach(q => qAll.push(q));
+  u.qs = list;
+}
+function addUnits(arr) { arr.forEach(addUnit); }
+
+const byUnit  = id => qByUnit.get(id) || [];
+const unit    = id => byId.get(id);
+const byArea  = a  => units.filter(u => u.area === a);
+const areasOf = kind => Object.entries(AREAS).filter(([,v]) => !kind || v.kind === kind)
+  .sort((a,b)=>a[1].order-b[1].order).map(([id,v]) => ({id, ...v}));
+const qsOfArea = a => byArea(a).flatMap(u => byUnit(u.id));
+const all = () => qAll;
+const unitsMap = () => Object.fromEntries(units.map(u=>[u.id,u]));
+
+return { AREAS, addUnit, addUnits, units, unit, byUnit, byArea, areasOf, qsOfArea, all, unitsMap,
+  get count(){ return qAll.length; } };
+})();

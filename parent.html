@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>きろく・設定 — 算数マスター</title>
+<link rel="stylesheet" href="app/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="theme-color" content="#ff8a3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">← ホーム</a>
+    <div style="flex:1"><h1>👨‍👩‍👧 きろく・設定</h1><div class="sub">おうちの人むけ</div></div>
+  </div>
+
+  <div class="card">
+    <h2>📅 この2週間</h2>
+    <div id="chart"></div>
+    <div class="stats" style="margin-top:10px" id="sum"></div>
+  </div>
+
+  <div class="card">
+    <h2>⚠️ 苦手な単元</h2>
+    <p class="muted" style="margin-bottom:10px">正答率が7割を切っている単元です。ここだけ集中してやり直すと効きます。</p>
+    <div id="weak"></div>
+  </div>
+
+  <div class="card">
+    <h2>📈 単元べつの定着</h2>
+    <div style="max-height:420px;overflow:auto"><table class="t" id="units"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ 設定</h2>
+    <div class="row"><div><div class="lbl">いまの学年</div><div class="hint">「きょうの5問」の出題範囲になります</div></div>
+      <div class="seg" id="set-home"></div></div>
+    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint">5問が推奨（多いほど続きにくい）</div></div>
+      <div class="seg" id="set-goal"></div></div>
+    <div class="row"><div><div class="lbl">効果音</div></div><div class="seg" id="set-sound"></div></div>
+    <div class="row"><div><div class="lbl">問題の自動よみあげ</div><div class="hint">音読すると記憶に残りやすくなります</div></div>
+      <div class="seg" id="set-read"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🧠 このアプリの設計</h2>
+    <div class="note b"><strong>間隔反復：</strong>正解するたび 1日後 → 3日後 → 1週間後 → 16日後 → 35日後 と、忘れかけたころに再出題します。まちがえたら箱1に戻り、その日のうちにもう一度出ます。</div>
+    <div class="note c"><strong>想起テスト：</strong>選択肢だけでなく【数値入力】を混ぜています。選ぶより思い出すほうが、記憶が強く残ります。</div>
+    <div class="note"><strong>インターリービング：</strong>同じ単元を続けて出しません。まざっているほうが、実力としての定着が良くなります。</div>
+    <div class="note d"><strong>ベストタイミングは寝る前30分。</strong>睡眠中に記憶が整理されます。1日5問で十分です。</div>
+  </div>
+
+  <div class="card">
+    <h2>💾 データ</h2>
+    <p class="muted" style="margin-bottom:10px">記録はこの端末のブラウザにだけ保存されます。機種変更のときは書き出してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+      <button class="btn ghost sm" id="exp">書き出す</button>
+      <button class="btn ghost sm" id="imp">読みこむ</button>
+    </div>
+    <button class="btn ghost sm wide" id="reset" style="margin-top:9px;color:var(--ng)">記録をぜんぶ消す</button>
+    <p class="muted" style="margin-top:12px;font-size:.75rem">旧バージョン：
+      <a href="1年.html" style="text-decoration:underline">1年</a>・
+      <a href="4年.html" style="text-decoration:underline">4年</a>・
+      <a href="お話.html" style="text-decoration:underline">おもしろ話</a>・
+      <a href="ひらめき.html" style="text-decoration:underline">ひらめきパズル</a></p>
+  </div>
+</div>
+
+<nav class="tabbar">
+  <a href="index.html"><span class="i">🏠</span>ホーム</a>
+  <a href="train.html?mode=daily"><span class="i">✏️</span>れんしゅう</a>
+  <a href="learn.html"><span class="i">📖</span>解き方</a>
+  <a href="zukan.html"><span class="i">🏅</span>ずかん</a>
+  <a href="parent.html" class="on"><span class="i">👨‍👩‍👧</span>きろく</a>
+</nav>
+
+<script src="app/fig.js"></script>
+<script src="app/chara.js"></script>
+<script src="app/store.js"></script>
+<script src="app/quiz.js"></script>
+<script src="data/core.js"></script>
+<script src="questions/g1.js"></script>
+<script src="questions/g2.js"></script>
+<script src="questions/g3.js"></script>
+<script src="questions/g4.js"></script>
+<script src="questions/g5.js"></script>
+<script src="questions/g6.js"></script>
+<script src="data/elem.js"></script>
+<script src="data/jk-num.js"></script>
+<script src="data/jk-ratio.js"></script>
+<script src="data/jk-toku.js"></script>
+<script src="data/jk-speed.js"></script>
+<script src="data/jk-geo.js"></script>
+<script>
+(() => {
+  const st = Store.state;
+  const days = Store.last14();
+  document.getElementById('chart').innerHTML = Fig.render({
+    type:'bar', cats: days.map(d => String(Number(d.d.slice(8)))), values: days.map(d => d.done),
+    yMax: Math.max(10, ...days.map(d=>d.done))*1.2, yStep: 5, yLabel:'問', color:'b', height:230
+  });
+  const total = days.reduce((a,d)=>a+d.done,0), ok = days.reduce((a,d)=>a+d.correct,0);
+  document.getElementById('sum').innerHTML = `
+    <div class="stat"><div class="ico">📝</div><div class="n">${total}</div><div class="l">2週間の問題数</div></div>
+    <div class="stat"><div class="ico">⭕️</div><div class="n">${total?Math.round(ok/total*100):0}%</div><div class="l">正答率</div></div>
+    <div class="stat hot"><div class="ico">🔥</div><div class="n">${st.streak.n}</div><div class="l">れんぞく日</div></div>
+    <div class="stat crown"><div class="ico">📦</div><div class="n">${Store.masteredCount()}</div><div class="l">マスター</div></div>`;
+
+  // 苦手
+  const weak = Store.weakUnits(DATA.unitsMap());
+  document.getElementById('weak').innerHTML = weak.length
+    ? weak.slice(0,8).map(w => {
+        const u = DATA.unit(w.id);
+        return `<a class="unit" style="display:flex;align-items:center;gap:10px;margin-bottom:8px" href="train.html?unit=${encodeURIComponent(w.id)}">
+          <span style="font-size:1.3rem">${u?u.emoji:'📘'}</span>
+          <span style="flex:1"><span class="t">${u?u.name:w.id}</span><span class="m">${w.ok}/${w.seen}問 正解 ・ ${Math.round(w.rate*100)}%</span></span>
+          <span style="color:var(--a);font-weight:800">▶︎</span></a>`;
+      }).join('')
+    : '<p class="muted">いまのところ ありません。よく出来ています。</p>';
+
+  // 単元べつ
+  const rows = DATA.units.map(u => {
+    const qs = DATA.byUnit(u.id).map(q=>q.id);
+    const s = Store.unitStats(u.id, qs);
+    const a = DATA.AREAS[u.area] || {};
+    return { u, s, area:a.name || u.area };
+  }).filter(r => r.s.touched > 0).sort((a,b) => a.s.mastery - b.s.mastery);
+  document.getElementById('units').innerHTML =
+    `<tr><th>単元</th><th>分野</th><th style="text-align:right">やった</th><th style="text-align:right">定着</th></tr>` +
+    (rows.length ? rows.map(r => `<tr><td>${r.u.emoji} ${r.u.name}</td><td style="font-size:.75rem;color:var(--sub)">${r.area}</td>
+      <td class="num">${r.s.touched}/${r.s.total}</td>
+      <td class="num" style="color:${r.s.mastery>=.8?'var(--ok)':r.s.mastery>=.4?'var(--a)':'var(--ng)'}">${Math.round(r.s.mastery*100)}%</td></tr>`).join('')
+      : `<tr><td colspan="4" class="muted">まだ記録がありません</td></tr>`);
+
+  // 設定
+  function seg(el, opts, cur, onPick) {
+    el.innerHTML = opts.map(o => `<button data-v="${o[0]}" class="${String(o[0])===String(cur)?'on':''}">${o[1]}</button>`).join('');
+    el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      el.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); SFX.tap(); onPick(b.dataset.v);
+    }));
+  }
+  seg(document.getElementById('set-home'), [['g3','3年'],['g4','4年'],['g5','5年'],['g6','6年']],
+      Store.get('home'), v => Store.set('home', v));
+  seg(document.getElementById('set-goal'), [[3,'3問'],[5,'5問'],[10,'10問'],[20,'20問']],
+      Store.get('dailyGoal'), v => Store.set('dailyGoal', Number(v)));
+  seg(document.getElementById('set-sound'), [['on','あり'],['off','なし']],
+      Store.get('sound') === false ? 'off' : 'on', v => Store.set('sound', v === 'on'));
+  seg(document.getElementById('set-read'), [['on','する'],['off','しない']],
+      Store.get('autoRead') ? 'on' : 'off', v => Store.set('autoRead', v === 'on'));
+
+  // データ
+  document.getElementById('exp').onclick = async () => {
+    const t = Store.exportJSON();
+    try { await navigator.clipboard.writeText(t); Quiz.toast('クリップボードにコピーしました'); }
+    catch(e) { prompt('この文字列を保存してください', t); }
+  };
+  document.getElementById('imp').onclick = () => {
+    const t = prompt('書き出した文字列を貼りつけてください');
+    if (!t) return;
+    const ok = Store.importJSON(t);
+    Quiz.toast(ok ? '読みこみました' : '読みこめませんでした');
+    if (ok) setTimeout(()=>location.reload(), 800);
+  };
+  document.getElementById('reset').onclick = () => {
+    if (!confirm('学習の記録をすべて消します。よろしいですか？')) return;
+    Store.reset(); location.reload();
+  };
+})();
+</script>
+</body>
+</html>
