@@ -212,6 +212,8 @@ h1,h2,h3{line-height:1.35;letter-spacing:.01em}
 }
 .numin .disp .unit{font-size:1rem;color:var(--sub);font-weight:800}
 .numin .disp.blink{animation:chShake .4s}
+.numin .disp.ok{border-color:var(--ok);background:#effdf2;color:var(--ok)}
+.numin .disp.ng{border-color:var(--ng);background:#fff1f1;color:#c53030}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pad button{
   height:56px;border:none;border-radius:14px;background:#fff;box-shadow:0 3px 0 rgba(43,50,69,.12),var(--sh-sm);

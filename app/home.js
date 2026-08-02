@@ -8,19 +8,6 @@ const st = Store.state;
 const who = st.chara || 'pika';
 const HOME_GRADE = Store.get('home') || 'g4';
 
-/* ---- きょうのプール ----
-   ① 今の学年の単元　② 一度でもやった問題（学年問わず復習）　③ 着手した中学受験の単元 */
-function dailyPool() {
-  return DATA.all().filter(q => {
-    if (q.unit.startsWith(HOME_GRADE + '-')) return true;
-    const c = st.cards[q.id];
-    if (c && c.seen) return true;
-    const u = DATA.unit(q.unit);
-    return u && u.area.startsWith('jk') && st.units[q.unit];
-  });
-}
-window.SansuDailyPool = dailyPool;
-
 /* ---- あいさつ ---- */
 const h = new Date().getHours();
 const greet = h < 9 ? 'おはよう！' : h < 17 ? 'こんにちは！' : h < 20 ? 'おかえり！' : 'こんばんは！';
@@ -42,7 +29,7 @@ $('#stats').innerHTML = `
   <div class="stat crown"><div class="ico">🏅</div><div class="n">${Object.keys(st.badges).length}</div><div class="l">バッジ</div></div>`;
 
 /* ---- ミッション ---- */
-const pool = dailyPool();
+const pool = Store.dailyPool(DATA.all(), HOME_GRADE);
 const dueCount = pool.filter(q => st.cards[q.id] && st.cards[q.id].box > 0 && st.cards[q.id].due <= Store.today()).length;
 const wrongCount = st.wrong.length;
 $('#day-bar').style.width = Math.min(100, st.day.done / goal * 100) + '%';

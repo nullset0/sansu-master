@@ -422,7 +422,8 @@ function polyFig(sp) {
   const H = sp.height || 300;
   const all = [...sp.pts];
   (sp.inner||[]).forEach(o => o.pts.forEach(p=>all.push(p)));
-  (sp.segs||[]).forEach(s => s.forEach(p=>all.push(p)));
+  // segs は [始点, 終点, 色?, 実線?] の形。座標だけを拾う（色や真偽値を混ぜると座標がNaNになる）
+  (sp.segs||[]).forEach(s => s.slice(0,2).forEach(p=>all.push(p)));
   (sp.dots||[]).forEach(d => all.push(d.p));
   const f = frame(all, VW, H, sp.pad || 46);
   const S = sp.pts.map(f.pt);

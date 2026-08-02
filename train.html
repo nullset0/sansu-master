@@ -92,14 +92,7 @@
   } else if (mode === 'wrong') {
     pool = DATA.all(); only = 'wrong'; title = '🔁 まちがいノート'; sub = '一度まちがえた問題だけ';
   } else {
-    // ① 今の学年　② 一度でもやった問題（学年をこえて復習）　③ 着手ずみの中学受験の単元
-    pool = DATA.all().filter(q => {
-      if (q.unit.startsWith(HOME + '-')) return true;
-      const c = st.cards[q.id];
-      if (c && c.seen) return true;
-      const u = DATA.unit(q.unit);
-      return u && u.area.startsWith('jk') && st.units[q.unit];
-    });
+    pool = Store.dailyPool(DATA.all(), HOME);
     title = '🎯 きょうの5問';
     sub = 'ふくしゅう優先・単元はまぜて出します';
   }

@@ -12,6 +12,8 @@ const KEY = 'sansu-v2';
 const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35];   // index = box(1..6)
 const MAX_BOX = 6;
 
+const clone = o => (typeof structuredClone === 'function'
+  ? structuredClone(o) : JSON.parse(JSON.stringify(o)));   // 古いiOS Safari対策
 const today = () => new Date().toISOString().slice(0,10);
 const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+d); return t.toISOString().slice(0,10); };
 const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000);
@@ -34,11 +36,11 @@ let S = load();
 function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!raw) return migrate(structuredClone(DEFAULTS));
-    return Object.assign(structuredClone(DEFAULTS), raw, {
+    if (!raw) return migrate(clone(DEFAULTS));
+    return Object.assign(clone(DEFAULTS), raw, {
       settings: Object.assign({}, DEFAULTS.settings, raw.settings||{}),
     });
-  } catch(e) { return structuredClone(DEFAULTS); }
+  } catch(e) { return clone(DEFAULTS); }
 }
 // v1（学年ごとの sansu-master-* キー）から連続日数だけ引き継ぐ
 function migrate(fresh) {
@@ -114,7 +116,7 @@ function unitMastery(unitId, qids) {
   qids.forEach(q => {
     const c = S.cards[q];
     if (!c || !c.box) return;
-    sum += Math.min(1, c.box / 4);      // 箱4以上で「覚えた」
+    sum += Math.min(1, c.box / 5);      // 箱5＝「おぼえた」。ずかんの表示と同じ基準
   });
   return sum / qids.length;
 }
@@ -175,6 +177,21 @@ function buildSession(pool, count, opts = {}) {
     }
   }
   return interleave(picked.slice(0, count));
+}
+
+/* ---- 「きょうの5問」の出題範囲 --------------------------------
+   ① 今の学年の単元　② 一度でもやった問題（学年をこえて復習）
+   ③ 着手ずみの中学受験の単元
+   ※ホームと出題ページの両方から使うので、ここ1か所に置く
+--------------------------------------------------------------- */
+function dailyPool(all, homeGrade) {
+  const g = (homeGrade || S.settings.home || 'g4') + '-';
+  return all.filter(q => {
+    if (q.unit.indexOf(g) === 0) return true;
+    const c = S.cards[q.id];
+    if (c && c.seen) return true;
+    return q.unit.indexOf('jk-') === 0 && !!S.units[q.unit];
+  });
 }
 
 function shuffle(a) { const r=a.slice(); for (let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];} return r; }
@@ -276,15 +293,15 @@ function weakUnits(units) {
     .sort((a,b) => a.rate - b.rate);
 }
 
-function reset() { localStorage.removeItem(KEY); S = structuredClone(DEFAULTS); save(); }
+function reset() { localStorage.removeItem(KEY); S = clone(DEFAULTS); save(); }
 function exportJSON() { return JSON.stringify(S); }
-function importJSON(t) { try { S = Object.assign(structuredClone(DEFAULTS), JSON.parse(t)); save(); return true; } catch(e){ return false; } }
+function importJSON(t) { try { S = Object.assign(clone(DEFAULTS), JSON.parse(t)); save(); return true; } catch(e){ return false; } }
 
 return {
   get state(){ return S; },
   save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
-  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits,
+  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits, dailyPool,
   reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle,
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },
 };

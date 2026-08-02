@@ -161,8 +161,9 @@
   document.getElementById('imp').onclick = () => {
     const t = prompt('書き出した文字列を貼りつけてください');
     if (!t) return;
-    Quiz.toast(Store.importJSON(t) ? '読みこみました' : '読みこめませんでした');
-    if (Store.importJSON(t)) setTimeout(()=>location.reload(), 800);
+    const ok = Store.importJSON(t);
+    Quiz.toast(ok ? '読みこみました' : '読みこめませんでした');
+    if (ok) setTimeout(()=>location.reload(), 800);
   };
   document.getElementById('reset').onclick = () => {
     if (!confirm('学習の記録をすべて消します。よろしいですか？')) return;
