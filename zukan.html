@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ずかん — 算数マスター</title>
+<link rel="stylesheet" href="app/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="theme-color" content="#ff8a3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">← ホーム</a>
+    <div style="flex:1"><h1>🏅 ずかん</h1><div class="sub">なかま と バッジ</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🐾 なかま</h2>
+    <p class="muted" style="margin-bottom:10px">タップすると、いっしょに冒険するキャラを えらべます。</p>
+    <div id="cast" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>📦 おぼえ箱</h2>
+    <p class="muted" style="margin-bottom:10px">まちがえると1に戻り、正解するたび右へ。5に入れば「おぼえた」です。</p>
+    <div class="boxes" id="boxes"></div>
+  </div>
+
+  <div class="card">
+    <h2>🏅 バッジ <span style="margin-left:auto;font-size:.75rem;color:var(--sub)" id="badge-n"></span></h2>
+    <div class="badges" id="badges"></div>
+  </div>
+</div>
+
+<nav class="tabbar">
+  <a href="index.html"><span class="i">🏠</span>ホーム</a>
+  <a href="train.html?mode=daily"><span class="i">✏️</span>れんしゅう</a>
+  <a href="learn.html"><span class="i">📖</span>解き方</a>
+  <a href="zukan.html" class="on"><span class="i">🏅</span>ずかん</a>
+  <a href="parent.html"><span class="i">👨‍👩‍👧</span>きろく</a>
+</nav>
+
+<script src="app/fig.js"></script>
+<script src="app/chara.js"></script>
+<script src="app/store.js"></script>
+<script src="app/quiz.js"></script>
+<script src="data/core.js"></script>
+<script src="questions/g1.js"></script>
+<script src="questions/g2.js"></script>
+<script src="questions/g3.js"></script>
+<script src="questions/g4.js"></script>
+<script src="questions/g5.js"></script>
+<script src="questions/g6.js"></script>
+<script src="data/elem.js"></script>
+<script src="data/jk-num.js"></script>
+<script src="data/jk-ratio.js"></script>
+<script src="data/jk-toku.js"></script>
+<script src="data/jk-speed.js"></script>
+<script src="data/jk-geo.js"></script>
+<script>
+(() => {
+  const st = Store.state;
+
+  // ---- なかま ----
+  function renderCast() {
+    document.getElementById('cast').innerHTML = Chara.list().map(w => {
+      const info = Chara.info(w);
+      const got = st.unlocked.includes(w);
+      const need = (Store.UNLOCKS.find(u => u.who === w) || {}).label;
+      const on = st.chara === w;
+      return `<div class="badge ${got?'got':''}" data-who="${w}" style="cursor:pointer;${on?'outline:3px solid var(--a)':''}">
+        <div style="display:flex;justify-content:center;${got?'':'filter:grayscale(1);opacity:.3'}">${Chara.svg(w, got?'happy':'sleep', 84, {anim: got?'idle':false})}</div>
+        <div class="n">${info.name}${on?' ★':''}</div>
+        <div class="d">${got ? info.role : '🔒 ' + (need || '？')}</div>
+      </div>`;
+    }).join('');
+    document.querySelectorAll('[data-who]').forEach(el => el.addEventListener('click', () => {
+      const w = el.dataset.who;
+      if (!st.unlocked.includes(w)) { SFX.wrong(); Quiz.toast('まだ なかまになっていません'); return; }
+      st.chara = w; Store.save(); SFX.coin();
+      Quiz.toast(`${Chara.info(w).name} と いっしょに いこう！`);
+      renderCast();
+    }));
+  }
+  renderCast();
+
+  // ---- おぼえ箱 ----
+  const b = Store.boxCounts(DATA.all());
+  const labels = [['1','まちがえた'],['2','1日後'],['3','3日後'],['4','1週間後'],['5','おぼえた']];
+  document.getElementById('boxes').innerHTML = labels.map(([n,l],i) =>
+    `<div class="box b${i+1}"><div class="n">${[b.b1,b.b2,b.b3,b.b4,b.b5][i]}</div><div class="l">箱${n}<br>${l}</div></div>`).join('');
+
+  // ---- バッジ ----
+  const got = Object.keys(st.badges).length;
+  document.getElementById('badge-n').textContent = `${got} / ${Store.BADGES.length}`;
+  document.getElementById('badges').innerHTML = Store.BADGES.map(bd => {
+    const d = st.badges[bd.id];
+    return `<div class="badge ${d?'got':''}"><div class="e">${bd.e}</div><div class="n">${bd.n}</div>
+      <div class="d">${d ? d.replace(/-/g,'/') : bd.d}</div></div>`;
+  }).join('');
+
+  Chara.bindTap(document);
+})();
+</script>
+</body>
+</html>
