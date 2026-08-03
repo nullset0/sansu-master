@@ -112,6 +112,14 @@ function grade(qid, correct, unitId, opts = {}) {
 
 /* ---------- 軽い記録（道具えらび・手順ならべかえ用）----------
    間隔反復のカードは汚さず、単元の正答率と きょうの記録だけ動かす */
+// とくべつ練習をやった日を記録する
+function markTraining(kind) {
+  const r = S.records = S.records || {};
+  const e = r[kind] = r[kind] || {};
+  e.lastDate = today(); e.count = (e.count || 0) + 1;
+  save();
+}
+
 function note(unitId, correct) {
   rollDay();
   if (unitId) {
@@ -302,7 +310,7 @@ return {
   save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits,
-  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note,
+  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note, markTraining,
   get rev(){ return REV; },
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },
 };

@@ -93,35 +93,66 @@ function toast(msg, ms = 2200) {
 /* ---------- 手書きメモ ---------- */
 function memoPad(host) {
   const c = host.querySelector('canvas');
-  const dpr = window.devicePixelRatio || 1;
-  const fit = () => { const r=c.getBoundingClientRect(); c.width=r.width*dpr; c.height=r.height*dpr; const x=c.getContext('2d'); x.scale(dpr,dpr); x.lineCap='round'; x.lineJoin='round'; };
-  fit();
   const x = c.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const undoStack = [];
+  const fit = () => {
+    const r = c.getBoundingClientRect();
+    if (!r.width) return;
+    const keep = c.width ? c.toDataURL() : null;
+    c.width = r.width*dpr; c.height = r.height*dpr;
+    x.setTransform(1,0,0,1,0,0); x.scale(dpr,dpr); x.lineCap='round'; x.lineJoin='round';
+    if (keep) { const img=new Image(); img.onload=()=>x.drawImage(img,0,0,r.width,r.height); img.src=keep; }
+  };
+  fit();
   let drawing=false, color='#2b3245', w=3, erase=false;
   const pos = e => { const r=c.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
-  c.addEventListener('pointerdown', e => { drawing=true; c.setPointerCapture(e.pointerId); const [a,b]=pos(e); x.beginPath(); x.moveTo(a,b); });
-  c.addEventListener('pointermove', e => { if(!drawing) return; const [a,b]=pos(e);
+  const snapshot = () => { try { undoStack.push(c.toDataURL()); if (undoStack.length>12) undoStack.shift(); } catch(e){} };
+
+  c.addEventListener('pointerdown', e => {
+    e.preventDefault(); snapshot();
+    drawing=true; c.setPointerCapture(e.pointerId);
+    const [a,b]=pos(e); x.beginPath(); x.moveTo(a,b);
+    // 点を打っただけでも見えるように
     x.globalCompositeOperation = erase?'destination-out':'source-over';
-    x.strokeStyle=color; x.lineWidth = erase?18:w; x.lineTo(a,b); x.stroke(); });
+    x.strokeStyle=color; x.lineWidth = erase?22:w; x.lineTo(a+0.1,b); x.stroke();
+  });
+  c.addEventListener('pointermove', e => { if(!drawing) return; e.preventDefault();
+    const [a,b]=pos(e);
+    x.globalCompositeOperation = erase?'destination-out':'source-over';
+    x.strokeStyle=color; x.lineWidth = erase?22:w; x.lineTo(a,b); x.stroke(); });
   ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>drawing=false));
+
   host.querySelectorAll('.sw').forEach(b => b.addEventListener('click', () => {
     host.querySelectorAll('.sw').forEach(s=>s.classList.remove('on')); b.classList.add('on');
     color=b.dataset.c; erase=false; host.querySelector('[data-act=erase]')?.classList.remove('on');
   }));
-  host.querySelector('[data-act=erase]')?.addEventListener('click', e => { erase=!erase; e.target.classList.toggle('on', erase); });
-  host.querySelector('[data-act=clear]')?.addEventListener('click', () => x.clearRect(0,0,c.width,c.height));
-  window.addEventListener('resize', () => { const d=c.toDataURL(); fit(); const img=new Image(); img.onload=()=>x.drawImage(img,0,0,c.getBoundingClientRect().width,c.getBoundingClientRect().height); img.src=d; });
+  host.querySelector('[data-act=erase]')?.addEventListener('click', e => {
+    erase=!erase; e.target.classList.toggle('on', erase); });
+  host.querySelector('[data-act=clear]')?.addEventListener('click', () => {
+    snapshot(); const r=c.getBoundingClientRect(); x.clearRect(0,0,r.width,r.height); });
+  host.querySelector('[data-act=undo]')?.addEventListener('click', () => {
+    const d = undoStack.pop(); if (!d) return;
+    const r=c.getBoundingClientRect();
+    const img=new Image(); img.onload=()=>{ x.clearRect(0,0,r.width,r.height); x.drawImage(img,0,0,r.width,r.height); }; img.src=d; });
+  host.querySelector('[data-act=big]')?.addEventListener('click', e => {
+    host.classList.toggle('tall');
+    e.target.textContent = host.classList.contains('tall') ? '⤡ ちぢめる' : '⤢ 広げる';
+    requestAnimationFrame(fit); });
+  window.addEventListener('resize', fit);
 }
 const memoHTML = `
 <div class="memo" id="memo">
-  <canvas></canvas>
+  <div class="memo-sheet"><canvas></canvas></div>
   <div class="memo-bar">
     <span class="sw on" data-c="#2b3245" style="background:#2b3245"></span>
     <span class="sw" data-c="#ef4444" style="background:#ef4444"></span>
     <span class="sw" data-c="#2563eb" style="background:#2563eb"></span>
     <span class="sw" data-c="#16a34a" style="background:#16a34a"></span>
+    <button class="tool" data-act="undo">↩︎ もどす</button>
     <button class="tool" data-act="erase">消しゴム</button>
     <button class="tool" data-act="clear">ぜんぶ消す</button>
+    <button class="tool" data-act="big">⤢ 広げる</button>
   </div>
 </div>`;
 
@@ -184,6 +215,8 @@ function render() {
 
   S.answered = false; S.hintStep = 0; S.hintUsed = false;
   renderAnswer(q);
+  // むずかしい問題は、計算用のメモを最初から開いておく（紙の代わり）
+  if ((q.lv || 1) >= 4) { $('#memo').classList.add('open'); $('#t-memo').classList.add('on'); }
   memoPad($('#memo'));
 
   $('#t-hint')?.addEventListener('click', showHint);
