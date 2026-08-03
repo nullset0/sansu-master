@@ -48,61 +48,126 @@
 <script src="data/jk-toku.js"></script>
 <script src="data/jk-speed.js"></script>
 <script src="data/jk-geo.js"></script>
+<script src="data/hard.js"></script>
+<script src="data/graph.js"></script>
+<script src="app/mastery.js"></script>
 <script>
 (() => {
   const P = new URLSearchParams(location.search);
   const host = document.getElementById('app');
   const st = Store.state;
-  const HOME = Store.get('home') || 'g4';
-  const unitId = P.get('unit'), areaId = P.get('area'), mode = P.get('mode') || 'daily';
+  const unitId = P.get('unit'), areaId = P.get('area');
+  const mode = P.get('mode') || 'plan';
   const count = Number(P.get('n')) || Store.get('dailyGoal') || 5;
+  const setHead = (t, sub) => {
+    document.getElementById('t-title').textContent = t;
+    document.getElementById('t-sub').textContent = sub || '';
+  };
 
-  let pool = [], title = 'きょうの5問', sub = '', only = null;
+  /* ---------- レベル診断：下の学年から3問ずつ ---------- */
+  if (mode === 'placement') {
+    setHead('🎈 レベル診断', 'できる学年は とばして先へ進みます');
+    let gi = 0;
+    const passed = [];
+    const step = () => {
+      if (gi >= Mastery.GRADES.length) return finishPlacement();
+      const g = Mastery.GRADES[gi];
+      const qs = Mastery.ladderFor(g, 3).map(q => Quiz.normalize(q));
+      if (!qs.length) { gi++; return step(); }
+      const name = (DATA.AREAS[g] || {}).name || g;
+      host.innerHTML = `<div class="card" style="text-align:center">
+        ${Chara.tag('fukurou','normal', `つぎは <b>${name}</b> の問題を3問。ぜんぶ合っていたら とばして先へ進むよ。`, 92)}
+        <button class="btn wide blue" id="go" style="margin-top:8px">▶︎ ${name}の3問へ</button></div>`;
+      document.getElementById('go').onclick = () => {
+        Quiz.start({ pool: qs, list: qs, host, count: qs.length, noFinishUI: true,
+          onDone: ({ok, total}) => {
+            if (ok === total) { Mastery.assumeGrade(g); passed.push(name); gi++; step(); }
+            else finishPlacement(name);
+          }});
+      };
+    };
+    const finishPlacement = (stopAt) => {
+      st.placed = st.placed || (passed.length ? Mastery.GRADES[passed.length-1] : 'g1');
+      Store.save();
+      const fr = Mastery.frontier(3);
+      host.innerHTML = `<div class="card" style="text-align:center">
+        <h2 style="justify-content:center">🎈 診断おわり！</h2>
+        <div style="display:flex;justify-content:center">${Chara.svg('fukurou','excited',140,{anim:'hop'})}</div>
+        <p class="muted">${passed.length ? `<b>${passed.join('・')}</b> はもう分かっているとみなしました。` : 'まずは1年生の内容からゆっくりいこう。'}
+        ${stopAt ? `<br><b>${stopAt}</b> のあたりから ていねいにやっていくよ。` : ''}</p>
+        <div class="note b" style="text-align:left">ここからは学年のかべはありません。前の単元がしっかりしたら、
+          <b>知らないうちに上の学年へ</b>進んでいきます。つまずいたら自動で下へ戻します。</div>
+      </div>
+      ${fr.length ? `<div class="card"><h2>📍 まずはここから</h2>
+        ${fr.map(f=>`<a class="unit" style="display:flex;gap:10px;align-items:center;margin-bottom:8px" href="train.html?unit=${encodeURIComponent(f.u.id)}">
+          <span style="font-size:1.3rem">${f.u.emoji}</span><span style="flex:1"><span class="t">${f.u.name}</span>
+          <span class="m">${(DATA.AREAS[f.u.area]||{}).name||''}</span></span><span style="color:var(--a);font-weight:800">▶︎</span></a>`).join('')}
+      </div>` : ''}
+      <div class="card"><a class="btn wide" href="index.html">🏠 ホームへ</a></div>`;
+      Quiz.confetti(1.4); SFX.clear();
+    };
+    step();
+    return;
+  }
+
+  /* ---------- ときどきチェック ---------- */
+  if (mode === 'check') {
+    const list = Mastery.buildCheck(Number(P.get('n')) || 10).map(q => Quiz.normalize(q));
+    setHead('🩺 チェック', 'ヒント無し・解説はさいご');
+    if (list.length < 3) {
+      host.innerHTML = '<div class="card"><p class="muted">チェックできる単元がまだ足りません。まずは何単元かクリアしよう。</p>'
+        + '<a class="btn wide ghost" href="index.html">ホームへ</a></div>';
+      return;
+    }
+    Quiz.start({ pool: list, list, host, count: list.length, mode: 'check' });
+    return;
+  }
+
+  /* ---------- 単元 / エリア / まちがい / きょうのプラン ---------- */
+  let pool = [], title = '', sub = '', only = null, list = null;
 
   if (unitId) {
     const u = DATA.unit(unitId);
     if (!u) { host.innerHTML = '<div class="card">単元が見つかりません。</div>'; return; }
     pool = DATA.byUnit(unitId);
-    title = `${u.emoji} ${u.name}`;
-    sub = u.tag || '';
+    setHead(`${u.emoji} ${u.name}`, u.tag || '');
     document.getElementById('t-learn').href = `learn.html#${unitId}`;
-    document.getElementById('t-title').textContent = title;
-    document.getElementById('t-sub').textContent = sub;
-    if (u.teach) {
-      // その単元をはじめてやるときは、先に解き方カードへ誘導
-      const touched = pool.some(q => st.cards[q.id] && st.cards[q.id].seen);
-      if (!touched) {
-        host.innerHTML = `
-          <div class="card">
-            ${Chara.tag('fukurou','thinking', `${u.name} は はじめてだね。先に「解き方」を1分だけ見ておくと、ぐっと楽になるよ。`, 96)}
-            <div class="note"><strong>${u.emoji} ${u.name}</strong><br>${u.tag||''}</div>
-            <div class="keyline" style="background:linear-gradient(180deg,#fff8e6,#fff1cf);border:2.5px dashed var(--e);border-radius:16px;padding:13px 15px;font-weight:800;margin:12px 0">
-              <span style="font-size:.7rem;color:#a06b00;display:block;margin-bottom:3px">かんじんな一言</span>${u.teach.key}</div>
-            <a class="btn wide blue" href="learn.html#${unitId}">📖 解き方を見る</a>
-            <button class="btn ghost wide" id="skip" style="margin-top:10px">いきなり やってみる</button>
-          </div>`;
-        document.getElementById('skip').onclick = () => go();
-        return;
-      }
+    const s = Mastery.unitState(unitId);
+    if (!s.open) {
+      const need = Graph.pre(unitId).map(p => (DATA.unit(p)||{}).name).join('・');
+      host.innerHTML = `<div class="card">
+        ${Chara.tag('fukurou','thinking', `この単元はまだ早いかも。先に <b>${need}</b> をかためると、ここが ぐっと楽になるよ。`, 96)}
+        ${Graph.pre(unitId).map(p=>{const pu=DATA.unit(p); return pu?`<a class="btn ghost wide sm" style="margin-top:8px" href="train.html?unit=${encodeURIComponent(p)}">${pu.emoji} ${pu.name} をやる</a>`:''}).join('')}
+        <button class="btn wide" id="anyway" style="margin-top:12px">それでも やってみる</button></div>`;
+      document.getElementById('anyway').onclick = () => go();
+      return;
+    }
+    if (u.teach && !s.started) {
+      host.innerHTML = `<div class="card">
+          ${Chara.tag('fukurou','thinking', `${u.name} は はじめてだね。先に「解き方」を1分だけ見ておくと、ぐっと楽になるよ。`, 96)}
+          <div class="note"><strong>${u.emoji} ${u.name}</strong><br>${u.tag||''}</div>
+          <div style="background:linear-gradient(180deg,#fff8e6,#fff1cf);border:2.5px dashed var(--e);border-radius:16px;padding:13px 15px;font-weight:800;margin:12px 0">
+            <span style="font-size:.7rem;color:#a06b00;display:block;margin-bottom:3px">かんじんな一言</span>${u.teach.key}</div>
+          <a class="btn wide blue" href="learn.html#${unitId}">📖 解き方を見る</a>
+          <button class="btn ghost wide" id="skip" style="margin-top:10px">いきなり やってみる</button>
+        </div>`;
+      document.getElementById('skip').onclick = () => go();
+      return;
     }
   } else if (areaId) {
     pool = DATA.qsOfArea(areaId);
     const a = DATA.AREAS[areaId] || {};
-    title = `${a.emoji||''} ${a.name||areaId}`;
+    setHead(`${a.emoji||''} ${a.name||areaId}`, '');
   } else if (mode === 'wrong') {
-    pool = DATA.all(); only = 'wrong'; title = '🔁 まちがいノート'; sub = '一度まちがえた問題だけ';
+    pool = DATA.all(); only = 'wrong';
+    setHead('🔁 まちがいノート', '一度まちがえた問題だけ');
   } else {
-    pool = Store.dailyPool(DATA.all(), HOME);
-    title = '🎯 きょうの5問';
-    sub = 'ふくしゅう優先・単元はまぜて出します';
+    list = Mastery.plan(count);
+    pool = list;
+    setHead('🎯 きょうの' + count + '問', 'ふくしゅう・土台なおし・新しい所を まぜて出します');
   }
 
-  document.getElementById('t-title').textContent = title;
-  document.getElementById('t-sub').textContent = sub;
-
-  function go() {
-    Quiz.start({ pool, count, host, unitId, only, title });
-  }
+  function go() { Quiz.start({ pool, list, count, host, unitId, only }); }
   go();
 })();
 </script>

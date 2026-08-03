@@ -18,15 +18,37 @@ const AREAS = {
   'jk-toku':  {name:'特殊算',         emoji:'🧩', kind:'juken', order:13},
   'jk-speed': {name:'速さ',           emoji:'🏃', kind:'juken', order:14},
   'jk-geo':   {name:'図形',           emoji:'📐', kind:'juken', order:15},
+  'jk-hard':  {name:'難関チャレンジ',  emoji:'🏔️', kind:'juken', order:16},
 };
 
 function addUnit(u) {
   if (byId.has(u.id)) return;
   units.push(u); byId.set(u.id, u);
-  const list = (u.qs || []).map((q,i) => Object.assign({
+  const base = (u.qs || []).map((q,i) => Object.assign({
     unit: u.id, lv: q.lv || u.lv || 1, tag: q.tag || u.name,
     pattern: q.pattern !== undefined ? q.pattern : (u.area.startsWith('jk') ? u.name : null),
   }, q, { id: q.id || `${u.id}-${i+1}` }));
+
+  // 誘導つきの大問（parts）は、小問1つずつを独立した問題に展開する。
+  // (2) だけを単独で練習できるように、前の小問の答えは「わかっていること」として渡す。
+  const list = [];
+  base.forEach(q => {
+    if (!Array.isArray(q.parts)) { list.push(q); return; }
+    q.parts.forEach((p, pi) => {
+      const given = q.parts.slice(0, pi)
+        .map((pp, k) => `(${k+1}) ${pp.label || 'こたえ'} ＝ ${pp.ans}${pp.unitLabel || ''}`);
+      list.push(Object.assign({}, q, p, {
+        id: `${q.id}-p${pi+1}`,
+        parts: undefined,
+        lead: q.q, leadFig: q.fig,
+        fig: p.fig || null,
+        partIndex: pi + 1, partTotal: q.parts.length,
+        given: given.length ? given : null,
+        lv: p.lv || q.lv,
+        q: p.q,
+      }));
+    });
+  });
   qByUnit.set(u.id, list);
   list.forEach(q => qAll.push(q));
   u.qs = list;

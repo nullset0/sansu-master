@@ -157,6 +157,7 @@ h1,h2,h3{line-height:1.35;letter-spacing:.01em}
 .island.g5 .island-head{background:linear-gradient(135deg,#ff9ab5,#f6668f)}
 .island.g6 .island-head{background:linear-gradient(135deg,#ffd166,#f0a500)}
 .island.jk .island-head{background:linear-gradient(135deg,#3d4a6b,#1f2942)}
+.island.hard .island-head{background:linear-gradient(135deg,#8b2f4a,#3d1224)}
 .unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px}
 .unit{
   display:block;background:#fff;border:2px solid var(--line);border-radius:16px;padding:11px 12px;
@@ -182,6 +183,16 @@ h1,h2,h3{line-height:1.35;letter-spacing:.01em}
 .q-progress{height:9px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px}
 .q-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--b),var(--f));border-radius:99px;transition:width .4s}
 .q-text{font-size:1.16rem;font-weight:800;line-height:1.75;margin-bottom:6px}
+.lead{
+  background:#f6f9fc;border:2px solid var(--line);border-left:6px solid var(--f);
+  border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:.97rem;line-height:1.8;font-weight:600;
+}
+.lead .fig{margin:10px 0 2px}
+.given{
+  background:var(--c-l);border-radius:12px;padding:9px 13px;margin-bottom:10px;
+  font-size:.88rem;font-weight:800;
+}
+.given .lab{display:block;font-size:.68rem;color:#2c7a4b;margin-bottom:2px;font-weight:900}
 .q-text .hl{background:linear-gradient(transparent 62%, #ffe9a3 62%)}
 
 .opts{display:grid;gap:10px;margin-top:14px}
