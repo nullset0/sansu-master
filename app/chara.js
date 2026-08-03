@@ -115,6 +115,7 @@ function mouth(spec, expr) {
 /* ---------- 本体のかたち（シルエットの決め手） ----------------- */
 // d = 本体のパス。うしろに描くもの / 前に描くもの も返す
 function shape(who, spec) {
+  if (!CAST[who]) who = 'pika';   // 知らない名前が来ても落とさない
   switch (who) {
     case 'pika': return {
       // うしろ：しっぽ（星つき）と、とがった耳
@@ -245,7 +246,7 @@ function svg(who = 'pika', expr = 'normal', size = 130, opts = {}) {
   const spec = CAST[who] || CAST.pika;
   const id = 'k' + (++_uid);
   const anim = opts.anim === false ? '' : (opts.anim || 'idle');
-  const sh = shape(who, spec);
+  const sh = shape(CAST[who] ? who : 'pika', spec);
   sh.cheekDx = sh.cheekDx || 55; sh.cheekY = sh.cheekY || 133;
   const L = limbs(spec);
   const cheekOp = ({happy:1, excited:1, wink:1, normal:.8, wow:.85, sad:.45, sleep:.55, thinking:.65})[expr] ?? .8;
