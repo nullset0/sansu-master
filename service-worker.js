@@ -1,5 +1,5 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v40';
+const CACHE_NAME = 'sansu-master-v41';
 const ASSETS = [
   './', './index.html', './train.html', './learn.html', './zukan.html', './parent.html',
   './manifest.json', './icon.svg',
