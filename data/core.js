@@ -18,6 +18,7 @@ const AREAS = {
   'jk-toku':  {name:'特殊算',         emoji:'🧩', kind:'juken', order:13},
   'jk-speed': {name:'速さ',           emoji:'🏃', kind:'juken', order:14},
   'jk-geo':   {name:'図形',           emoji:'📐', kind:'juken', order:15},
+  'jk-calc':  {name:'計算の力',        emoji:'🧮', kind:'juken', order:10},
   'jk-hard':  {name:'難関チャレンジ',  emoji:'🏔️', kind:'juken', order:16},
 };
 
@@ -55,6 +56,22 @@ function addUnit(u) {
 }
 function addUnits(arr) { arr.forEach(addUnit); }
 
+/* 既存の単元に問題を足す（増量用）。id が無いものは連番を振り直す */
+function extendUnit(id, qs) {
+  const u = byId.get(id);
+  if (!u || !qs || !qs.length) return;
+  const cur = qByUnit.get(id) || [];
+  const start = cur.length;
+  const add = qs.map((q,i) => Object.assign({
+    unit: id, lv: q.lv || u.lv || 1, tag: q.tag || u.name,
+    pattern: q.pattern !== undefined ? q.pattern : (u.area.startsWith('jk') ? u.name : null),
+  }, q, { id: q.id || `${id}-x${start+i+1}` }));
+  add.forEach(q => { cur.push(q); qAll.push(q); });
+  qByUnit.set(id, cur);
+  u.qs = cur;
+}
+function extendUnits(map) { Object.entries(map).forEach(([id, qs]) => extendUnit(id, qs)); }
+
 const byUnit  = id => qByUnit.get(id) || [];
 const unit    = id => byId.get(id);
 const byArea  = a  => units.filter(u => u.area === a);
@@ -64,6 +81,6 @@ const qsOfArea = a => byArea(a).flatMap(u => byUnit(u.id));
 const all = () => qAll;
 const unitsMap = () => Object.fromEntries(units.map(u=>[u.id,u]));
 
-return { AREAS, addUnit, addUnits, units, unit, byUnit, byArea, areasOf, qsOfArea, all, unitsMap,
+return { AREAS, addUnit, addUnits, extendUnit, extendUnits, units, unit, byUnit, byArea, areasOf, qsOfArea, all, unitsMap,
   get count(){ return qAll.length; } };
 })();
