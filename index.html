@@ -40,6 +40,25 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2>🏋️ とくべつ練習</h2>
+    <p class="muted" style="margin-bottom:10px">ふつうの5問とは別に、力の種類ごとにきたえる。1つ3〜5分。</p>
+    <div class="train-grid">
+      <a class="tcard t-time" href="train.html?mode=time">
+        <span class="e">⏱</span><span class="t">タイムアタック</span>
+        <span class="d">計算20問のスピード。<br>目安は1問20秒</span><span class="rec" id="rec-time"></span></a>
+      <a class="tcard t-pat" href="train.html?mode=pattern">
+        <span class="e">🔧</span><span class="t">道具えらび</span>
+        <span class="d">答えは出さない。<br>「何算か」だけ見ぬく</span></a>
+      <a class="tcard t-step" href="train.html?mode=steps">
+        <span class="e">🪜</span><span class="t">手順ならべかえ</span>
+        <span class="d">解く順番を<br>組み立てる</span></a>
+      <a class="tcard t-print" href="print.html">
+        <span class="e">🖨</span><span class="t">プリント</span>
+        <span class="d">紙で解きたいとき。<br>答えも一緒に出る</span></a>
+    </div>
+  </div>
+
   <div class="card" id="nowcard">
     <h2>📍 いま ここ</h2>
     <p class="muted" style="margin-bottom:10px">前の単元がしっかりしたら、学年に関係なく つぎが自動でひらきます。</p>
@@ -93,6 +112,7 @@
 <script src="data/jk-drill.js"></script>
 <script src="data/hard.js"></script>
 <script src="data/graph.js"></script>
+<script src="app/modes.js"></script>
 <script src="app/mastery.js"></script>
 <script src="app/home.js"></script>
 <script>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プリント — 算数マスター</title>
+<link rel="stylesheet" href="app/style.css">
+<style>
+  /* ---- 紙で解くためのレイアウト ---- */
+  .sheet{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh);padding:26px 28px;margin-bottom:14px}
+  .sheet-head{display:flex;align-items:baseline;gap:12px;border-bottom:2.5px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
+  .sheet-head h2{font-size:1.15rem;margin:0}
+  .sheet-head .meta{margin-left:auto;font-size:.78rem;color:var(--sub);font-weight:700}
+  .namebox{display:flex;gap:18px;margin:12px 0 20px;font-size:.85rem;color:var(--sub);font-weight:700}
+  .namebox span{border-bottom:1.5px solid var(--line);flex:1;padding-bottom:3px}
+  .pq{border-top:1px dashed var(--line);padding:16px 0}
+  .pq:first-of-type{border-top:none}
+  .pq-no{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;
+    background:var(--ink);color:#fff;font-weight:900;font-size:.82rem;margin-right:8px;vertical-align:2px}
+  .pq-body{font-size:1rem;line-height:1.85;font-weight:600}
+  .pq-lead{background:#f6f9fc;border-left:5px solid var(--f);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:.94rem}
+  .pq-given{background:var(--c-l);border-radius:9px;padding:7px 11px;margin-bottom:8px;font-size:.85rem;font-weight:800}
+  .work{border:1.5px dashed #cbd5e1;border-radius:10px;height:var(--wh,86px);margin-top:10px;
+    background:repeating-linear-gradient(transparent,transparent 25px,#eef3f7 25px,#eef3f7 26px)}
+  .work-lab{font-size:.7rem;color:var(--faint);font-weight:800;margin:8px 0 -4px}
+  .ansline{margin-top:8px;font-size:.9rem;font-weight:800;color:var(--sub)}
+  .ansline u{display:inline-block;min-width:130px;border-bottom:1.5px solid var(--ink)}
+  .key{columns:2;column-gap:26px;font-size:.9rem}
+  .key div{break-inside:avoid;padding:5px 0;border-bottom:1px dotted var(--line)}
+  .key b{color:var(--a)}
+  .opts-print{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:.94rem;font-weight:700}
+
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff!important;padding:0}
+    .noprint,.tabbar,.top{display:none!important}
+    .sheet{box-shadow:none;border-radius:0;padding:0;margin:0 0 12mm}
+    .fig{border:none;padding:0}
+    .pagebreak{break-before:page}
+    .work{background:repeating-linear-gradient(transparent,transparent 25px,#e8eef3 25px,#e8eef3 26px)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top noprint">
+    <a class="back" href="index.html">← ホーム</a>
+    <div style="flex:1"><h1>🖨 プリント</h1><div class="sub">紙で解きたいとき用。答え合わせはアプリでもできます</div></div>
+  </div>
+
+  <div class="card noprint">
+    <h2>なにを印刷する？</h2>
+    <div class="row"><div class="lbl">中身</div><div class="seg" id="p-kind"></div></div>
+    <div class="row"><div class="lbl">問題数</div><div class="seg" id="p-n"></div></div>
+    <div class="row"><div class="lbl">計算用のらん</div><div class="seg" id="p-work"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px">
+      <button class="btn" id="make">つくり直す</button>
+      <button class="btn blue" id="print">🖨 印刷する</button>
+    </div>
+    <div class="note b" style="margin-bottom:0">
+      <strong>使い方：</strong>印刷して鉛筆で解く → 答え合わせは この紙の最後のページか、
+      アプリの「れんしゅう」で同じ問題を解き直すと、まちがいが自動でおさらいの列に入ります。
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script src="app/fig.js"></script>
+<script src="app/chara.js"></script>
+<script src="app/store.js"></script>
+<script src="app/quiz.js"></script>
+<script src="data/core.js"></script>
+<script src="questions/g1.js"></script>
+<script src="questions/g2.js"></script>
+<script src="questions/g3.js"></script>
+<script src="questions/g4.js"></script>
+<script src="questions/g5.js"></script>
+<script src="questions/g6.js"></script>
+<script src="data/elem.js"></script>
+<script src="data/jk-num.js"></script>
+<script src="data/jk-ratio.js"></script>
+<script src="data/jk-toku.js"></script>
+<script src="data/jk-speed.js"></script>
+<script src="data/jk-calc.js"></script>
+<script src="data/jk-speed2.js"></script>
+<script src="data/jk-geo2.js"></script>
+<script src="data/jk-num2.js"></script>
+<script src="data/jk-drill.js"></script>
+<script src="data/jk-geo.js"></script>
+<script src="data/hard.js"></script>
+<script src="data/graph.js"></script>
+<script src="app/mastery.js"></script>
+<script>
+(() => {
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const rich = Quiz.rich;
+  let kind = 'plan', n = 10, work = 'normal';
+
+  function seg(el, opts, cur, cb) {
+    el.innerHTML = opts.map(o=>`<button data-v="${o[0]}" class="${String(o[0])===String(cur)?'on':''}">${o[1]}</button>`).join('');
+    el.querySelectorAll('button').forEach(b => b.onclick = () => {
+      el.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); SFX.tap(); cb(b.dataset.v); build();
+    });
+  }
+  seg(document.getElementById('p-kind'),
+      [['plan','きょうの分'],['weak','苦手なところ'],['calc','計算だけ'],['hard','難関の大問']],
+      kind, v => kind = v);
+  seg(document.getElementById('p-n'), [[10,'10問'],[20,'20問'],[30,'30問']], n, v => n = Number(v));
+  seg(document.getElementById('p-work'), [['none','なし'],['normal','ふつう'],['big','広め']], work, v => work = v);
+
+  function pick() {
+    if (kind === 'calc') return Store.shuffle(DATA.qsOfArea('jk-calc')).slice(0, n);
+    if (kind === 'hard') return Store.shuffle(DATA.qsOfArea('jk-hard')).slice(0, n);
+    if (kind === 'weak') {
+      const w = Mastery.weakUnits(8).map(x=>x.id);
+      const qs = w.flatMap(id => DATA.byUnit(id));
+      return Store.shuffle(qs.length ? qs : DATA.all()).slice(0, n);
+    }
+    return Mastery.plan(n);
+  }
+
+  function build() {
+    const list = pick();
+    const wh = { none:0, normal:86, big:150 }[work];
+    const title = { plan:'きょうの問題', weak:'苦手なところ', calc:'計算れんしゅう', hard:'難関チャレンジ' }[kind];
+    const d = new Date();
+    const today = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+
+    document.getElementById('out').innerHTML = `
+    <div class="sheet">
+      <div class="sheet-head"><h2>算数マスター ／ ${title}</h2><span class="meta">${today}　全${list.length}問</span></div>
+      <div class="namebox"><span>なまえ</span><span>かかった時間　　　分</span><span>点数　　／${list.length}</span></div>
+      ${list.map((q,i) => `
+        <div class="pq">
+          <div class="pq-body">
+            ${q.lead ? `<div class="pq-lead">${rich(q.lead)}${q.leadFig?Fig.render(q.leadFig):''}</div>` : ''}
+            ${q.given ? `<div class="pq-given">${q.given.map(g=>rich(g)).join('　／　')}</div>` : ''}
+            <span class="pq-no">${i+1}</span>${rich(q.q)}
+          </div>
+          ${q.fig ? Fig.render(q.fig) : ''}
+          ${q.opts ? `<div class="opts-print">${q.opts.map((o,k)=>`<div>${'アイウエオ'[k]}　${rich(o)}</div>`).join('')}</div>` : ''}
+          ${wh ? `<div class="work-lab">計算らん</div><div class="work" style="--wh:${wh}px"></div>` : ''}
+          <div class="ansline">こたえ <u></u> ${esc(q.unitLabel||'')}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sheet pagebreak">
+      <div class="sheet-head"><h2>こたえ ／ ${title}</h2><span class="meta">${today}</span></div>
+      <div class="key">
+        ${list.map((q,i) => `<div><b>${i+1}.</b> ${
+          q.ans!=null ? esc(q.ans + (q.unitLabel||'')) : esc('アイウエオ'[q.a] + '　' + q.opts[q.a])
+        }${q.steps ? `<br><span style="color:var(--sub);font-size:.85em">${q.steps.map(s=>esc(String(s).replace(/【|】/g,''))).join(' → ')}</span>` : ''}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('make').onclick = () => { SFX.tap(); build(); };
+  document.getElementById('print').onclick = () => window.print();
+  build();
+})();
+</script>
+</body>
+</html>

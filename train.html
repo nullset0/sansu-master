@@ -55,6 +55,7 @@
 <script src="data/jk-drill.js"></script>
 <script src="data/hard.js"></script>
 <script src="data/graph.js"></script>
+<script src="app/modes.js"></script>
 <script src="app/mastery.js"></script>
 <script>
 (() => {
@@ -114,6 +115,11 @@
     step();
     return;
   }
+
+  /* ---------- 紙の代わりの練習モード ---------- */
+  if (mode === 'time')    { setHead('⏱ タイムアタック', '計算のスピードをきたえる');   Modes.timeAttack(host, {n:Number(P.get('n'))||20}); return; }
+  if (mode === 'pattern') { setHead('🔧 道具えらび', '何算かを見ぬく');                 Modes.patternPick(host, {n:Number(P.get('n'))||8}); return; }
+  if (mode === 'steps')   { setHead('🪜 手順ならべかえ', '解く順を組み立てる');         Modes.stepOrder(host, {n:Number(P.get('n'))||5}); return; }
 
   /* ---------- ときどきチェック ---------- */
   if (mode === 'check') {

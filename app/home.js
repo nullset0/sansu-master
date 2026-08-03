@@ -73,6 +73,10 @@ $('#mission-txt').innerHTML = left === 0
 if (left === 0) $('#go-daily').textContent = '▶︎ もう少しやる';
 if (!wrongCount) { const w = $('#go-wrong'); w.style.opacity = .45; w.style.pointerEvents = 'none'; w.textContent = '🔁 まちがいなし'; }
 
+/* ---- とくべつ練習の記録 ---- */
+const ta = (st.records||{}).timeAttack;
+if (ta && ta.best && $('#rec-time')) $('#rec-time').textContent = `ベスト ${(ta.best/1000).toFixed(1)}秒／問`;
+
 /* ---- ④ いま ここ（フロンティア） ---- */
 const bar = (v, c) => `<div class="bar" style="margin-top:4px"><i style="width:${Math.round(v*100)}%;background:${c}"></i></div>`;
 $('#now').innerHTML = sum.frontier.length ? sum.frontier.map(f => {
