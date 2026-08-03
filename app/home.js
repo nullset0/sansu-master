@@ -52,7 +52,22 @@ if (due && Mastery.placementDone()) {
     </div>`;
 }
 
-/* ---- ③ きょうのミッション ---- */
+/* ---- ③ きょうは とくべつ練習の日？（アプリ側が決める）---- */
+const tr = Mastery.trainingDue();
+if (tr && Mastery.placementDone() && !due) {
+  const say = { time:'計算がにぶってないか、3分で見てみよう。',
+                pattern:'型がたまってきた。問題を見た瞬間に見ぬけるか ためそう。',
+                steps:'答えより先に「どう考えるか」を組み立てる練習をしよう。' }[tr.mode];
+  $('#checkcard').innerHTML += `
+    <div class="card" style="border:3px solid var(--b)">
+      <h2>${tr.emoji} きょうは ${esc(tr.name)}の日</h2>
+      ${Chara.tag(who,'wink', say, 92)}
+      <a class="btn wide blue" href="train.html?mode=${tr.mode}" style="margin-top:8px">▶︎ ${esc(tr.name)}をやる（3〜5分）</a>
+      <p class="muted" style="text-align:center;margin-top:8px">${esc(tr.why)}</p>
+    </div>`;
+}
+
+/* ---- ④ きょうのミッション ---- */
 const plan = Mastery.plan(goal);
 const wrongCount = st.wrong.length;
 $('#day-bar').style.width = Math.min(100, st.day.done / goal * 100) + '%';
@@ -74,10 +89,21 @@ if (left === 0) $('#go-daily').textContent = '▶︎ もう少しやる';
 if (!wrongCount) { const w = $('#go-wrong'); w.style.opacity = .45; w.style.pointerEvents = 'none'; w.textContent = '🔁 まちがいなし'; }
 
 /* ---- とくべつ練習の記録 ---- */
-const ta = (st.records||{}).timeAttack;
-if (ta && ta.best && $('#rec-time')) $('#rec-time').textContent = `ベスト ${(ta.best/1000).toFixed(1)}秒／問`;
+const R = st.records || {};
+if (R.timeAttack && R.timeAttack.best && $('#rec-time'))
+  $('#rec-time').textContent = `ベスト ${(R.timeAttack.best/1000).toFixed(1)}秒／問`;
+Mastery.TRAINING.forEach(t => {
+  const el = $('#rec-' + ({time:'time', pattern:'pat', steps:'step'}[t.mode]));
+  if (!el) return;
+  const last = R[t.mode] && R[t.mode].lastDate;
+  if (!last) { if (!el.textContent) el.textContent = 'まだ やっていない'; return; }
+  const d = Store.daysBetween(last, Store.today());
+  const left = t.every - d;
+  const txt = left <= 0 ? '▶︎ やるタイミング' : `つぎは あと${left}日`;
+  el.textContent = el.textContent ? el.textContent + ' ・ ' + txt : txt;
+});
 
-/* ---- ④ いま ここ（フロンティア） ---- */
+/* ---- ⑤ いま ここ（フロンティア） ---- */
 const bar = (v, c) => `<div class="bar" style="margin-top:4px"><i style="width:${Math.round(v*100)}%;background:${c}"></i></div>`;
 $('#now').innerHTML = sum.frontier.length ? sum.frontier.map(f => {
   const u = f.u, s = f.s;
@@ -98,7 +124,7 @@ $('#now').innerHTML = sum.frontier.length ? sum.frontier.map(f => {
   </a>`;
 }).join('') : '<p class="muted">まずはレベル診断からどうぞ。</p>';
 
-/* ---- ⑤ 見つかっている「穴」 ---- */
+/* ---- ⑥ 見つかっている「穴」 ---- */
 const holes = [];
 sum.frontier.forEach(f => Mastery.weakSpots(f.u.id).forEach(w => holes.push(w.id)));
 Mastery.weakUnits(3).forEach(w => holes.push(w.id));

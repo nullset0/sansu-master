@@ -311,6 +311,41 @@ function demote(unitId) {
   return true;
 }
 
+/* ---------- とくべつ練習の自動わりふり ----------------------
+   子どもに「今日はどれをやる？」と選ばせない。
+   間があいたもの・条件がそろったものを、アプリ側から出す。
+------------------------------------------------------------ */
+const TRAINING = [
+  { mode:'time',    emoji:'⏱', name:'タイムアタック', every:3,
+    why:'計算のスピードは 使わないとすぐ落ちる。3日に1回みておく',
+    ready: () => DATA.all().filter(q =>
+      ['jk-gyakusan','jk-bunsu-keisan','jk-kufu','g2-九九','g2-ひっさん','g3-わり算',
+       'g3-小数','g4-小数','g4-計算順序','g5-分数'].indexOf(q.unit) >= 0 &&
+      st().cards[q.id] && st().cards[q.id].ok > 0).length >= 10 },
+  { mode:'pattern', emoji:'🔧', name:'道具えらび', every:7,
+    why:'型がたまってきた。問題を見た瞬間に見ぬけるか ためす',
+    ready: () => DATA.all().filter(q => q.pattern && q.unit.indexOf('jk-') === 0 &&
+      st().cards[q.id] && st().cards[q.id].seen).length >= 12 },
+  { mode:'steps',   emoji:'🪜', name:'手順ならべかえ', every:10,
+    why:'答えより先に「どう考えるか」を組み立てる練習',
+    ready: () => DATA.all().filter(q => q.steps && q.steps.length >= 3 &&
+      st().cards[q.id] && st().cards[q.id].seen).length >= 8 },
+];
+
+function trainingDue() {
+  const r = st().records || {};
+  const cand = TRAINING
+    .filter(t => t.ready())
+    .map(t => {
+      const last = r[t.mode] && r[t.mode].lastDate;
+      const days = last ? Store.daysBetween(last, Store.today()) : 999;
+      return { ...t, days, over: days - t.every };
+    })
+    .filter(t => t.over >= 0)
+    .sort((a,b) => b.over - a.over);
+  return cand[0] || null;
+}
+
 /* ---------- 最初のレベル診断（学年を決めうちしない） ------
    下の学年から3問ずつ出し、全問正解なら「その学年は分かっている」
    とみなして次へ。落ちたところが学習の開始地点になる。
@@ -354,7 +389,7 @@ function summary() {
 
 return { unitState, isOpen, frontier, weakSpots, weakUnits, plan, phaseOf,
          checkDue, buildCheck, finishCheck, demote, doneUnits,
-         GRADES, ladderFor, assumeGrade, placementDone, summary, markDone,
+         GRADES, ladderFor, assumeGrade, placementDone, summary, markDone, trainingDue, TRAINING,
          BASIC, APPLY };
 })();
 if (typeof window !== 'undefined') window.Mastery = Mastery;

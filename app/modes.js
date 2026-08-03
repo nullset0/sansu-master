@@ -30,7 +30,8 @@ function timeAttack(host, opts = {}) {
     'g4-小数','g4-分数','g4-計算順序','g4-大きい数','g4-がい数','g4-単位',
     'g5-分数','g6-分数かけ割り'];
   const isCalc = q => CALC.indexOf(q.unit) >= 0;
-  const all = DATA.all().filter(q => q.ans != null && isCalc(q));
+  // 4択も数値入力も両方つかう（小学校の計算問題は4択のため）
+  const all = DATA.all().filter(isCalc);
   // すでに一度は正解した問題を優先（知らない問題でタイムを測っても意味がない）
   const known = all.filter(q => st.cards[q.id] && st.cards[q.id].ok > 0);
   const src = known.length >= n ? known : all;
@@ -52,7 +53,11 @@ function timeAttack(host, opts = {}) {
       </div>
       <div class="q-progress"><i style="width:${i/list.length*100}%"></i></div>
       <div class="q-text" style="font-size:1.5rem;text-align:center;margin:18px 0">${rich(q.q)}</div>
-      <div class="numin">
+      ${q.kind === 'mc' ? `<div class="opts two">${
+          Store.shuffle(q.opts.map((_,k)=>k)).map(oi =>
+            `<button class="opt" data-i="${oi}"><span>${rich(q.opts[oi])}</span></button>`).join('')
+        }</div>`
+      : `<div class="numin">
         <div class="disp" id="disp"><span id="dv">?</span>${q.unitLabel?`<span class="unit">${esc(q.unitLabel)}</span>`:''}</div>
         <div class="pad">
           ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
@@ -60,12 +65,19 @@ function timeAttack(host, opts = {}) {
           <button data-act="del" class="act">⌫</button>
           <button data-act="go" class="go" style="grid-column:1/-1">こたえる</button>
         </div>
-      </div>
+      </div>`}
     </div>`;
     buf = ''; t0 = performance.now();
-    const dv = $('#dv'), tEl = $('#ta-time');
+    const tEl = $('#ta-time');
     clearInterval(tick);
     tick = setInterval(() => { tEl.firstChild.textContent = fmt(performance.now() - t0); }, 100);
+    if (q.kind === 'mc') {
+      $$('.opt').forEach(b => b.addEventListener('click', () => {
+        SFX.tap(); submit(Number(b.dataset.i) === q.a, b);
+      }));
+      return;
+    }
+    const dv = $('#dv');
     $$('.pad button').forEach(b => b.addEventListener('click', () => {
       SFX.tap();
       const d = b.dataset.d, a = b.dataset.act;
@@ -76,15 +88,18 @@ function timeAttack(host, opts = {}) {
       dv.textContent = buf || '?';
     }));
   }
-  function submit() {
-    if (!buf) { $('#disp').classList.add('blink'); setTimeout(()=>$('#disp').classList.remove('blink'),400); return; }
+  function submit(mcOK, btn) {
+    const q = list[i];
+    if (q.kind !== 'mc' && !buf) { $('#disp').classList.add('blink'); setTimeout(()=>$('#disp').classList.remove('blink'),400); return; }
     clearInterval(tick);
-    const q = list[i], dt = performance.now() - t0;
-    const correct = Math.abs(parseFloat(buf) - q.ans) <= (q.tol||0) + 1e-9;
+    const dt = performance.now() - t0;
+    const correct = q.kind === 'mc' ? !!mcOK : Math.abs(parseFloat(buf) - q.ans) <= (q.tol||0) + 1e-9;
     times.push({ id:q.id, ms:dt, ok:correct, q });
     if (correct) { ok++; SFX.correct(); } else SFX.wrong();
     Store.grade(q.id, correct, q.unit, {});
-    $('#disp').classList.add(correct ? 'ok' : 'ng');
+    if (q.kind === 'mc') {
+      $$('.opt').forEach(x => x.classList.add(Number(x.dataset.i) === q.a ? 'ok' : (x === btn ? 'ng' : 'dim')));
+    } else $('#disp').classList.add(correct ? 'ok' : 'ng');
     setTimeout(() => { i++; i < list.length ? render() : finish(); }, correct ? 260 : 900);
   }
   function finish() {
@@ -96,6 +111,7 @@ function timeAttack(host, opts = {}) {
     const isBest = ok === times.length && (!rec2.best || avg < rec2.best);
     if (isBest) rec2.best = avg;
     rec2.count++; rec2.last = avg; Store.save();
+    Store.markTraining('time');
     Store.touchStreak();
     if (isBest) { Quiz.confetti(1.4); SFX.clear(); }
 
@@ -116,7 +132,8 @@ function timeAttack(host, opts = {}) {
       <h2>🐢 時間がかかった3問</h2>
       ${slow.map(t=>`<div class="unit" style="margin-bottom:8px">
         <div class="t">${rich(t.q.q)}</div>
-        <div class="m">${fmt(t.ms)}秒 ・ ${t.ok?'せいかい':'まちがい'} ・ こたえ ${t.q.ans}${t.q.unitLabel||''}</div></div>`).join('')}
+        <div class="m">${fmt(t.ms)}秒 ・ ${t.ok?'せいかい':'まちがい'} ・ こたえ ${
+          t.q.kind === 'mc' ? esc(String(t.q.opts[t.q.a])) : esc(t.q.ans + (t.q.unitLabel||''))}</div></div>`).join('')}
     </div>
     <div class="card">
       <button class="btn wide" id="again">🔁 もう1回</button>
@@ -192,6 +209,7 @@ function patternPick(host, opts = {}) {
   function finish() {
     const rate = Math.round(ok/list.length*100);
     Store.touchStreak();
+    Store.markTraining('pattern');
     if (rate >= 80) { Quiz.confetti(1.2); SFX.clear(); }
     host.innerHTML = `
     <div class="card" style="text-align:center">
@@ -270,6 +288,7 @@ function stepOrder(host, opts = {}) {
   }
   function finish() {
     Store.touchStreak();
+    Store.markTraining('steps');
     const rate = Math.round(ok/list.length*100);
     if (rate>=80) { Quiz.confetti(1.2); SFX.clear(); }
     host.innerHTML = `
