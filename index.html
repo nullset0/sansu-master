@@ -26,21 +26,25 @@
 
   <div class="stats" id="stats"></div>
 
+  <div id="checkcard"></div>
+
   <div class="card" id="mission">
     <h2>🎯 きょうのミッション</h2>
     <div class="q-progress" style="margin-bottom:10px"><i id="day-bar" style="width:0"></i></div>
-    <p class="muted" id="mission-txt" style="margin-bottom:12px"></p>
-    <a class="btn wide" id="go-daily" href="train.html?mode=daily">▶︎ はじめる</a>
+    <p class="muted" id="mission-txt" style="margin-bottom:10px"></p>
+    <div id="plan-preview"></div>
+    <a class="btn wide" id="go-daily" href="train.html?mode=plan">▶︎ はじめる</a>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px">
       <a class="btn ghost sm" id="go-wrong" href="train.html?mode=wrong">🔁 まちがいノート</a>
       <a class="btn ghost sm" href="learn.html">📖 解き方ずかん</a>
     </div>
   </div>
 
-  <div class="card tight" id="tip-card">
-    <div class="note b" style="margin:0">
-      <strong>🧠 記憶に残るしくみ：</strong>まちがえた問題は【翌日・3日後・1週間後…】と、忘れかけたころに もう一度出ます。1日5問でも、1年で1800問の想起になります。
-    </div>
+  <div class="card" id="nowcard">
+    <h2>📍 いま ここ</h2>
+    <p class="muted" style="margin-bottom:10px">前の単元がしっかりしたら、学年に関係なく つぎが自動でひらきます。</p>
+    <div id="now"></div>
+    <div id="holes"></div>
   </div>
 
   <h2 style="margin:20px 6px 10px;font-size:1.05rem">🎓 中学受験コース</h2>
@@ -82,6 +86,9 @@
 <script src="data/jk-toku.js"></script>
 <script src="data/jk-speed.js"></script>
 <script src="data/jk-geo.js"></script>
+<script src="data/hard.js"></script>
+<script src="data/graph.js"></script>
+<script src="app/mastery.js"></script>
 <script src="app/home.js"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(()=>{});

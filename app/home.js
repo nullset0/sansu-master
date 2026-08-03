@@ -1,12 +1,12 @@
 /* =========================================================
-   ホーム画面の組み立て (home.js)
+   ホーム画面の組み立て (home.js)  — v3: 適応学習に対応
    ========================================================= */
 (() => {
 'use strict';
 const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const st = Store.state;
 const who = st.chara || 'pika';
-const HOME_GRADE = Store.get('home') || 'g4';
 
 /* ---- あいさつ ---- */
 const h = new Date().getHours();
@@ -22,61 +22,134 @@ $('#hello-sub').textContent = left === 0
   : (h >= 20 ? 'ねる前がいちばん覚えられる時間だよ' : `のこり ${left}問`);
 
 /* ---- ステータス ---- */
+const sum = Mastery.summary();
 $('#stats').innerHTML = `
   <div class="stat hot"><div class="ico">🔥</div><div class="n">${st.streak.n}</div><div class="l">れんぞく日</div></div>
-  <div class="stat"><div class="ico">📦</div><div class="n">${Store.masteredCount()}</div><div class="l">おぼえた</div></div>
+  <div class="stat"><div class="ico">🎓</div><div class="n">${sum.done}</div><div class="l">クリア単元</div></div>
   <div class="stat coin"><div class="ico">🪙</div><div class="n">${st.coins}</div><div class="l">コイン</div></div>
   <div class="stat crown"><div class="ico">🏅</div><div class="n">${Object.keys(st.badges).length}</div><div class="l">バッジ</div></div>`;
 
-/* ---- ミッション ---- */
-const pool = Store.dailyPool(DATA.all(), HOME_GRADE);
-const dueCount = pool.filter(q => st.cards[q.id] && st.cards[q.id].box > 0 && st.cards[q.id].due <= Store.today()).length;
+/* ---- ① まだレベル診断をしていない ---- */
+if (!Mastery.placementDone()) {
+  $('#checkcard').innerHTML = `
+    <div class="card" style="border:3px solid var(--f)">
+      <h2>🎈 はじめに：レベル診断</h2>
+      ${Chara.tag('fukurou','happy','どこから始めるかを決めるよ。かんたんな学年から少しずつ出すね。3問ぜんぶ合っていたら、その学年は とばして先へ進むよ。', 96)}
+      <a class="btn wide blue" href="train.html?mode=placement" style="margin-top:8px">▶︎ 診断をはじめる（3〜18問）</a>
+      <p class="muted" style="text-align:center;margin-top:8px">あとからでもOK。とばすと1年生から順にやります。</p>
+    </div>`;
+}
+
+/* ---- ② ときどきチェック ---- */
+const due = Mastery.checkDue();
+if (due && Mastery.placementDone()) {
+  const label = { unit:'単元が4つすすんだ', weekly:'1週間たった', monthly:'1か月たった' }[due] || '';
+  $('#checkcard').innerHTML += `
+    <div class="card" style="border:3px solid var(--e)">
+      <h2>🩺 チェックの時間</h2>
+      ${Chara.tag('fukurou','thinking', `${label}ね。ヒント無しで10問。ここで落ちた単元は もう一度おさらいの列にもどすよ。「できたつもり」をつぶすのが目的。`, 96)}
+      <a class="btn wide" href="train.html?mode=check" style="margin-top:8px;background:linear-gradient(180deg,#ffd166,#f0a500);box-shadow:0 4px 0 #c98a00">▶︎ チェックを受ける（10問）</a>
+    </div>`;
+}
+
+/* ---- ③ きょうのミッション ---- */
+const plan = Mastery.plan(goal);
 const wrongCount = st.wrong.length;
 $('#day-bar').style.width = Math.min(100, st.day.done / goal * 100) + '%';
+const counts = {};
+plan.forEach(q => { counts[q._why] = (counts[q._why]||0) + 1; });
+const WHY = {'なおし':['🔁','まちがい直し'],'ふくしゅう':['♻️','ふくしゅう'],'よわいところ':['🧱','土台なおし'],
+             'あたらしい':['✨','あたらしい'],'おうよう':['🔥','おうよう'],'しあげ':['🏁','しあげ']};
+$('#plan-preview').innerHTML = plan.length
+  ? `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${
+      Object.entries(counts).map(([k,v]) => {
+        const w = WHY[k] || ['•', k];
+        return `<span class="chip">${w[0]} ${w[1]} ${v}問</span>`;
+      }).join('')}</div>`
+  : '';
 $('#mission-txt').innerHTML = left === 0
   ? `きょうは <b>${st.day.done}問</b> やりました。もっとやりたいときは そのまま続けられます。`
-  : `<b>${goal}問</b>だけ。ふくしゅう <b>${dueCount}問</b>が待っています${wrongCount ? `／まちがいノート <b>${wrongCount}問</b>` : ''}。`;
+  : `<b>${goal}問</b>だけ。いまのあなたに合わせて えらんであります。`;
 if (left === 0) $('#go-daily').textContent = '▶︎ もう少しやる';
-if (!wrongCount) { const w = $('#go-wrong'); w.classList.add('btn'); w.style.opacity = .45; w.style.pointerEvents = 'none'; w.textContent = '🔁 まちがいなし'; }
+if (!wrongCount) { const w = $('#go-wrong'); w.style.opacity = .45; w.style.pointerEvents = 'none'; w.textContent = '🔁 まちがいなし'; }
+
+/* ---- ④ いま ここ（フロンティア） ---- */
+const bar = (v, c) => `<div class="bar" style="margin-top:4px"><i style="width:${Math.round(v*100)}%;background:${c}"></i></div>`;
+$('#now').innerHTML = sum.frontier.length ? sum.frontier.map(f => {
+  const u = f.u, s = f.s;
+  const area = DATA.AREAS[u.area] || {};
+  const phase = Mastery.phaseOf(s);
+  return `<a class="unit" style="display:block;margin-bottom:10px" href="train.html?unit=${encodeURIComponent(u.id)}">
+    <div style="display:flex;align-items:center;gap:9px">
+      <span style="font-size:1.4rem">${u.emoji}</span>
+      <span style="flex:1"><span class="t">${esc(u.name)}</span>
+        <span class="m">${esc(area.name||'')} ・ ${esc(u.tag||'')}</span></span>
+      <span class="chip ${phase==='おうよう'?'lv':'new'}">${WHY[phase] ? WHY[phase][0] : ''} ${phase}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+      <div><div class="m">理解 ${Math.round(s.understand*100)}%</div>${bar(s.understand,'var(--b)')}</div>
+      <div><div class="m">定着 ${Math.round(s.retain*100)}%</div>${bar(s.retain,'var(--c)')}</div>
+      <div><div class="m">応用 ${Math.round(s.apply*100)}%</div>${bar(s.apply,'var(--a)')}</div>
+    </div>
+  </a>`;
+}).join('') : '<p class="muted">まずはレベル診断からどうぞ。</p>';
+
+/* ---- ⑤ 見つかっている「穴」 ---- */
+const holes = [];
+sum.frontier.forEach(f => Mastery.weakSpots(f.u.id).forEach(w => holes.push(w.id)));
+Mastery.weakUnits(3).forEach(w => holes.push(w.id));
+const uniq = [...new Set(holes)].slice(0, 4);
+$('#holes').innerHTML = uniq.length ? `
+  <div class="note d" style="margin-top:14px">
+    <strong>🧱 先に埋めておきたい土台：</strong>
+    ${uniq.map(id => { const u = DATA.unit(id); const a = DATA.AREAS[u.area]||{};
+      return `<a href="train.html?unit=${encodeURIComponent(id)}" style="text-decoration:underline">${u.emoji}${esc(u.name)}<span style="font-size:.75em;color:var(--sub)">(${esc(a.name||'')})</span></a>`;
+    }).join('・')}
+    <div style="font-size:.8rem;color:var(--sub);margin-top:4px">上の単元でつまずく原因になっている所です。ここは自動でも出題されます。</div>
+  </div>` : '';
 
 /* ---- エリア（単元グリッド）---- */
 function unitCard(u) {
-  const qs = DATA.byUnit(u.id);
-  const s = Store.unitStats(u.id, qs.map(q => q.id));
-  const pct = Math.round(s.mastery * 100);
-  return `<a class="unit ${s.done ? 'done' : ''}" href="train.html?unit=${encodeURIComponent(u.id)}">
+  const s = Mastery.unitState(u.id);
+  const pct = Math.round((s.understand*0.4 + s.retain*0.3 + s.apply*0.3) * 100);
+  const locked = !s.open;
+  const need = locked ? Graph.pre(u.id).filter(p => !Mastery.unitState(p).done || true)
+    .map(p => (DATA.unit(p)||{}).name).slice(0,2).join('・') : '';
+  return `<a class="unit ${s.done ? 'done' : ''} ${locked ? 'locked' : ''}"
+      href="${locked ? 'javascript:void(0)' : 'train.html?unit=' + encodeURIComponent(u.id)}"
+      ${locked ? `data-lock="${esc(need)}"` : ''}>
     ${u.lv >= 4 ? `<span class="lv">Lv${u.lv}</span>` : ''}
-    <div class="t">${u.emoji} ${u.name}</div>
-    <div class="m">${s.touched}/${s.total}問 ・ ${pct}%</div>
-    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="t">${locked ? '🔒 ' : ''}${u.emoji} ${esc(u.name)}</div>
+    <div class="m">${locked ? esc(need) + ' のあと' : `${s.seen}/${s.total}問 ・ ${pct}%`}</div>
+    <div class="bar"><i style="width:${locked ? 0 : pct}%"></i></div>
   </a>`;
 }
 function island(area, extraClass) {
   const units = DATA.byArea(area.id);
   if (!units.length) return '';
-  const allQ = units.flatMap(u => DATA.byUnit(u.id).map(q => q.id));
-  const done = units.filter(u => Store.unitStats(u.id, DATA.byUnit(u.id).map(q=>q.id)).done).length;
+  const allQ = units.reduce((a,u) => a + DATA.byUnit(u.id).length, 0);
+  const done = units.filter(u => Mastery.unitState(u.id).done).length;
   return `<div class="island ${extraClass}">
     <div class="island-head">
       <span class="emo">${area.emoji}</span>
       <div style="flex:1">
         <h2>${area.name}</h2>
-        <div class="p">${units.length}単元 ・ ${allQ.length}問 ・ クリア ${done}</div>
+        <div class="p">${units.length}単元 ・ ${allQ}問 ・ クリア ${done}</div>
       </div>
       <span style="font-size:1.1rem;opacity:.9" class="tw">▾</span>
     </div>
     <div class="unit-grid" style="display:none">${units.map(unitCard).join('')}</div>
   </div>`;
 }
-$('#juken').innerHTML  = DATA.areasOf('juken').map(a => island(a, 'jk')).join('');
+$('#juken').innerHTML  = DATA.areasOf('juken').map(a => island(a, a.id === 'jk-hard' ? 'jk hard' : 'jk')).join('');
 $('#grades').innerHTML = DATA.areasOf('grade').map(a => island(a, a.id)).join('');
 
+const activeAreas = new Set(sum.frontier.map(f => f.u.area));
 document.querySelectorAll('.island-head').forEach(head => {
   const grid = head.nextElementSibling, tw = head.querySelector('.tw');
-  const area = head.closest('.island');
-  // 今の学年と、進行中の中受エリアは最初から開く
-  const open = area.classList.contains(HOME_GRADE)
-    || [...grid.querySelectorAll('.unit')].some(u => u.querySelector('.bar i').style.width !== '0%');
+  const box = head.closest('.island');
+  const open = [...activeAreas].some(a => box.classList.contains(a) || box.classList.contains(a.replace('jk-','')))
+    || [...grid.querySelectorAll('.unit')].some(u => { const w = u.querySelector('.bar i').style.width; return w && w !== '0%'; });
   if (open) { grid.style.display = 'grid'; tw.textContent = '▴'; }
   head.style.cursor = 'pointer';
   head.addEventListener('click', () => {
@@ -86,12 +159,17 @@ document.querySelectorAll('.island-head').forEach(head => {
     SFX.tap();
   });
 });
+document.querySelectorAll('[data-lock]').forEach(el => el.addEventListener('click', e => {
+  e.preventDefault(); SFX.wrong();
+  Quiz.toast(`まだ開いていません。<br>先に <b>${el.dataset.lock}</b> をクリアしよう`);
+}));
 
 /* ---- キャラをなでる ---- */
 Chara.bindTap(document, () => {
   SFX.coin();
   const lines = ['きょうも いっしょに がんばろう！','図をかくと 見えてくるよ。','まちがえた問題は 宝ものだよ。',
-    'ねる前にやると 記憶にのこりやすいんだって。','5問でいい。つづけるのが つよい。'];
+    'ねる前にやると 記憶にのこりやすいんだって。','5問でいい。つづけるのが つよい。',
+    '前の単元がかたまると、上の学年でも かんたんに見えてくる。'];
   Quiz.toast(lines[Math.floor(Math.random()*lines.length)]);
 });
 Chara.followPointer();

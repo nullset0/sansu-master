@@ -54,7 +54,8 @@ function migrate(fresh) {
   } catch(e){}
   return fresh;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+let REV = 0;   // 状態が変わるたびに増える。習熟度の計算結果をキャッシュするのに使う
+function save() { REV++; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ---------- 日付まわり ---------- */
 function rollDay() {
@@ -179,21 +180,6 @@ function buildSession(pool, count, opts = {}) {
   return interleave(picked.slice(0, count));
 }
 
-/* ---- 「きょうの5問」の出題範囲 --------------------------------
-   ① 今の学年の単元　② 一度でもやった問題（学年をこえて復習）
-   ③ 着手ずみの中学受験の単元
-   ※ホームと出題ページの両方から使うので、ここ1か所に置く
---------------------------------------------------------------- */
-function dailyPool(all, homeGrade) {
-  const g = (homeGrade || S.settings.home || 'g4') + '-';
-  return all.filter(q => {
-    if (q.unit.indexOf(g) === 0) return true;
-    const c = S.cards[q.id];
-    if (c && c.seen) return true;
-    return q.unit.indexOf('jk-') === 0 && !!S.units[q.unit];
-  });
-}
-
 function shuffle(a) { const r=a.slice(); for (let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];} return r; }
 
 // 同じ単元が2連続しないように並べかえ（インターリービング）
@@ -301,8 +287,9 @@ return {
   get state(){ return S; },
   save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
-  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits, dailyPool,
+  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits,
   reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle,
+  get rev(){ return REV; },
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },
 };
 })();

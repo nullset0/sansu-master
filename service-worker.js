@@ -1,11 +1,11 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v31';
+const CACHE_NAME = 'sansu-master-v40';
 const ASSETS = [
   './', './index.html', './train.html', './learn.html', './zukan.html', './parent.html',
   './manifest.json', './icon.svg',
   './app/style.css', './app/fig.js', './app/chara.js', './app/store.js', './app/quiz.js', './app/home.js',
   './data/core.js', './data/elem.js',
-  './data/jk-num.js', './data/jk-ratio.js', './data/jk-toku.js', './data/jk-speed.js', './data/jk-geo.js',
+  './data/jk-num.js', './data/jk-ratio.js', './data/jk-toku.js', './data/jk-speed.js', './data/jk-geo.js', './data/hard.js', './data/graph.js', './app/mastery.js',
   './questions/g1.js', './questions/g2.js', './questions/g3.js',
   './questions/g4.js', './questions/g5.js', './questions/g6.js',
   // 旧バージョン（残してある）

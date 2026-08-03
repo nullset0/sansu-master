@@ -24,6 +24,16 @@
   </div>
 
   <div class="card">
+    <h2>🗺️ 到達マップ</h2>
+    <p class="muted" style="margin-bottom:10px">学年ではなく「前提が満たされたか」で進みます。下の学年に穴があれば自動で戻します。</p>
+    <div class="stats" id="reach"></div>
+    <h3>いま取り組んでいる単元</h3>
+    <div id="p-front"></div>
+    <h3>チェックの記録</h3>
+    <div id="p-check"></div>
+  </div>
+
+  <div class="card">
     <h2>⚠️ 苦手な単元</h2>
     <p class="muted" style="margin-bottom:10px">正答率が7割を切っている単元です。ここだけ集中してやり直すと効きます。</p>
     <div id="weak"></div>
@@ -36,8 +46,8 @@
 
   <div class="card">
     <h2>⚙️ 設定</h2>
-    <div class="row"><div><div class="lbl">いまの学年</div><div class="hint">「きょうの5問」の出題範囲になります</div></div>
-      <div class="seg" id="set-home"></div></div>
+    <div class="row"><div><div class="lbl">レベル診断</div><div class="hint">学年の設定はありません。診断で開始地点を決め、あとは前提が満たされ次第 自動で先へ進みます</div></div>
+      <a class="btn ghost sm" href="train.html?mode=placement">診断する</a></div>
     <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint">5問が推奨（多いほど続きにくい）</div></div>
       <div class="seg" id="set-goal"></div></div>
     <div class="row"><div><div class="lbl">効果音</div></div><div class="seg" id="set-sound"></div></div>
@@ -94,6 +104,9 @@
 <script src="data/jk-toku.js"></script>
 <script src="data/jk-speed.js"></script>
 <script src="data/jk-geo.js"></script>
+<script src="data/hard.js"></script>
+<script src="data/graph.js"></script>
+<script src="app/mastery.js"></script>
 <script>
 (() => {
   const st = Store.state;
@@ -108,6 +121,34 @@
     <div class="stat"><div class="ico">⭕️</div><div class="n">${total?Math.round(ok/total*100):0}%</div><div class="l">正答率</div></div>
     <div class="stat hot"><div class="ico">🔥</div><div class="n">${st.streak.n}</div><div class="l">れんぞく日</div></div>
     <div class="stat crown"><div class="ico">📦</div><div class="n">${Store.masteredCount()}</div><div class="l">マスター</div></div>`;
+
+  // 到達マップ
+  const sm = Mastery.summary();
+  document.getElementById('reach').innerHTML = `
+    <div class="stat"><div class="ico">🎓</div><div class="n">${sm.done}</div><div class="l">クリア単元<br>/ ${sm.total}</div></div>
+    <div class="stat crown"><div class="ico">📚</div><div class="n">${sm.jkDone}</div><div class="l">中学受験<br>/ ${sm.jkTotal}</div></div>
+    <div class="stat hot"><div class="ico">🏔️</div><div class="n">${DATA.byArea('jk-hard').filter(u=>Mastery.unitState(u.id).done).length}</div><div class="l">難関<br>/ ${DATA.byArea('jk-hard').length}</div></div>
+    <div class="stat coin"><div class="ico">🔓</div><div class="n">${sm.open}</div><div class="l">いま開いて<br>いる単元</div></div>`;
+
+  const bar = (v,c) => `<div class="bar" style="margin-top:3px"><i style="width:${Math.round(v*100)}%;background:${c}"></i></div>`;
+  document.getElementById('p-front').innerHTML = sm.frontier.length ? sm.frontier.map(f => {
+    const a = DATA.AREAS[f.u.area] || {};
+    return `<div class="unit" style="margin-bottom:8px">
+      <div class="t">${f.u.emoji} ${f.u.name} <span style="font-size:.72rem;color:var(--sub);font-weight:700">${a.name||''}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px">
+        <div><div class="m">理解 ${Math.round(f.s.understand*100)}%</div>${bar(f.s.understand,'var(--b)')}</div>
+        <div><div class="m">定着 ${Math.round(f.s.retain*100)}%</div>${bar(f.s.retain,'var(--c)')}</div>
+        <div><div class="m">応用 ${Math.round(f.s.apply*100)}%</div>${bar(f.s.apply,'var(--a)')}</div>
+      </div></div>`;
+  }).join('') : '<p class="muted">まだ始まっていません。</p>';
+
+  const clog = (st.checkLog || []).slice(-6).reverse();
+  document.getElementById('p-check').innerHTML = clog.length
+    ? `<table class="t"><tr><th>日</th><th style="text-align:right">正解</th><th>やり直しになった単元</th></tr>` +
+      clog.map(c => `<tr><td>${c.d.slice(5).replace('-','/')}</td><td class="num">${c.ok}/${c.n}</td>
+        <td style="font-size:.8rem">${c.demoted.length ? c.demoted.map(id=>(DATA.unit(id)||{}).name||id).join('・') : 'なし'}</td></tr>`).join('')
+      + '</table>'
+    : '<p class="muted">チェックはまだ行われていません（単元を4つクリアすると始まります）。</p>';
 
   // 苦手
   const weak = Store.weakUnits(DATA.unitsMap());
@@ -143,8 +184,6 @@
       b.classList.add('on'); SFX.tap(); onPick(b.dataset.v);
     }));
   }
-  seg(document.getElementById('set-home'), [['g3','3年'],['g4','4年'],['g5','5年'],['g6','6年']],
-      Store.get('home'), v => Store.set('home', v));
   seg(document.getElementById('set-goal'), [[3,'3問'],[5,'5問'],[10,'10問'],[20,'20問']],
       Store.get('dailyGoal'), v => Store.set('dailyGoal', Number(v)));
   seg(document.getElementById('set-sound'), [['on','あり'],['off','なし']],

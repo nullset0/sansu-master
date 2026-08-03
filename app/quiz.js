@@ -137,6 +137,7 @@ function start(opts) {
     list, i:0, host:opts.host, title:opts.title||'', unitId:opts.unitId,
     correct:0, combo:0, maxCombo:0, hintUsed:false, anyHint:false,
     wrongIds:[], answered:false, hintStep:0, retry: !!opts.retry, onDone:opts.onDone,
+    mode: opts.mode || 'normal', results: [], noFinishUI: !!opts.noFinishUI,
   };
   render();
 }
@@ -149,22 +150,32 @@ function render() {
             : '<span class="chip rev">ふくしゅう</span>';
   const lv = q.lv >= 4 ? `<span class="chip lv">レベル${q.lv}</span>` : '';
   const pat = q.pattern ? `<span class="chip">${esc(q.pattern)}</span>` : '';
+  const check = S.mode === 'check';
+  const WHY = {'なおし':['🔁','d'],'ふくしゅう':['♻️','rev'],'よわいところ':['🧱','new'],
+               'あたらしい':['✨','new'],'おうよう':['🔥','lv'],'しあげ':['🏁','']};
+  const w = q._why && WHY[q._why];
+  const why = w ? `<span class="chip ${w[1]}">${w[0]} ${q._why}</span>` : '';
+  const lead = q.lead ? `<div class="lead">${rich(q.lead)}${figHTML(q.leadFig)}</div>` : '';
+  const given = q.given ? `<div class="given"><span class="lab">わかっていること</span>${
+      q.given.map(g=>`<div>${rich(g)}</div>`).join('')}</div>` : '';
+  const part = q.partTotal ? `<span class="chip lv">(${q.partIndex}) / 全${q.partTotal}問</span>` : '';
 
   S.host.innerHTML = `
   <div class="q-shell">
     <div class="q-progress"><i style="width:${(S.i/S.list.length)*100}%"></i></div>
     <div class="q-meta">
-      <span class="chip">${S.i+1} / ${S.list.length}</span>${tag}${lv}${pat}
+      <span class="chip">${S.i+1} / ${S.list.length}</span>${check?'<span class="chip new">チェック</span>':tag}${why}${lv}${part}${pat}
       ${q.tag && q.tag !== q.pattern ? `<span class="chip">${esc(q.tag)}</span>` : ''}
     </div>
+    ${lead}${given}
     <div class="q-text">${rich(q.q)}</div>
     ${figHTML(q.fig)}
     <div id="answer"></div>
     <div class="q-tools">
-      ${q.hints.length?`<button class="tool" id="t-hint">💡 ヒント</button>`:''}
+      ${(!check && q.hints.length)?`<button class="tool" id="t-hint">💡 ヒント</button>`:''}
       <button class="tool" id="t-memo">📝 メモ・ひっ算</button>
       <button class="tool" id="t-read">🔊 よみあげ</button>
-      <button class="tool" id="t-give">🤔 わからない</button>
+      ${check?'':'<button class="tool" id="t-give">🤔 わからない</button>'}
     </div>
     <div id="hints"></div>
     ${memoHTML}
@@ -177,8 +188,8 @@ function render() {
 
   $('#t-hint')?.addEventListener('click', showHint);
   $('#t-memo').addEventListener('click', e => { $('#memo').classList.toggle('open'); e.target.classList.toggle('on'); });
-  $('#t-read').addEventListener('click', () => speak(q.q));
-  $('#t-give').addEventListener('click', () => { SFX.tap(); judge(q, null, false); });
+  $('#t-read').addEventListener('click', () => speak((q.lead ? q.lead + '。' : '') + q.q));
+  $('#t-give')?.addEventListener('click', () => { SFX.tap(); judge(q, null, false); });
   if (Store.get('autoRead')) speak(q.q);
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -263,6 +274,7 @@ function judge(q, given, ok, btn) {
   }
 
   const res = Store.grade(q.id, ok, q.unit, { usedHint: S.hintUsed });
+  S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);
     SFX.correct();
@@ -281,6 +293,14 @@ function judge(q, given, ok, btn) {
   const word = gave ? words[Math.floor(Math.random()*words.length)] : 'いっしょに 見てみよう。';
 
   const ansText = q.kind === 'mc' ? q.opts[q.a] : `${q.ans}${q.unitLabel||''}`;
+
+  // チェックテスト中は答えを見せずに進む（あとでまとめて解説）
+  if (S.mode === 'check') {
+    $('#verdict').innerHTML = `<div class="verdict ${ok?'ok':'ng'}" style="text-align:center;padding:12px">
+      <div class="head" style="justify-content:center;margin:0">${ok?'⭕️':'❌'}<span style="font-size:.85rem;font-weight:700;color:var(--sub)">解説はさいごにまとめて</span></div></div>`;
+    setTimeout(() => { S.i++; S.i < S.list.length ? render() : finish(); }, 620);
+    return;
+  }
   const nextIn = res.next === Store.today() ? 'きょう もう1回' : `つぎは ${Store.daysBetween(Store.today(), res.next)}日後`;
 
   $('#verdict').innerHTML = `
@@ -305,6 +325,8 @@ function judge(q, given, ok, btn) {
 }
 
 function finish() {
+  if (S.mode === 'check') return finishCheck();
+  if (S.noFinishUI) { if (S.onDone) S.onDone({ ok:S.correct, total:S.list.length, results:S.results }); return; }
   const total = S.list.length, ok = S.correct;
   const perfect = ok === total;
   Store.touchStreak();
@@ -354,6 +376,54 @@ function finish() {
   });
   Chara.bindTap(S.host);
   if (S.onDone) S.onDone({ ok, total });
+}
+
+/* ---------- チェックテストの結果 ---------- */
+function finishCheck() {
+  const total = S.list.length, ok = S.correct;
+  const { demoted, shaky } = Mastery.finishCheck(S.results);
+  Store.touchStreak();
+  const rate = Math.round(ok/total*100);
+  const msg = rate >= 90 ? 'ぬけ落ちなし。ちゃんと身についてる！'
+    : rate >= 60 ? 'だいたい残ってる。落とした所だけ直そう。'
+    : demoted.length ? `${demoted.length}つの単元に すきまが見つかった。ここを埋めれば もっと強くなる。`
+    : 'ここは まだ固まっていないみたい。あせらず もう一周しよう。';
+  const back = demoted.concat(shaky.filter(u => !demoted.find(d => d.id === u.id)));
+
+  if (rate >= 80 && !demoted.length) { confetti(1.2); SFX.clear(); } else { SFX.wrong(); }
+
+  S.host.innerHTML = `
+  <div class="card" style="text-align:center">
+    <h2 style="justify-content:center">🩺 チェックの結果</h2>
+    <div style="display:flex;justify-content:center">${Chara.svg('fukurou', demoted.length?'thinking':'happy', 130)}</div>
+    <div style="font-size:2.4rem;font-weight:900">${ok} <span style="font-size:1.2rem;color:var(--sub)">/ ${total}問</span></div>
+    <p class="muted">${msg}</p>
+  </div>
+  ${back.length ? `<div class="card">
+    <h2>🧱 もう一度やる単元</h2>
+    <p class="muted" style="margin-bottom:10px">できたつもりだった所です。${demoted.length ? `このうち <b>${demoted.length}つ</b>は おさらいの列に戻しました。` : 'つぎのチェックでも落とすと、おさらいの列に戻します。'}</p>
+    ${back.map(u=>`<a class="unit" style="display:flex;align-items:center;gap:10px;margin-bottom:8px" href="train.html?unit=${encodeURIComponent(u.id)}">
+      <span style="font-size:1.3rem">${u.emoji}</span><span style="flex:1"><span class="t">${esc(u.name)}</span>
+      <span class="m">${esc(u.tag||'')}</span></span><span style="color:var(--a);font-weight:800">▶︎</span></a>`).join('')}
+  </div>` : ''}
+  <div class="card">
+    <h2>📖 ぜんぶの解説</h2>
+    ${S.results.map((r,i) => {
+      const q = r.q;
+      const ansText = q.kind === 'mc' ? q.opts[q.a] : `${q.ans}${q.unitLabel||''}`;
+      return `<details class="more" ${r.ok?'':'open'} style="border-top:1px dashed var(--line);padding-top:10px">
+        <summary>${r.ok?'⭕️':'❌'} ${i+1}. ${esc(String(q.q).replace(/【|】/g,'').slice(0,34))}…</summary>
+        <div class="why" style="margin-top:8px">
+          <div style="font-weight:900;margin-bottom:6px">こたえ：<span style="color:var(--a)">${rich(String(ansText))}</span></div>
+          ${q.steps ? `<div class="steps">${q.steps.map(t=>`<div class="step">${rich(t)}</div>`).join('')}</div>` : ''}
+          ${q.why ? `<div style="margin-top:6px">${rich(q.why)}</div>` : ''}
+          ${figHTML(q.whyFig)}
+        </div></details>`;
+    }).join('')}
+  </div>
+  <div class="card"><a class="btn wide" href="index.html">🏠 ホームへ</a></div>`;
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (S.onDone) S.onDone({ ok, total, demoted, shaky });
 }
 
 function jkClearedCount() {
