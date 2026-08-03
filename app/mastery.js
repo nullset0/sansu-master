@@ -257,7 +257,8 @@ function buildCheck(n = 10) {
     const qs = qsOf(id);
     const a = qs.filter(APPLY);
     const cand = (a.length ? a : qs);
-    pick.push(Store.shuffle(cand)[0]);
+    const q = Store.shuffle(cand)[0];
+    if (q) pick.push(q);
   });
   // 足りなければ済単元からランダムに足す
   while (pick.length < n && dus.length) {
@@ -265,7 +266,7 @@ function buildCheck(n = 10) {
     const q = Store.shuffle(qsOf(id))[0];
     if (q && !pick.find(x => x.id === q.id)) pick.push(q); else break;
   }
-  return pick.slice(0, n);
+  return pick.filter(Boolean).slice(0, n);
 }
 
 function finishCheck(results) {

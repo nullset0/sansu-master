@@ -113,8 +113,8 @@ function unitCard(u) {
   const s = Mastery.unitState(u.id);
   const pct = Math.round((s.understand*0.4 + s.retain*0.3 + s.apply*0.3) * 100);
   const locked = !s.open;
-  const need = locked ? Graph.pre(u.id).filter(p => !Mastery.unitState(p).done || true)
-    .map(p => (DATA.unit(p)||{}).name).slice(0,2).join('・') : '';
+  const need = locked ? (Graph.pre(u.id).filter(p => !Mastery.unitState(p).done)
+    .map(p => (DATA.unit(p)||{}).name).slice(0,2).join('・') || '前の単元') : '';
   return `<a class="unit ${s.done ? 'done' : ''} ${locked ? 'locked' : ''}"
       href="${locked ? 'javascript:void(0)' : 'train.html?unit=' + encodeURIComponent(u.id)}"
       ${locked ? `data-lock="${esc(need)}"` : ''}>
