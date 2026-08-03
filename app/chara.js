@@ -53,12 +53,12 @@ const CAST = {
 let _uid = 0;
 
 // ---- レイアウト（viewBox 200 × 212）----
-const BODY = `M 100 50
-  C 78 50 64 74 62 108
-  C 60 146 76 170 100 170
-  C 124 170 140 146 138 108
-  C 136 74 122 50 100 50 Z`;
-const EYE_Y = 100, EYE_DX = 13;                 // 目は高め・近め（ここが顔の要）
+const BODY = `M 100 58
+  C 68 58 44 82 44 114
+  C 44 145 68 166 100 166
+  C 132 166 156 145 156 114
+  C 156 82 132 58 100 58 Z`;
+const EYE_Y = 108, EYE_DX = 15;                 // まるい体に合わせて 目も少し下・広めに
 const STEM = '#a9bb84', STEM_D = '#7d8f5c';     // 茎は全員共通の色＝同じ種族に見える
 
 /* ---------- 図形の芽 ---------- */
@@ -67,18 +67,18 @@ function sprout(kind, spec) {
   switch (kind) {
     case 'star': return `
       <path d="M 0 -20 L 6.2 -6.4 L 21 -5 L 10 4.6 L 13.4 19 L 0 11.4 L -13.4 19 L -10 4.6 L -21 -5 L -6.2 -6.4 Z"
-        fill="${s}"/>
+        fill="${s}" stroke="${s}" stroke-width="5" stroke-linejoin="round"/>
       <path d="M 0 -20 L 6.2 -6.4 L 0 -4 Z" fill="#fff" opacity=".55"/>`;
     case 'circle': return `
       <circle cx="0" cy="0" r="18" fill="${s}"/>
       <circle cx="0" cy="0" r="8.5" fill="#fff" opacity=".5"/>
       <ellipse cx="-6" cy="-8" rx="5" ry="3.4" fill="#fff" opacity=".8" transform="rotate(-30 -6 -8)"/>`;
     case 'square': return `
-      <rect x="-16" y="-16" width="32" height="32" rx="5" fill="${s}"/>
-      <rect x="-9" y="-9" width="18" height="18" rx="3" fill="#fff" opacity=".45"/>
+      <rect x="-15" y="-15" width="30" height="30" rx="10" fill="${s}"/>
+      <rect x="-8" y="-8" width="16" height="16" rx="6" fill="#fff" opacity=".45"/>
       <rect x="-12" y="-12" width="9" height="5" rx="2.5" fill="#fff" opacity=".8"/>`;
     case 'triangle': return `
-      <path d="M 0 -19 L 18 14 L -18 14 Z" fill="${s}" stroke="${s}" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M 0 -18 L 17 13 L -17 13 Z" fill="${s}" stroke="${s}" stroke-width="8" stroke-linejoin="round"/>
       <path d="M 0 -7 L 8 10 L -8 10 Z" fill="#fff" opacity=".45"/>`;
     case 'pencil': return `
       <g transform="rotate(16)">
@@ -130,7 +130,7 @@ function eyes(spec, expr) {
 
 /* ---------- 口（小さく。出しすぎない）---------- */
 function mouth(spec, expr) {
-  const X = 100, Y = 130, ink = spec.deep;
+  const X = 100, Y = 136, ink = spec.deep;
   switch (expr) {
     case 'happy':   return `<path d="M ${X-11} ${Y-3} q 11 15 22 0 q -11 4 -22 0 Z" fill="#b8394d"/>
                             <path d="M ${X-11} ${Y-3} q 11 15 22 0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
@@ -150,16 +150,17 @@ function limbs(spec, expr) {
   const up = expr === 'excited' || expr === 'happy' || expr === 'wow';
   const down = expr === 'sad' || expr === 'sleep';
   const arm = (x1,y1,x2,y2,x3,y3) => `
-    <path d="M ${x1} ${y1} Q ${x2} ${y2} ${x3} ${y3}" stroke="${spec.shade}" stroke-width="9"
+    <path d="M ${x1} ${y1} Q ${x2} ${y2} ${x3} ${y3}" stroke="${spec.shade}" stroke-width="10"
       fill="none" stroke-linecap="round"/>
-    <circle cx="${x3}" cy="${y3}" r="7" fill="${spec.color}"/>`;
-  const L = up ? arm(69,112, 46,96, 38,80) : down ? arm(69,120, 56,140, 54,154) : arm(69,116, 52,130, 47,146);
-  const R = up ? arm(131,112, 154,96, 162,80) : down ? arm(131,120, 144,140, 146,154) : arm(131,116, 150,130, 155,144);
+    <circle cx="${x3}" cy="${y3}" r="8.5" fill="${spec.color}"/>
+    <circle cx="${x3-2}" cy="${y3-3}" r="3" fill="#fff" opacity=".3"/>`;
+  const L = up ? arm(56,116, 36,102, 30,86) : down ? arm(54,126, 44,146, 42,158) : arm(55,122, 40,136, 36,150);
+  const R = up ? arm(144,116, 164,102, 170,86) : down ? arm(146,126, 156,146, 158,158) : arm(145,122, 162,134, 166,146);
   const leg = (x, fx) => `
-    <path d="M ${x} 160 L ${fx} 182" stroke="${spec.shade}" stroke-width="11" stroke-linecap="round"/>
-    <ellipse cx="${fx}" cy="188" rx="13" ry="7" fill="${spec.deep}"/>
-    <ellipse cx="${fx}" cy="186.6" rx="11" ry="5" fill="${spec.shade}"/>`;
-  return { arms: `<g class="arm-l">${L}</g><g class="arm-r">${R}</g>`, legs: leg(90, 85) + leg(110, 117) };
+    <path d="M ${x} 156 L ${fx} 180" stroke="${spec.shade}" stroke-width="12" stroke-linecap="round"/>
+    <ellipse cx="${fx}" cy="187" rx="14" ry="9" fill="${spec.deep}"/>
+    <ellipse cx="${fx}" cy="185.4" rx="11.5" ry="6.5" fill="${spec.shade}"/>`;
+  return { arms: `<g class="arm-l">${L}</g><g class="arm-r">${R}</g>`, legs: leg(88, 82) + leg(112, 120) };
 }
 
 /* ---------- 本体 ---------- */
@@ -206,23 +207,23 @@ function svg(who = 'pika', expr = 'normal', size = 130, opts = {}) {
 
     <g transform="rotate(${tilt} 100 180)">
       ${L.legs}
-      <path d="M 100 60 C 98 46 104 38 101 30" stroke="${STEM_D}" stroke-width="8" fill="none" stroke-linecap="round"/>
-      <path d="M 100 60 C 98 46 104 38 101 30" stroke="${STEM}" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <g class="sprout" transform="translate(101,26) scale(1.18)">${sprout(spec.sprout, spec)}</g>
+      <path d="M 100 66 C 98 52 104 44 101 34" stroke="${STEM_D}" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M 100 66 C 98 52 104 44 101 34" stroke="${STEM}" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <g class="sprout" transform="translate(101,28) scale(1.1)">${sprout(spec.sprout, spec)}</g>
 
       ${L.arms}
 
       <g class="ch-head">
         <path d="${BODY}" fill="url(#b${id})"/>
         <g clip-path="url(#c${id})">
-          <ellipse cx="72" cy="80" rx="46" ry="40" fill="url(#s${id})"/>
-          <ellipse cx="100" cy="152" rx="34" ry="16" fill="${spec.hi}" opacity=".35"/>
-          <path d="M 142 74 q 14 40 -6 82 q 22 -30 14 -74 Z" fill="#fff" opacity=".18"/>
+          <ellipse cx="74" cy="88" rx="48" ry="42" fill="url(#s${id})"/>
+          <ellipse cx="100" cy="152" rx="38" ry="16" fill="${spec.hi}" opacity=".32"/>
+          <path d="M 150 82 q 12 36 -8 76 q 22 -28 16 -70 Z" fill="#fff" opacity=".16"/>
         </g>
         <path d="${BODY}" fill="none" stroke="${spec.deep}" stroke-width="2" opacity=".38"/>
         <g opacity="${cheekOp}">
-          <ellipse cx="73" cy="120" rx="9" ry="5.5" fill="${spec.cheek}" opacity=".7"/>
-          <ellipse cx="127" cy="120" rx="9" ry="5.5" fill="${spec.cheek}" opacity=".7"/>
+          <ellipse cx="66" cy="128" rx="11" ry="6.5" fill="${spec.cheek}" opacity=".72"/>
+          <ellipse cx="134" cy="128" rx="11" ry="6.5" fill="${spec.cheek}" opacity=".72"/>
         </g>
         <g class="ch-eyes" style="animation-delay:-${(_uid*1.37)%5.2}s">${eyes(spec, expr)}</g>
         ${mouth(spec, expr)}
