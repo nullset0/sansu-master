@@ -103,6 +103,21 @@ const EXTRA = {
   'jk-tenkai':      ['g4-立体'],
   'jk-suisou':      ['jk-taiseki','jk-hi','g4-グラフ'],
 
+  // ---- 計算の力（土台。早いうちに開く）----
+  'jk-gyakusan':     ['g4-計算順序'],
+  'jk-bunsu-keisan': ['g5-分数','g4-小数'],
+  'jk-kufu':         ['jk-gyakusan','jk-suuretsu'],
+
+  // ---- 追加単元 ----
+  'jk-hayasa-hi':    ['jk-hayasa','jk-hi'],
+  'jk-setsudan':     ['jk-taiseki','jk-tenkai'],
+  'jk-kaiten':       ['jk-taiseki','jk-en'],
+  'jk-idou':         ['jk-en','jk-fukugou'],
+  'jk-nshin':        ['jk-baisu'],
+  'jk-yakusu-wa':    ['jk-sosuu'],
+  'jk-baai2':        ['jk-baai'],
+  'jk-ronri':        ['g4-文章題'],
+
   // ---- 難関チャレンジ（前提の単元を両方おさえてから開く）----
   'hard-speed':    ['jk-tabibito','jk-diagram'],
   'hard-tenmove':  ['jk-menseki','jk-diagram'],
