@@ -110,6 +110,20 @@ function grade(qid, correct, unitId, opts = {}) {
   return { box:c.box, next:c.due, gain };
 }
 
+/* ---------- 軽い記録（道具えらび・手順ならべかえ用）----------
+   間隔反復のカードは汚さず、単元の正答率と きょうの記録だけ動かす */
+function note(unitId, correct) {
+  rollDay();
+  if (unitId) {
+    const u = S.units[unitId] || (S.units[unitId] = { seen:0, ok:0 });
+    u.seen++; if (correct) u.ok++;
+  }
+  S.day.done++; if (correct) S.day.correct++;
+  const gain = correct ? 5 : 1;
+  S.coins += gain; S.day.coins += gain;
+  save();
+}
+
 /* ---------- 単元の習熟度（0〜1） ---------- */
 function unitMastery(unitId, qids) {
   if (!qids || !qids.length) return 0;
@@ -288,7 +302,7 @@ return {
   save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits,
-  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle,
+  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note,
   get rev(){ return REV; },
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },
 };
