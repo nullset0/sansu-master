@@ -214,6 +214,7 @@ function render() {
   </div>`;
 
   S.answered = false; S.hintStep = 0; S.hintUsed = false;
+  S.shownAt = Date.now();          // この1問にかかった時間を測る
   renderAnswer(q);
   // むずかしい問題は、計算用のメモを最初から開いておく（紙の代わり）
   if ((q.lv || 1) >= 4) { $('#memo').classList.add('open'); $('#t-memo').classList.add('on'); }
@@ -306,7 +307,8 @@ function judge(q, given, ok, btn) {
     $('#disp').classList.add(ok ? 'ok' : 'ng');
   }
 
-  const res = Store.grade(q.id, ok, q.unit, { usedHint: S.hintUsed });
+  const res = Store.grade(q.id, ok, q.unit,
+    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0 });
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);

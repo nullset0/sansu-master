@@ -62,7 +62,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {
   Store.save();
 
   const daily = [];   // 毎日の到達点
-  let stall = 0, checks = 0, demotes = 0;
+  let stall = 0, checks = 0, demotes = 0, explains = 0, explainPass = 0;
   for (let d = 0; d < days; d++) {
     DAY = d;
     Store.rollDay();
@@ -75,7 +75,19 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {
       });
       if (res.length >= 3) { const r = Mastery.finishCheck(res); checks++; demotes += r.demoted.length; }
     }
-    const plan = Mastery.plan(perDay);
+    // 「なぜ？チェック」待ちの単元があれば、その日に1つ受ける（4問・少し辛め）。
+    // その日の問題数の内わけとして数える＝子どもの1日の量は増やさない。
+    let budget = perDay;
+    Mastery.explainDue(1).forEach(id => {
+      const N = 4;
+      let ok = 0;
+      for (let k = 0; k < N; k++) if (rnd() < p0 - 0.10) ok++;
+      Mastery.recordExplain(id, ok, N);
+      explains += N; budget = Math.max(1, budget - N);
+      if (ok / N >= Mastery.EXPLAIN_MIN) explainPass++;
+    });
+
+    const plan = Mastery.plan(budget);
     if (!plan.length) stall++;
     plan.forEach(q => Store.grade(q.id, rnd() < pOf(q, p0), q.unit, {}));
     const s = Mastery.summary();
@@ -88,7 +100,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {
     y1_done: (daily[364] || daily[daily.length-1]).done,
     y1_jk:   (daily[364] || daily[daily.length-1]).jk,
     mo_jk30: first(x => x.jk >= 30), mo_jk60: first(x => x.jk >= 60), mo_all: first(x => x.done >= s.total),
-    stall, checks, demotes };
+    stall, checks, demotes, explains, explainPass };
 }
 
 /* 使い方: node tools/sim.js <1日の問題数,…> <日数> <素の正答率> <開始学年>

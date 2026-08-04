@@ -57,6 +57,7 @@
 <script src="data/graph.js"></script>
 <script src="app/modes.js"></script>
 <script src="app/mastery.js"></script>
+<script src="app/goal.js"></script>
 <script>
 (() => {
   const P = new URLSearchParams(location.search);
@@ -114,6 +115,67 @@
       Quiz.confetti(1.4); SFX.clear();
     };
     step();
+    return;
+  }
+
+  /* ---------- なぜ？チェック（本質が分かっているか） ----------
+     答えが合うだけでは「済」にしない。何算かを見ぬけるか・手順を組み立て
+     られるかを、その単元だけで問う。7割とれたら合格。何度でも受けられる。
+  ------------------------------------------------------------ */
+  if (mode === 'why') {
+    const uid = P.get('unit') || Mastery.explainDue(1)[0];
+    const u = uid && DATA.unit(uid);
+    if (!u) {
+      setHead('🧠 なぜ？チェック', '');
+      host.innerHTML = '<div class="card"><p class="muted">いまチェックできる単元はありません。単元を仕上げると出てきます。</p>'
+        + '<a class="btn wide" href="index.html">🏠 ホームへ</a></div>';
+      return;
+    }
+    setHead('🧠 なぜ？チェック', `${u.name} — 答えは出さなくていい`);
+    const hasSteps = DATA.byUnit(uid).filter(q => q.steps && q.steps.length >= 3 && q.steps.length <= 5).length >= 2;
+    const nPat = hasSteps ? 3 : 4;
+
+    const intro = () => {
+      host.innerHTML = `<div class="card" style="text-align:center">
+        ${Chara.tag('fukurou','normal',
+          `<b>${u.name}</b> は もう解けるようになったね。<br>つぎは <b>「なぜそれで解けるのか」</b> を見せてもらうよ。`, 100, {html:true})}
+        <div class="note b" style="text-align:left">問題を見て <b>何算か</b> を当てる${nPat}問${hasSteps?'と、<b>解く順番</b>をならべかえる2問':''}。
+          計算はしなくていい。7割できたら合格で、この単元が「済」になります。</div>
+        <button class="btn wide blue" id="go" style="margin-top:8px">▶︎ はじめる</button>
+        <a class="btn wide ghost" href="index.html" style="margin-top:8px">あとで</a>
+      </div>`;
+      document.getElementById('go').onclick = run;
+    };
+
+    const run = () => {
+      Modes.patternPick(host, { n: nPat, unit: uid, onDone: r1 => {
+        if (!hasSteps) return done(r1.ok, r1.total);
+        Modes.stepOrder(host, { n: 2, unit: uid,
+          onDone: r2 => done(r1.ok + r2.ok, r1.total + r2.total) });
+      }});
+    };
+
+    const done = (ok, total) => {
+      const pass = Mastery.recordExplain(uid, ok, total);
+      const s = Mastery.unitState(uid);
+      Store.touchStreak();
+      if (pass) { Quiz.confetti(1.4); SFX.clear(); }
+      host.innerHTML = `
+      <div class="card" style="text-align:center">
+        <h2 style="justify-content:center">${pass ? '🧠 合格！' : '🧠 もう一歩'}</h2>
+        <div style="display:flex;justify-content:center">${Chara.svg('fukurou', pass?'excited':'thinking', 130, pass?{anim:'hop'}:{})}</div>
+        <div style="font-size:2.2rem;font-weight:900">${ok} <span style="font-size:1rem;color:var(--sub)">/ ${total}問</span></div>
+        <p class="muted">${pass
+          ? `<b>${u.name}</b> は「解ける」だけでなく「なぜ」も言えています。済にしました。`
+          : `答えは出せていても、<b>どの道具を使うか</b>がまだあいまいです。解き方を見てから、もう一度どうぞ。`}</p>
+      </div>
+      <div class="card">
+        ${pass ? '' : `<a class="btn wide blue" href="train.html?mode=why&unit=${encodeURIComponent(uid)}">🔁 もう1回</a>`}
+        <a class="btn wide ${pass?'blue':'ghost'}" href="learn.html#${encodeURIComponent(uid)}" style="margin-top:8px">📖 ${u.name}の解き方</a>
+        <a class="btn wide ghost" href="index.html" style="margin-top:8px">🏠 ホームへ</a>
+      </div>`;
+    };
+    intro();
     return;
   }
 

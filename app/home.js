@@ -52,6 +52,20 @@ if (due && Mastery.placementDone()) {
     </div>`;
 }
 
+/* ---- ②-b なぜ？チェック（本質）：3層そろった単元は これで「済」になる ---- */
+// チェックの日と重なっても出す。ここを通さないと単元が「済」にならないので、
+// 先送りにすると到達がいつまでも増えない。
+const why = Mastery.explainDue(1)[0];
+if (why && Mastery.placementDone()) {
+  const wu = DATA.unit(why);
+  $('#checkcard').innerHTML += `
+    <div class="card" style="border:3px solid var(--f,#a78bfa)">
+      <h2>🧠 なぜ？チェック</h2>
+      ${Chara.tag('fukurou','normal', `${wu.emoji} <b>${esc(wu.name)}</b> は もう解けるね。あとは「なぜそれで解けるか」。<br>計算はしない。何算かを見ぬくだけ。ここを通ると この単元は済になるよ。`, 96, {html:true})}
+      <a class="btn wide" href="train.html?mode=why&unit=${encodeURIComponent(why)}" style="margin-top:8px;background:linear-gradient(180deg,#c4b5fd,#8b5cf6);box-shadow:0 4px 0 #6d28d9">▶︎ なぜ？チェックを受ける（4〜5問）</a>
+    </div>`;
+}
+
 /* ---- ③ きょうは とくべつ練習の日？（アプリ側が決める）---- */
 const tr = Mastery.trainingDue();
 if (tr && Mastery.placementDone() && !due) {
@@ -64,6 +78,22 @@ if (tr && Mastery.placementDone() && !due) {
       ${Chara.tag(who,'wink', say, 92)}
       <a class="btn wide blue" href="train.html?mode=${tr.mode}" style="margin-top:8px">▶︎ ${esc(tr.name)}をやる（3〜5分）</a>
       <p class="muted" style="text-align:center;margin-top:8px">${esc(tr.why)}</p>
+    </div>`;
+}
+
+/* ---- ③-b 志望校まで（決めていれば）---- */
+if (typeof Goal !== 'undefined' && Goal.get()) {
+  const gs = Goal.state();
+  const word = { ok:['間に合う','#16a34a'], tight:['ぎりぎり','#d97706'], behind:['ペースが足りない','#dc2626'] }[gs.verdict];
+  $('#checkcard').innerHTML += `
+    <div class="card">
+      <h2>🎓 ${esc(gs.sch.name)}まで あと ${gs.daysLeft}日</h2>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <div class="bar" style="flex:1"><i style="width:${gs.pct}%"></i></div>
+        <span style="font-weight:900">${gs.pct}%</span>
+      </div>
+      <p class="muted" style="margin:0">必要なのは <b>1日${gs.perDayNeeded}問</b>、いまは <b>1日${gs.perDayNow}問</b>
+        — <b style="color:${word[1]}">${word[0]}</b></p>
     </div>`;
 }
 
