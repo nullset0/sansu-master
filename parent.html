@@ -50,7 +50,7 @@
       <a class="btn ghost sm" href="train.html?mode=placement">診断する</a></div>
     <div class="row"><div><div class="lbl">くわしく測る</div><div class="hint">診断は各学年3問なので、うっかりミス1つでも低く出ます。1学年6問ずつ・ヒント無しで測り直します</div></div>
       <a class="btn ghost sm" href="sokutei.html">くわしく測る</a></div>
-    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint">5問が推奨（多いほど続きにくい）</div></div>
+    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint">中受範囲(60単元)を一周するまでの目安：3問=届かない／5問=約28ヶ月／10問=約15ヶ月／20問=約8ヶ月。必要な総問題数はほぼ一定で、1日の数がそのまま期間を決めます。ただし<b>続かないと意味がない</b>ので、続く量を選んでください</div></div>
       <div class="seg" id="set-goal"></div></div>
     <div class="row"><div><div class="lbl">効果音</div></div><div class="seg" id="set-sound"></div></div>
     <div class="row"><div><div class="lbl">問題の自動よみあげ</div><div class="hint">音読すると記憶に残りやすくなります</div></div>
@@ -214,7 +214,7 @@
       b.classList.add('on'); SFX.tap(); onPick(b.dataset.v);
     }));
   }
-  seg(document.getElementById('set-goal'), [[3,'3問'],[5,'5問'],[10,'10問'],[20,'20問']],
+  seg(document.getElementById('set-goal'), [[3,'3問'],[5,'5問'],[8,'8問'],[10,'10問'],[20,'20問']],
       Store.get('dailyGoal'), v => Store.set('dailyGoal', Number(v)));
   seg(document.getElementById('set-sound'), [['on','あり'],['off','なし']],
       Store.get('sound') === false ? 'off' : 'on', v => Store.set('sound', v === 'on'));
