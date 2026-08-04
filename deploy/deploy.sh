@@ -25,7 +25,7 @@ ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/app"
 echo "📤 アプリ本体を転送..."
 rsync -avz --delete \
   --exclude='deploy/' --exclude='.DS_Store' --exclude='*.command' \
-  --exclude='_figtest.html' --exclude='.git' \
+  --exclude='_figtest.html' --exclude='_simtest.html' --exclude='.git' \
   -e "ssh -o StrictHostKeyChecking=accept-new" \
   "$APP_DIR/" \
   "$VPS_HOST:$REMOTE_DIR/app/"

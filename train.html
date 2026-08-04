@@ -82,7 +82,7 @@
       if (!qs.length) { gi++; return step(); }
       const name = (DATA.AREAS[g] || {}).name || g;
       host.innerHTML = `<div class="card" style="text-align:center">
-        ${Chara.tag('fukurou','normal', `つぎは <b>${name}</b> の問題を3問。ぜんぶ合っていたら とばして先へ進むよ。`, 92)}
+        ${Chara.tag('fukurou','normal', `つぎは <b>${name}</b> の問題を3問。ぜんぶ合っていたら とばして先へ進むよ。`, 92, {html:true})}
         <button class="btn wide blue" id="go" style="margin-top:8px">▶︎ ${name}の3問へ</button></div>`;
       document.getElementById('go').onclick = () => {
         Quiz.start({ pool: qs, list: qs, host, count: qs.length, noFinishUI: true,
@@ -109,7 +109,8 @@
           <span style="font-size:1.3rem">${f.u.emoji}</span><span style="flex:1"><span class="t">${f.u.name}</span>
           <span class="m">${(DATA.AREAS[f.u.area]||{}).name||''}</span></span><span style="color:var(--a);font-weight:800">▶︎</span></a>`).join('')}
       </div>` : ''}
-      <div class="card"><a class="btn wide" href="index.html">🏠 ホームへ</a></div>`;
+      <div class="card"><a class="btn wide blue" href="sokutei.html">🔍 もっとくわしく測る（1学年6問）</a>
+        <a class="btn wide" href="index.html" style="margin-top:8px">🏠 ホームへ</a></div>`;
       Quiz.confetti(1.4); SFX.clear();
     };
     step();
@@ -147,7 +148,7 @@
     if (!s.open) {
       const need = Graph.pre(unitId).map(p => (DATA.unit(p)||{}).name).join('・');
       host.innerHTML = `<div class="card">
-        ${Chara.tag('fukurou','thinking', `この単元はまだ早いかも。先に <b>${need}</b> をかためると、ここが ぐっと楽になるよ。`, 96)}
+        ${Chara.tag('fukurou','thinking', `この単元はまだ早いかも。先に <b>${need}</b> をかためると、ここが ぐっと楽になるよ。`, 96, {html:true})}
         ${Graph.pre(unitId).map(p=>{const pu=DATA.unit(p); return pu?`<a class="btn ghost wide sm" style="margin-top:8px" href="train.html?unit=${encodeURIComponent(p)}">${pu.emoji} ${pu.name} をやる</a>`:''}).join('')}
         <button class="btn wide" id="anyway" style="margin-top:12px">それでも やってみる</button></div>`;
       document.getElementById('anyway').onclick = () => go();
