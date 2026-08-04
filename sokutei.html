@@ -166,6 +166,7 @@
           落とした単元だけは毎日の弱点枠（Mastery.plan の②）で必ず戻ってくる     */
     const applied = { skipped: [], marked: [] };
     const missSet = new Set(Object.keys(miss));
+    const placedBefore = Store.state.placed || 'g1';
     log.filter(l => l.ok / l.total >= 0.8).forEach(l => {
       Mastery.assumeGrade(l.grade, missSet); applied.skipped.push(nameOf(l.grade));
     });
@@ -178,9 +179,11 @@
       e.focus = 1;
       applied.marked.push(m.name);
     });
-    // 開始地点の記録も、上へ伸びたときだけ更新する
-    if (solid && GR.indexOf(solid.grade) > GR.indexOf(Store.state.placed || 'g1'))
-      Store.state.placed = solid.grade;
+    // 開始地点の記録は上へ伸びたときだけ更新する。
+    // ★ assumeGrade は最後に placed = その学年 を書くので、下の学年を測り直しただけで
+    //   placed が下がってしまう。ここで測る前の値と比べて、高いほうを残す。
+    const best = solid ? solid.grade : placedBefore;
+    Store.state.placed = GR.indexOf(best) > GR.indexOf(placedBefore) ? best : placedBefore;
     Store.save();
 
     const payload = {
@@ -219,7 +222,7 @@
         ${applied.marked.length ? `落とした <b>${applied.marked.join('・')}</b> は<b>重点</b>に入れました。学年を飛ばしても、この単元だけは毎日の出題で戻ってきます（できるようになったら自動で外れます）。`
           : '落とした単元はありませんでした。'}
       </div>
-      <a class="btn wide green" href="train.html?mode=plan" style="margin-top:8px">✏️ さっそく きょうの5問へ</a>
+      <a class="btn wide green" href="train.html?mode=daily" style="margin-top:8px">✏️ さっそく きょうの5問へ</a>
     </div>
 
     <div class="card"><h2>📋 結果のコピー（保護者むけ）</h2>
