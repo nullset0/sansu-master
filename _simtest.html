@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>_simtest — 進度シミュレーション（開発用・deploy対象外）</title>
+<script>
+/* 日付を偽装する。store.js より前に差し替える必要があるので、ここが最初。
+   window.__DAY を進めると Store.today() が動く。 */
+(() => {
+  const Real = Date;
+  const BASE = Real.parse('2026-04-06T09:00:00Z');   // 小4の4月はじめ
+  window.__DAY = 0;
+  function Fake(...a) {
+    if (!(this instanceof Fake)) return new Fake(...a).toString();
+    return a.length ? new Real(...a) : new Real(BASE + window.__DAY * 86400000);
+  }
+  Fake.prototype = Real.prototype;
+  Fake.now = () => BASE + window.__DAY * 86400000;
+  Fake.parse = Real.parse; Fake.UTC = Real.UTC;
+  window.Date = Fake;
+})();
+</script>
+</head>
+<body style="font:14px ui-monospace,Menlo,monospace;padding:16px;white-space:pre-wrap">
+<div id="out">読み込み中…</div>
+
+<script>
+/* キャッシュを掴んで「直したはずのバグが再現する」のを防ぐため、毎回 ?t= を付けて読む */
+(() => {
+  const SRC = ["app/fig.js", "app/chara.js", "app/store.js", "app/quiz.js", "data/core.js", "questions/g1.js", "questions/g2.js", "questions/g3.js", "questions/g4.js", "questions/g5.js", "questions/g6.js", "data/elem.js", "data/jk-num.js", "data/jk-ratio.js", "data/jk-toku.js", "data/jk-speed.js", "data/jk-geo.js", "data/jk-calc.js", "data/jk-speed2.js", "data/jk-geo2.js", "data/jk-num2.js", "data/jk-drill.js", "data/hard.js", "data/graph.js", "app/mastery.js"];
+  const t = Math.random().toString(36).slice(2);
+  document.write(SRC.map(s => `<script src="${s}?t=${t}"><\/script>`).join(""));
+})();
+</script>
+<script>
+/* =========================================================
+   仮想の生徒で毎日5問を回し、「実力が着実に上がるか」を実測する。
+   設計バグ（停滞・押し戻しすぎ・弱点の取りこぼし）は
+   静的に読んでも見つからず、これでしか出てこない。
+   ========================================================= */
+window.Sim = (() => {
+  'use strict';
+
+  // 再現できるように乱数は固定シード
+  function rng(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+  const preDone = id => Graph.pre(id).every(p => Store.state.units[p] && Store.state.units[p].everDone);
+
+  /* 生徒モデル：素の力 p0 に、レベルの重さ・前提の穴・くり返しによる定着を効かせる */
+  function pOf(q, p0) {
+    const c = Store.state.cards[q.id];
+    const rep = c ? Math.min(3, c.seen) : 0;
+    let p = p0 - 0.06 * ((q.lv || 1) - 1);
+    if (!preDone(q.unit)) p -= 0.25;
+    p += 0.13 * rep;
+    return Math.max(0.05, Math.min(0.97, p));
+  }
+
+  function reset() { localStorage.removeItem('sansu-v2'); location.reload(); }
+
+  function run({ days = 365, perDay = 5, p0 = 0.80, seed = 42, placeAt = null,
+                 sokuteiMiss = [], applyFlag = true } = {}) {
+    const rnd = rng(seed);
+    localStorage.removeItem('sansu-v2');
+    window.__DAY = 0;
+    Store.importJSON(JSON.stringify({}));            // まっさらから
+    Store.state.settings.dailyGoal = perDay;
+
+    // レベル診断ぶん（placeAt までの学年は「分かっている」）を先に反映
+    // applyFlag=true のときは sokutei.html と同じく「落とした単元は飛ばさない」
+    const skip = applyFlag ? new Set(sokuteiMiss) : new Set();
+    if (placeAt) Mastery.GRADES.slice(0, Mastery.GRADES.indexOf(placeAt) + 1).forEach(g => Mastery.assumeGrade(g, skip));
+    // くわしく測るで落とした単元に「あやしい」印（sokutei.html と同じ効果）
+    if (applyFlag) sokuteiMiss.forEach(id => {
+      const e = Store.state.units[id] || (Store.state.units[id] = { seen:0, ok:0 });
+      e.focus = 1;
+    });
+    Store.save();
+
+    const hist = [], stall = [];
+    let lastDone = Mastery.doneUnits().length, flat = 0, maxFlat = 0, checks = 0, demotes = 0;
+    const missedSeen = {};   // sokuteiMiss の単元が何日目に出題されたか
+
+    for (let d = 0; d < days; d++) {
+      window.__DAY = d;
+      Store.rollDay();
+
+      // ときどきチェック（ヒント無し・落とすと格下げ）
+      if (Mastery.checkDue()) {
+        const list = Mastery.buildCheck(10);
+        const res = list.map(q => {
+          const ok = rnd() < pOf(q, p0) - 0.08;      // 抜き打ちなので少し辛め
+          Store.grade(q.id, ok, q.unit, {});
+          return { id: q.id, unit: q.unit, ok };
+        });
+        if (res.length >= 3) { const r = Mastery.finishCheck(res); checks++; demotes += r.demoted.length; }
+      }
+
+      const plan = Mastery.plan(perDay);
+      if (!plan.length) stall.push(d);
+      plan.forEach(q => {
+        if (sokuteiMiss.includes(q.unit) && missedSeen[q.unit] == null) missedSeen[q.unit] = d;
+        Store.grade(q.id, rnd() < pOf(q, p0), q.unit, {});
+      });
+
+      const done = Mastery.doneUnits().length;
+      if (done === lastDone) { flat++; maxFlat = Math.max(maxFlat, flat); } else flat = 0;
+      lastDone = done;
+      if ((d + 1) % 30 === 0) {
+        const s = Mastery.summary();
+        hist.push({ day: d + 1, done: s.done, jk: s.jkDone, reach: s.reach, open: s.open });
+      }
+    }
+    const s = Mastery.summary();
+    return { days, p0, perDay, placeAt, hist,
+             done: s.done, total: s.total, jk: `${s.jkDone}/${s.jkTotal}`, reach: s.reach,
+             checks, demotes, stallDays: stall.length, maxFlatDays: maxFlat,
+             sokuteiMissPickedUpOnDay: missedSeen };
+  }
+  return { run, reset, rng };
+})();
+document.getElementById('out').textContent =
+  `準備OK — ${DATA.units.length}単元 / ${DATA.count}問\nコンソールで Sim.run({days:365, p0:0.8}) を実行`;
+</script>
+</body>
+</html>

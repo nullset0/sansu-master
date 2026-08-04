@@ -247,7 +247,9 @@ function tag(who = 'pika', expr = 'happy', text = '', size = 110, opts = {}) {
   const spec = CAST[who] || CAST.pika;
   const msg = text || spec.word;
   const side = opts.side === 'right' ? 'right' : 'left';
-  const bubble = `<div class="ch-bubble ${side}">${String(msg).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`;
+  // opts.html を立てたときだけ、呼び出し側が組んだタグ（<b> など）をそのまま活かす
+  const body = opts.html ? String(msg) : String(msg).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const bubble = `<div class="ch-bubble ${side}">${body}</div>`;
   const fig = `<div class="ch-fig">${svg(who, expr, size, opts)}</div>`;
   return `<div class="ch-row ${side}">${side==='left' ? fig+bubble : bubble+fig}</div>`;
 }

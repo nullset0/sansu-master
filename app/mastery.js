@@ -78,7 +78,14 @@ function isOpen(id) {
 // クリアしたことを記録しておく（開放のヒステリシス用）
 function markDone(id) {
   const U = st().units, e = U[id] || (U[id] = { seen:0, ok:0 });
-  if (!e.everDone) { e.everDone = true; e.doneAt = Store.today(); Store.save(); }
+  let dirty = false;
+  if (!e.everDone) { e.everDone = true; e.doneAt = Store.today(); dirty = true; }
+  // 3層そろって「済」になったら、測定でついた重点印(focus)は下ろす＝直り終わり。
+  // 下ろさないと、直った単元が毎日の弱点枠（1日1問）を占領しつづけ、ほかの穴が待たされる。
+  // ★ shaky（チェックで落とした回数）はここでは触らない。あれは格下げの根拠で、
+  //   勝手に消すと「できたつもり」を潰す仕組みが効かなくなる。
+  if (e.focus) { e.focus = 0; dirty = true; }
+  if (dirty) Store.save();
 }
 
 /* ---------- いま取り組む単元（フロンティア） ---------- */
@@ -113,9 +120,13 @@ function weakSpots(id, max = 3) {
 function weakUnits(max = 5) {
   const U = st().units;
   return Object.entries(U)
-    .filter(([id,u]) => DATA.unit(id) && ((u.seen >= 4 && u.ok / u.seen < 0.62) || (u.shaky || 0) >= 1))
-    .map(([id,u]) => ({ id, rate: u.seen ? u.ok/u.seen : 0, seen:u.seen, shaky:u.shaky||0, d: Graph.depthOf(id) }))
-    .sort((a,b) => (b.shaky - a.shaky) || (a.rate - b.rate))
+    .filter(([id,u]) => DATA.unit(id) &&
+      ((u.seen >= 4 && u.ok / u.seen < 0.62) || (u.shaky || 0) >= 1 || (u.focus || 0) >= 1))
+    .map(([id,u]) => ({ id, rate: u.seen ? u.ok/u.seen : 0, seen:u.seen,
+                        shaky:u.shaky||0, focus:u.focus||0, d: Graph.depthOf(id) }))
+    // ①チェックで落としたもの ②測定で見つけた穴（土台に近い順） ③正答率の低い順
+    .sort((a,b) => (b.shaky - a.shaky) || (b.focus - a.focus)
+                || (a.focus && b.focus ? a.d - b.d : 0) || (a.rate - b.rate))
     .slice(0, max);
 }
 
@@ -357,15 +368,19 @@ function ladderFor(grade, n = 3) {
   return Store.shuffle(qs).slice(0, n);
 }
 // その学年を「だいたい分かっている」ことにする（箱3＝3日後）
-function assumeGrade(grade) {
+// skip に単元idを渡すと、その単元だけは飛ばさない。
+// （くわしく測るで落とした単元用。学年は飛ばしても、落とした単元は
+//   「分かっていること」にしてしまうと二度と出てこなくなる）
+function assumeGrade(grade, skip) {
   const cards = st().cards;
-  DATA.byArea(grade).forEach(u => qsOf(u.id).forEach(q => {
+  const skipSet = skip instanceof Set ? skip : new Set(skip || []);
+  DATA.byArea(grade).filter(u => !skipSet.has(u.id)).forEach(u => qsOf(u.id).forEach(q => {
     const c = cards[q.id] || (cards[q.id] = { box:0, due:Store.today(), seen:0, ok:0, ng:0, last:null, run:0 });
     if (c.box < 3) { c.box = 3; c.ok = Math.max(1, c.ok); c.seen = Math.max(1, c.seen);
                      c.due = Store.addDays(Store.today(), 3); }
   }));
   const u = st().units;
-  DATA.byArea(grade).forEach(x => {
+  DATA.byArea(grade).filter(x => !skipSet.has(x.id)).forEach(x => {
     const e = u[x.id] || (u[x.id] = { seen:0, ok:0 });
     e.seen = Math.max(e.seen, qsOf(x.id).length); e.ok = Math.max(e.ok, Math.round(qsOf(x.id).length*0.9));
   });
