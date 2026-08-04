@@ -91,12 +91,17 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {
     stall, checks, demotes };
 }
 
+/* 使い方: node tools/sim.js <1日の問題数,…> <日数> <素の正答率> <開始学年>
+   例:    node tools/sim.js 5,10,20 1080 0.65 g2                       */
 const rows = [];
+const P0 = Number(process.argv[4] || 0.80);
+const PLACE = process.argv[5] || 'g3';
 for (const perDay of (process.argv[2] || '3,5,8,10,15').split(',').map(Number)) {
-  const r = run({ days: Number(process.argv[3] || 1080), perDay });
+  const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE });
   rows.push(r);
   console.log(JSON.stringify(r));
 }
+console.log(`\n素の正答率 ${P0} ・ 開始 ${PLACE}`);
 console.log('\n1日の問題数 | ' + (Number(process.argv[3] || 1080) >= 365 ? '1年後' : '最終日') + 'の中受単元 | 中受30単元まで | 中受60/60まで | 全115単元まで | 停滞日');
 rows.forEach(r => console.log(
   `${String(r.perDay).padStart(2)}問 | ${String(r.y1_jk).padStart(2)}/60 | ` +
