@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>きろく・設定 — 算数マスター</title>
-<link rel="stylesheet" href="app/style.css?v=80">
+<link rel="stylesheet" href="app/style.css?v=81">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <meta name="theme-color" content="#ff8a3d">
@@ -31,6 +31,8 @@
     <div id="chart"></div>
     <div class="stats" style="margin-top:10px" id="sum"></div>
   </div>
+
+  <div class="card" id="today-card"></div>
 
   <div class="card" id="goal-card"></div>
 
@@ -143,34 +145,34 @@
   <a href="parent.html" class="on"><span class="i">👨‍👩‍👧</span>きろく</a>
 </nav>
 
-<script src="app/fig.js?v=80"></script>
-<script src="app/chara.js?v=80"></script>
-<script src="app/store.js?v=80"></script>
-<script src="app/quiz.js?v=80"></script>
-<script src="data/core.js?v=80"></script>
-<script src="questions/g1.js?v=80"></script>
-<script src="questions/g2.js?v=80"></script>
-<script src="questions/g3.js?v=80"></script>
-<script src="questions/g4.js?v=80"></script>
-<script src="questions/g5.js?v=80"></script>
-<script src="questions/g6.js?v=80"></script>
-<script src="data/elem.js?v=80"></script>
-<script src="data/jk-num.js?v=80"></script>
-<script src="data/jk-ratio.js?v=80"></script>
-<script src="data/jk-toku.js?v=80"></script>
-<script src="data/jk-speed.js?v=80"></script>
-<script src="data/jk-geo.js?v=80"></script>
-<script src="data/jk-calc.js?v=80"></script>
-<script src="data/jk-speed2.js?v=80"></script>
-<script src="data/jk-geo2.js?v=80"></script>
-<script src="data/jk-num2.js?v=80"></script>
-<script src="data/jk-drill.js?v=80"></script>
-<script src="data/hard.js?v=80"></script>
-<script src="data/graph.js?v=80"></script>
-<script src="app/modes.js?v=80"></script>
-<script src="app/mastery.js?v=80"></script>
-<script src="app/goal.js?v=80"></script>
-<script src="app/notice.js?v=80"></script>
+<script src="app/fig.js?v=81"></script>
+<script src="app/chara.js?v=81"></script>
+<script src="app/store.js?v=81"></script>
+<script src="app/quiz.js?v=81"></script>
+<script src="data/core.js?v=81"></script>
+<script src="questions/g1.js?v=81"></script>
+<script src="questions/g2.js?v=81"></script>
+<script src="questions/g3.js?v=81"></script>
+<script src="questions/g4.js?v=81"></script>
+<script src="questions/g5.js?v=81"></script>
+<script src="questions/g6.js?v=81"></script>
+<script src="data/elem.js?v=81"></script>
+<script src="data/jk-num.js?v=81"></script>
+<script src="data/jk-ratio.js?v=81"></script>
+<script src="data/jk-toku.js?v=81"></script>
+<script src="data/jk-speed.js?v=81"></script>
+<script src="data/jk-geo.js?v=81"></script>
+<script src="data/jk-calc.js?v=81"></script>
+<script src="data/jk-speed2.js?v=81"></script>
+<script src="data/jk-geo2.js?v=81"></script>
+<script src="data/jk-num2.js?v=81"></script>
+<script src="data/jk-drill.js?v=81"></script>
+<script src="data/hard.js?v=81"></script>
+<script src="data/graph.js?v=81"></script>
+<script src="app/modes.js?v=81"></script>
+<script src="app/mastery.js?v=81"></script>
+<script src="app/goal.js?v=81"></script>
+<script src="app/notice.js?v=81"></script>
 <script>
 (() => {
   const st = Store.state;
@@ -254,6 +256,54 @@
       Store.get('sound') === false ? 'off' : 'on', v => Store.set('sound', v === 'on'));
   seg(document.getElementById('set-read'), [['on','する'],['off','しない']],
       Store.get('autoRead') ? 'on' : 'off', v => Store.set('autoRead', v === 'on'));
+
+  /* ================= きょうの内わけ =================
+     「105問やった」の中身を出す。やさしい計算ばかりなのか、
+     ちゃんと新しい所に手が伸びているのかは、合計では分からない。   */
+  (() => {
+    const host = document.getElementById('today-card');
+    const today = Store.today();
+    const byId = {}; DATA.all().forEach(q => byId[q.id] = q);
+    const hit = Object.entries(st.cards)
+      .filter(([id, c]) => c.last === today && byId[id])
+      .map(([id, c]) => ({ q: byId[id], c }));
+
+    if (!hit.length) {
+      host.innerHTML = `<h2>📋 きょうの内わけ</h2><p class="muted">きょうはまだ記録がありません。</p>`;
+      return;
+    }
+    const lvName = lv => lv <= 2 ? 'やさしい（レベル1〜2）' : lv === 3 ? 'ふつう（レベル3）' : 'おうよう（レベル4〜）';
+    const group = (arr, f) => arr.reduce((m, x) => { const k = f(x); (m[k] = m[k] || []).push(x); return m; }, {});
+    const lvs = group(hit, x => lvName(x.q.lv || 1));
+    const areas = group(hit, x => { const u = DATA.unit(x.q.unit); return (DATA.AREAS[(u||{}).area] || {}).name || 'その他'; });
+    const fresh = hit.filter(x => x.c.seen <= 1).length;          // きょう はじめて出た問題
+    const row = (label, n, tone) => `<div style="margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;font-size:.85rem;font-weight:800">
+        <span>${label}</span><span class="muted">${n}問・${Math.round(n/hit.length*100)}%</span></div>
+      <div class="bar"><i style="width:${Math.round(n/hit.length*100)}%;background:${tone}"></i></div></div>`;
+
+    host.innerHTML = `<h2>📋 きょうの内わけ</h2>
+      <p class="muted" style="margin-bottom:10px">きょう解いた ${hit.length}問（同じ問題を2回やった場合は1問と数えます）の中身です。
+        「合計◯問」だけでは、やさしい計算をくり返しただけなのか分かりません。</p>
+      <div class="stats" style="margin-bottom:12px">
+        <div class="stat"><div class="ico">📝</div><div class="n">${st.day.done}</div><div class="l">きょうの<br>のべ問題数</div></div>
+        <div class="stat"><div class="ico">⭕️</div><div class="n">${st.day.done?Math.round(st.day.correct/st.day.done*100):0}%</div><div class="l">正答率</div></div>
+        <div class="stat crown"><div class="ico">✨</div><div class="n">${fresh}</div><div class="l">はじめて<br>出た問題</div></div>
+        <div class="stat coin"><div class="ico">📚</div><div class="n">${Object.keys(areas).length}</div><div class="l">ふれた<br>分野の数</div></div>
+      </div>
+      <h3>むずかしさの内わけ</h3>
+      ${['やさしい（レベル1〜2）','ふつう（レベル3）','おうよう（レベル4〜）']
+        .filter(k => lvs[k]).map(k => row(k, lvs[k].length,
+          k[0]==='や' ? 'var(--b)' : k[0]==='ふ' ? 'var(--c)' : 'var(--a)')).join('')}
+      <h3 style="margin-top:12px">分野の内わけ</h3>
+      ${Object.entries(areas).sort((a,b)=>b[1].length-a[1].length)
+        .map(([k,v]) => row(k, v.length, 'var(--b)')).join('')}
+      <div class="note b" style="text-align:left;margin-top:10px">
+        ${(lvs['やさしい（レベル1〜2）']||[]).length / hit.length >= 0.85
+          ? '★ ほとんどが <b>やさしい問題</b> でした。診断の直後や、下の学年をやり直している時期はこうなります。ここが何日も続くようなら、前提の穴が埋まっていないサインです。'
+          : '新しい所とやさしい所が混ざっています。土台なおしと前進の両方に手が伸びている状態です。'}
+      </div>`;
+  })();
 
   /* ================= 志望校ゴールと逆算 ================= */
   const V = { ok:['gl-ok','間に合う'], tight:['gl-tight','ぎりぎり'], behind:['gl-behind','遅れています'] };
