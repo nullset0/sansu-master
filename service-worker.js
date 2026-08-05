@@ -1,5 +1,5 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v75';
+const CACHE_NAME = 'sansu-master-v76';
 const ASSETS = [
   './', './index.html', './train.html', './sokutei.html', './learn.html', './zukan.html', './parent.html', './print.html',
   './manifest.json', './icon.svg',
@@ -18,7 +18,10 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       // 1つでも失敗したら全部落ちるのを防ぐ
-      Promise.all(ASSETS.map((a) => cache.add(a).catch(() => null)))
+      // {cache:'reload'} でブラウザのHTTPキャッシュを迂回する。
+      // 付けないと、install したのに古いJSを取りこんでしまう。
+      Promise.all(ASSETS.map((a) =>
+        cache.add(new Request(a, { cache: 'reload' })).catch(() => cache.add(a).catch(() => null))))
     )
   );
   self.skipWaiting();
