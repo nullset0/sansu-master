@@ -17,9 +17,15 @@ echo "  ローカル: $APP_DIR"
 echo "  VPS:    $VPS_HOST:$REMOTE_DIR"
 echo ""
 
-# 0. JS/CSS のURLに版を打つ（端末が古いJSを掴むのを防ぐ）
+# 0. 配る用の一時コピーを作り、そこにだけ版を打つ（作業ツリーは汚さない）
+STAGE="$(mktemp -d)/sansu-master"
+trap 'rm -rf "$(dirname "$STAGE")"' EXIT
+mkdir -p "$STAGE"
+rsync -a --exclude='.git' --exclude='deploy/' --exclude='tools/' \
+      --exclude='_figtest.html' --exclude='_simtest.html' --exclude='.DS_Store' \
+      "$APP_DIR/" "$STAGE/"
 if command -v node >/dev/null 2>&1; then
-  node "$APP_DIR/tools/stamp.js"
+  node "$APP_DIR/tools/stamp.js" "$STAGE"
 else
   echo "⚠️  node が無いので版打ちを飛ばします（古いJSが端末に残る可能性あり）"
 fi
@@ -31,10 +37,9 @@ ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/app"
 # 2. アプリ本体を rsync で転送
 echo "📤 アプリ本体を転送..."
 rsync -avz --delete \
-  --exclude='deploy/' --exclude='.DS_Store' --exclude='*.command' \
-  --exclude='_figtest.html' --exclude='_simtest.html' --exclude='tools/' --exclude='.git' \
+  --exclude='*.command' \
   -e "ssh -o StrictHostKeyChecking=accept-new" \
-  "$APP_DIR/" \
+  "$STAGE/" \
   "$VPS_HOST:$REMOTE_DIR/app/"
 
 # 3. compose.yaml と nginx.conf を転送

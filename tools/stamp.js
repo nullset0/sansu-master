@@ -4,12 +4,15 @@
    起きる（「きょうの5問」の白画面が、直した後も本番の端末で再現しつづけた）。
    URLが変われば必ず取り直されるので、この一手で丸ごと防げる。
 
-   使い方: node tools/stamp.js         … 版を1つ上げて全HTMLに打つ
-           node tools/stamp.js 123     … 版を指定して打つ                */
+   使い方: node tools/stamp.js <配る先ディレクトリ> [版]
+
+   ★ 作業ツリーは書き換えない。配る直前のコピーにだけ打つ。
+     リポジトリを書き換えると、デプロイのたびに差分が出てコミット漏れを生む。 */
 'use strict';
 const fs = require('fs'), path = require('path');
 const APP = path.join(__dirname, '..');
-const SW = path.join(APP, 'service-worker.js');
+const DEST = process.argv[2] && !/^\d+$/.test(process.argv[2]) ? process.argv[2] : APP;
+const SW = path.join(DEST, 'service-worker.js');
 
 const swSrc = fs.readFileSync(SW, 'utf8');
 const cur = Number((swSrc.match(/sansu-master-v(\d+)/) || [])[1] || 0);
@@ -23,7 +26,8 @@ try {
     .execSync('git rev-list --count HEAD', { cwd: APP, stdio: ['ignore','pipe','ignore'] })
     .toString().trim()) || 0;
 } catch (e) { /* gitが無い環境ではファイルの数字を使う */ }
-const ver = Number(process.argv[2]) || Math.max(counted, cur + 1);
+const ver = Number(process.argv[3]) || Number(/^\d+$/.test(process.argv[2] || '') ? process.argv[2] : 0)
+          || Math.max(counted, cur + 1);
 
 // 1) Service Worker の版と、precache するURLに版を打つ
 let sw = swSrc.replace(/sansu-master-v\d+/g, `sansu-master-v${ver}`);
@@ -32,10 +36,10 @@ sw = sw.replace(/'(\.\/app\/style\.css)(?:\?v=\d+)?'/g, `'$1?v=${ver}'`);
 fs.writeFileSync(SW, sw);
 
 // 2) 各HTMLの <script src> と <link href> に版を打つ
-const htmls = fs.readdirSync(APP).filter(f => f.endsWith('.html') && !f.startsWith('_'));
+const htmls = fs.readdirSync(DEST).filter(f => f.endsWith('.html') && !f.startsWith('_'));
 let touched = 0;
 htmls.forEach(f => {
-  const p = path.join(APP, f);
+  const p = path.join(DEST, f);
   const before = fs.readFileSync(p, 'utf8');
   const after = before
     .replace(/(src=")((?:app|data|questions)\/[^"?]+\.js)(?:\?v=\d+)?(")/g, `$1$2?v=${ver}$3`)
