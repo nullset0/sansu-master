@@ -135,6 +135,13 @@
     setHead('🧠 なぜ？チェック', `${u.name} — 答えは出さなくていい`);
     const hasSteps = DATA.byUnit(uid).filter(q => q.steps && q.steps.length >= 3 && q.steps.length <= 5).length >= 2;
     const nPat = hasSteps ? 3 : 4;
+    // 「何算か」を問う素材が無い単元は、チェックのしようがない（URLで直接
+    // 指定されたとき用の逃げ道。素材が無いと patternPick が何も出さずに止まる）
+    if (!DATA.byUnit(uid).filter(q => q.pattern).length) {
+      host.innerHTML = `<div class="card"><p class="muted">${u.name} は「なぜ？チェック」の対象ではありません。</p>`
+        + '<a class="btn wide" href="index.html">🏠 ホームへ</a></div>';
+      return;
+    }
 
     const intro = () => {
       host.innerHTML = `<div class="card" style="text-align:center">

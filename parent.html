@@ -315,9 +315,14 @@
     if (!g) {
       host.innerHTML = `<h2>🎓 志望校</h2>
         <p class="muted" style="margin-bottom:10px">志望校を決めると、入試日から逆算して「1日に何問やれば間に合うか」を毎日出します。</p>
-        ${Goal.schools().map(x=>`<button class="btn wide blue gl-set" data-id="${x.id}">${x.name} にする（偏差値 ${x.hensachi}）</button>`).join('')}`;
+        <div class="gl-row"><span class="gl-k">いまの学年</span>
+          <select class="in" id="gl-grade" style="max-width:9em">
+            ${[1,2,3,4,5,6].map(g=>`<option value="${g}"${g===4?' selected':''}>小${g}</option>`).join('')}
+          </select>
+          <span class="muted" style="font-size:.8rem">入試の年を決めるのに使います</span></div>
+        ${Goal.schools().map(x=>`<button class="btn wide blue gl-set" data-id="${x.id}" style="margin-top:8px">${x.name} にする（偏差値 ${x.hensachi}）</button>`).join('')}`;
       host.querySelectorAll('.gl-set').forEach(b => b.onclick = () => {
-        const grade = Number(prompt('いまの学年を数字で（例：4）', '4')) || 4;
+        const grade = Number(document.getElementById('gl-grade').value) || 4;
         Goal.set(b.dataset.id, null, grade); renderGoal();
       });
       return;
