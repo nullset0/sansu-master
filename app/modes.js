@@ -148,7 +148,10 @@ function timeAttack(host, opts = {}) {
 function patternPick(host, opts = {}) {
   const n = opts.n || 8;
   const st = Store.state;
-  const withP = DATA.all().filter(q => q.pattern && q.unit.indexOf('jk-') === 0);
+  // opts.unit を渡すと その単元だけから出す（単元ごとの「なぜ？チェック」用）
+  const withP = opts.unit
+    ? DATA.byUnit(opts.unit).filter(q => q.pattern)
+    : DATA.all().filter(q => q.pattern && q.unit.indexOf('jk-') === 0);
   // すでに一度は解いた問題を優先（知らない型は当てられない）
   const known = withP.filter(q => st.cards[q.id] && st.cards[q.id].seen);
   const list = Store.shuffle(known.length >= n ? known : withP).slice(0, n);
@@ -207,6 +210,7 @@ function patternPick(host, opts = {}) {
     window.scrollTo({top:0,behavior:'smooth'});
   }
   function finish() {
+    if (opts.onDone) return opts.onDone({ ok, total: list.length });
     const rate = Math.round(ok/list.length*100);
     Store.touchStreak();
     Store.markTraining('pattern');
@@ -230,7 +234,8 @@ function patternPick(host, opts = {}) {
 function stepOrder(host, opts = {}) {
   const n = opts.n || 5;
   const st = Store.state;
-  const src = DATA.all().filter(q => q.steps && q.steps.length >= 3 && q.steps.length <= 5);
+  const pool = opts.unit ? DATA.byUnit(opts.unit) : DATA.all();
+  const src = pool.filter(q => q.steps && q.steps.length >= 3 && q.steps.length <= 5);
   const known = src.filter(q => st.cards[q.id] && st.cards[q.id].seen);
   const list = Store.shuffle(known.length >= n ? known : src).slice(0, n);
   if (!list.length) { host.innerHTML = '<div class="card"><p class="muted">まだ問題がありません。</p></div>'; return; }
@@ -287,6 +292,7 @@ function stepOrder(host, opts = {}) {
     window.scrollTo({top:0,behavior:'smooth'});
   }
   function finish() {
+    if (opts.onDone) return opts.onDone({ ok, total: list.length });
     Store.touchStreak();
     Store.markTraining('steps');
     const rate = Math.round(ok/list.length*100);

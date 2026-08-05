@@ -15,6 +15,7 @@ const Mastery = (() => {
 
 const BASIC = q => (q.lv || 1) <= 2;
 const APPLY = q => (q.lv || 1) >= 4;
+const EXPLAIN_MIN = 0.7;    // 「なぜ？チェック」で7割とれたら、説明できているとみなす
 
 const MAX_ACTIVE   = 3;     // 同時に進める単元の数（散らかさない）
 const DONE_U = 0.90, DONE_A = 0.70, DONE_R = 0.55;
@@ -22,6 +23,37 @@ const OPEN_U = 0.80, OPEN_R = 0.40;
 
 const st = () => Store.state;
 const qsOf = id => DATA.byUnit(id);
+
+/* ---------- 本質の層：「解ける」だけでなく「なぜ」が言えるか ----------
+   答えが合うだけの状態を「済」にすると、初見の問題で崩れる。
+   中受範囲の単元は、道具えらび（何算かを見ぬく）と手順ならべかえに
+   受かってはじめて済にする。素材が無い単元には課さない。
+------------------------------------------------------------ */
+function needsExplain(id) {
+  const u = DATA.unit(id);
+  if (!u || u.area.indexOf('jk') !== 0) return false;
+  return qsOf(id).filter(q => q.pattern).length >= 3;
+}
+function explainOf(id) { return (st().units[id] || {}).explain || null; }
+function explainOK(id) {
+  if (!needsExplain(id)) return true;
+  const e = explainOf(id);
+  return !!(e && e.total && e.ok / e.total >= EXPLAIN_MIN);
+}
+// 何度でも挑戦できる。いちばん良い結果を残す
+function recordExplain(id, ok, total) {
+  if (!total) return explainOK(id);
+  const U = st().units, e = U[id] || (U[id] = { seen:0, ok:0 });
+  const prev = e.explain;
+  if (!prev || !prev.total || ok / total >= prev.ok / prev.total)
+    e.explain = { ok, total, at: Store.today() };
+  Store.save();
+  return explainOK(id);
+}
+// 3層そろったのに説明がまだ＝「なぜ？チェック」を出すべき単元
+function explainDue(max = 3) {
+  return DATA.units.filter(u => unitState(u.id).waitingExplain).slice(0, max).map(u => u.id);
+}
 
 /* ---------- 単元の状態 ----------
    104単元 × 問題数 を毎回なめると重いので、状態が変わるまでは結果を使い回す */
@@ -51,10 +83,13 @@ function computeUnitState(id) {
   const retain = sum / qs.length;
 
   const seen = qs.filter(q => cards[q.id] && cards[q.id].seen).length;
-  const done = understand >= DONE_U && apply >= DONE_A && retain >= DONE_R;
+  const layers = understand >= DONE_U && apply >= DONE_A && retain >= DONE_R;
+  const exOK = explainOK(id);
+  const done = layers && exOK;
   if (done) markDone(id);
-  return { understand, retain, apply, done, started: seen > 0, seen, total: qs.length,
-           open: isOpen(id) };
+  return { understand, retain, apply, done, explain: exOK,
+           waitingExplain: layers && !exOK,      // 練習ではなくチェック待ち
+           started: seen > 0, seen, total: qs.length, open: isOpen(id) };
 }
 
 function isOpen(id) {
@@ -94,7 +129,9 @@ function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
-    .filter(x => x.s.open && !x.s.done)
+    // チェック待ちは「練習が足りない」わけではないので、いま取り組む枠からは外す。
+    // 外さないと3枠を占領して前進が止まる。
+    .filter(x => x.s.open && !x.s.done && !x.s.waitingExplain)
     // ① やりかけを優先 ② 前提の浅い（＝準備ができている）順
     // ③ 同じ深さなら 学年・分野の順 ④ やさしいレベルから
     // 学年ではなく「前提が満たされたか」で並ぶので、自然に上の学年へ入っていく
@@ -138,6 +175,7 @@ function weakUnits(max = 5) {
 ------------------------------------------------------------ */
 function plan(count) {
   Store.rollDay();
+  st().day.units = doneUnits().length;   // 「済単元数の推移」を残すため、毎日ここで拾う
   const cards = st().cards, today = Store.today();
   const out = [], used = new Set();
   const push = (q, why, cap) => {
@@ -405,6 +443,7 @@ function summary() {
 return { unitState, isOpen, frontier, weakSpots, weakUnits, plan, phaseOf,
          checkDue, buildCheck, finishCheck, demote, doneUnits,
          GRADES, ladderFor, assumeGrade, placementDone, summary, markDone, trainingDue, TRAINING,
+         needsExplain, explainOK, explainOf, recordExplain, explainDue, EXPLAIN_MIN,
          BASIC, APPLY };
 })();
 if (typeof window !== 'undefined') window.Mastery = Mastery;

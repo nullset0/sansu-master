@@ -22,11 +22,13 @@ const DEFAULTS = {
   v: 2,
   settings: { dailyGoal:5, sound:true, speak:false, autoRead:false, numpad:true, hardMode:false, home:'g4' },
   cards: {}, units: {}, badges: {},
-  day: { date: today(), done:0, correct:0, coins:0 },
+  day: { date: today(), done:0, correct:0, coins:0, ms:0, units:0 },
   streak: { n:0, last:null, best:0 },
   coins: 0, xp: 0,
   wrong: [],          // まちがいノート（qid の配列・新しい順）
-  history: [],        // [{d, done, correct}]
+  history: [],        // [{d, done, correct, ms, units}] ms=その日の学習時間(ミリ秒)
+  mocks: [],          // 塾の公開テストの記録 [{d, name, hensachi, rank, of, score, note}]
+  goal: null,         // 志望校（app/goal.js が読む）
   chara: 'pika',
   unlocked: ['pika'],
 };
@@ -62,10 +64,11 @@ function rollDay() {
   const t = today();
   if (S.day.date !== t) {
     if (S.day.done > 0) {
-      S.history.push({ d:S.day.date, done:S.day.done, correct:S.day.correct });
+      S.history.push({ d:S.day.date, done:S.day.done, correct:S.day.correct,
+                       ms:S.day.ms || 0, units:S.day.units || 0 });
       if (S.history.length > 400) S.history = S.history.slice(-400);
     }
-    S.day = { date:t, done:0, correct:0, coins:0 };
+    S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0 };
     save();
   }
 }
@@ -84,6 +87,13 @@ function grade(qid, correct, unitId, opts = {}) {
   rollDay();
   const c = card(qid);
   c.seen++; c.last = today();
+  // かかった時間。処理速度は入試で効くので、1問ずつ残して単元べつに平均を出す。
+  // 考えこんで放置した時間まで足すと平均が壊れるので、1問5分で頭打ちにする。
+  const ms = Math.min(Number(opts.ms) || 0, 300000);
+  if (ms > 0) {
+    c.ms = Math.round(((c.ms || 0) * Math.max(0, c.seen - 1) + ms) / c.seen);   // カードごとの平均
+    S.day.ms = (S.day.ms || 0) + ms;
+  }
   const usedHint = !!opts.usedHint;
   if (correct) {
     c.ok++; c.run++;
@@ -102,6 +112,7 @@ function grade(qid, correct, unitId, opts = {}) {
   if (unitId) {
     const u = S.units[unitId] || (S.units[unitId] = { seen:0, ok:0, mastered:0 });
     u.seen++; if (correct) u.ok++;
+    if (ms > 0) { u.ms = (u.ms || 0) + ms; u.msN = (u.msN || 0) + 1; }
   }
   S.day.done++; if (correct) S.day.correct++;
   const gain = correct ? (usedHint ? 4 : (c.box >= 4 ? 12 : 8)) : 1;
@@ -285,6 +296,25 @@ function set(k, v) { S.settings[k] = v; save(); }
 const get = k => S.settings[k];
 
 /* ---------- ふりかえり（おうちの人むけ） ---------- */
+/* ---------- 塾の公開テストの記録（手入力） ---------- */
+function addMock(m) {
+  S.mocks = (S.mocks || []).concat([Object.assign({ d: today() }, m)])
+    .sort((a,b) => a.d < b.d ? -1 : 1).slice(-60);
+  save(); return S.mocks;
+}
+function removeMock(i) { (S.mocks || []).splice(i, 1); save(); }
+
+/* 直近 n 日ぶんの記録（きょうを含む）。無い日は 0 で埋める */
+function lastDays(n) {
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = addDays(today(), -i);
+    if (d === today()) out.push({ d, done:S.day.done, correct:S.day.correct, ms:S.day.ms||0, units:S.day.units||0 });
+    else { const h = S.history.find(x => x.d === d); out.push(h || { d, done:0, correct:0, ms:0, units:0 }); }
+  }
+  return out;
+}
+
 function last14() {
   const out = [];
   for (let i=13;i>=0;i--) {
@@ -309,7 +339,8 @@ return {
   get state(){ return S; },
   save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
-  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, weakUnits,
+  BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
+  addMock, removeMock,
   reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note, markTraining,
   get rev(){ return REV; },
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },

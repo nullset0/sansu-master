@@ -4,11 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>きろく・設定 — 算数マスター</title>
-<link rel="stylesheet" href="app/style.css?v=78">
+<link rel="stylesheet" href="app/style.css?v=81">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <meta name="theme-color" content="#ff8a3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  .in { width:100%; padding:9px 10px; border:1px solid var(--ln,#e5e5e5); border-radius:10px;
+        font-size:.9rem; font-family:inherit; background:#fff; box-sizing:border-box }
+  .gl-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--ln,#f0f0f0) }
+  .gl-row:last-child { border-bottom:0 }
+  .gl-k { font-size:.8rem; color:var(--sub); font-weight:800; min-width:8.5em }
+  .gl-v { font-weight:900 }
+  .gl-ok { color:#16a34a } .gl-tight { color:#d97706 } .gl-behind { color:#dc2626 }
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -21,6 +30,31 @@
     <h2>📅 この2週間</h2>
     <div id="chart"></div>
     <div class="stats" style="margin-top:10px" id="sum"></div>
+  </div>
+
+  <div class="card" id="today-card"></div>
+
+  <div class="card" id="goal-card"></div>
+
+  <div class="card">
+    <h2>📈 学力の推移（週ごと）</h2>
+    <p class="muted" style="margin-bottom:10px">問題数・正答率・学習時間・クリア単元の伸びを並べています。1週間の合計です。</p>
+    <div style="overflow:auto"><table class="t" id="trend"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>📝 塾のテストの記録</h2>
+    <p class="muted" style="margin-bottom:10px">馬渕などの公開テストの結果を入れておくと、アプリの中の伸びと外の結果を並べて見られます。</p>
+    <div id="mock-list"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <input class="in" id="mk-d" type="date" placeholder="日付">
+      <input class="in" id="mk-name" type="text" placeholder="テスト名（例：馬渕公開）">
+      <input class="in" id="mk-h" type="number" step="0.1" placeholder="偏差値">
+      <input class="in" id="mk-s" type="number" placeholder="算数の点">
+      <input class="in" id="mk-r" type="number" placeholder="順位">
+      <input class="in" id="mk-of" type="number" placeholder="受験者数">
+    </div>
+    <button class="btn wide" id="mk-add" style="margin-top:8px">＋ 記録する</button>
   </div>
 
   <div class="card">
@@ -111,32 +145,34 @@
   <a href="parent.html" class="on"><span class="i">👨‍👩‍👧</span>きろく</a>
 </nav>
 
-<script src="app/fig.js?v=78"></script>
-<script src="app/chara.js?v=78"></script>
-<script src="app/store.js?v=78"></script>
-<script src="app/quiz.js?v=78"></script>
-<script src="data/core.js?v=78"></script>
-<script src="questions/g1.js?v=78"></script>
-<script src="questions/g2.js?v=78"></script>
-<script src="questions/g3.js?v=78"></script>
-<script src="questions/g4.js?v=78"></script>
-<script src="questions/g5.js?v=78"></script>
-<script src="questions/g6.js?v=78"></script>
-<script src="data/elem.js?v=78"></script>
-<script src="data/jk-num.js?v=78"></script>
-<script src="data/jk-ratio.js?v=78"></script>
-<script src="data/jk-toku.js?v=78"></script>
-<script src="data/jk-speed.js?v=78"></script>
-<script src="data/jk-geo.js?v=78"></script>
-<script src="data/jk-calc.js?v=78"></script>
-<script src="data/jk-speed2.js?v=78"></script>
-<script src="data/jk-geo2.js?v=78"></script>
-<script src="data/jk-num2.js?v=78"></script>
-<script src="data/jk-drill.js?v=78"></script>
-<script src="data/hard.js?v=78"></script>
-<script src="data/graph.js?v=78"></script>
-<script src="app/modes.js?v=78"></script>
-<script src="app/mastery.js?v=78"></script>
+<script src="app/fig.js?v=81"></script>
+<script src="app/chara.js?v=81"></script>
+<script src="app/store.js?v=81"></script>
+<script src="app/quiz.js?v=81"></script>
+<script src="data/core.js?v=81"></script>
+<script src="questions/g1.js?v=81"></script>
+<script src="questions/g2.js?v=81"></script>
+<script src="questions/g3.js?v=81"></script>
+<script src="questions/g4.js?v=81"></script>
+<script src="questions/g5.js?v=81"></script>
+<script src="questions/g6.js?v=81"></script>
+<script src="data/elem.js?v=81"></script>
+<script src="data/jk-num.js?v=81"></script>
+<script src="data/jk-ratio.js?v=81"></script>
+<script src="data/jk-toku.js?v=81"></script>
+<script src="data/jk-speed.js?v=81"></script>
+<script src="data/jk-geo.js?v=81"></script>
+<script src="data/jk-calc.js?v=81"></script>
+<script src="data/jk-speed2.js?v=81"></script>
+<script src="data/jk-geo2.js?v=81"></script>
+<script src="data/jk-num2.js?v=81"></script>
+<script src="data/jk-drill.js?v=81"></script>
+<script src="data/hard.js?v=81"></script>
+<script src="data/graph.js?v=81"></script>
+<script src="app/modes.js?v=81"></script>
+<script src="app/mastery.js?v=81"></script>
+<script src="app/goal.js?v=81"></script>
+<script src="app/notice.js?v=81"></script>
 <script>
 (() => {
   const st = Store.state;
@@ -220,6 +256,155 @@
       Store.get('sound') === false ? 'off' : 'on', v => Store.set('sound', v === 'on'));
   seg(document.getElementById('set-read'), [['on','する'],['off','しない']],
       Store.get('autoRead') ? 'on' : 'off', v => Store.set('autoRead', v === 'on'));
+
+  /* ================= きょうの内わけ =================
+     「105問やった」の中身を出す。やさしい計算ばかりなのか、
+     ちゃんと新しい所に手が伸びているのかは、合計では分からない。   */
+  (() => {
+    const host = document.getElementById('today-card');
+    const today = Store.today();
+    const byId = {}; DATA.all().forEach(q => byId[q.id] = q);
+    const hit = Object.entries(st.cards)
+      .filter(([id, c]) => c.last === today && byId[id])
+      .map(([id, c]) => ({ q: byId[id], c }));
+
+    if (!hit.length) {
+      host.innerHTML = `<h2>📋 きょうの内わけ</h2><p class="muted">きょうはまだ記録がありません。</p>`;
+      return;
+    }
+    const lvName = lv => lv <= 2 ? 'やさしい（レベル1〜2）' : lv === 3 ? 'ふつう（レベル3）' : 'おうよう（レベル4〜）';
+    const group = (arr, f) => arr.reduce((m, x) => { const k = f(x); (m[k] = m[k] || []).push(x); return m; }, {});
+    const lvs = group(hit, x => lvName(x.q.lv || 1));
+    const areas = group(hit, x => { const u = DATA.unit(x.q.unit); return (DATA.AREAS[(u||{}).area] || {}).name || 'その他'; });
+    const fresh = hit.filter(x => x.c.seen <= 1).length;          // きょう はじめて出た問題
+    const row = (label, n, tone) => `<div style="margin-bottom:7px">
+      <div style="display:flex;justify-content:space-between;font-size:.85rem;font-weight:800">
+        <span>${label}</span><span class="muted">${n}問・${Math.round(n/hit.length*100)}%</span></div>
+      <div class="bar"><i style="width:${Math.round(n/hit.length*100)}%;background:${tone}"></i></div></div>`;
+
+    host.innerHTML = `<h2>📋 きょうの内わけ</h2>
+      <p class="muted" style="margin-bottom:10px">きょう解いた ${hit.length}問（同じ問題を2回やった場合は1問と数えます）の中身です。
+        「合計◯問」だけでは、やさしい計算をくり返しただけなのか分かりません。</p>
+      <div class="stats" style="margin-bottom:12px">
+        <div class="stat"><div class="ico">📝</div><div class="n">${st.day.done}</div><div class="l">きょうの<br>のべ問題数</div></div>
+        <div class="stat"><div class="ico">⭕️</div><div class="n">${st.day.done?Math.round(st.day.correct/st.day.done*100):0}%</div><div class="l">正答率</div></div>
+        <div class="stat crown"><div class="ico">✨</div><div class="n">${fresh}</div><div class="l">はじめて<br>出た問題</div></div>
+        <div class="stat coin"><div class="ico">📚</div><div class="n">${Object.keys(areas).length}</div><div class="l">ふれた<br>分野の数</div></div>
+      </div>
+      <h3>むずかしさの内わけ</h3>
+      ${['やさしい（レベル1〜2）','ふつう（レベル3）','おうよう（レベル4〜）']
+        .filter(k => lvs[k]).map(k => row(k, lvs[k].length,
+          k[0]==='や' ? 'var(--b)' : k[0]==='ふ' ? 'var(--c)' : 'var(--a)')).join('')}
+      <h3 style="margin-top:12px">分野の内わけ</h3>
+      ${Object.entries(areas).sort((a,b)=>b[1].length-a[1].length)
+        .map(([k,v]) => row(k, v.length, 'var(--b)')).join('')}
+      <div class="note b" style="text-align:left;margin-top:10px">
+        ${(lvs['やさしい（レベル1〜2）']||[]).length / hit.length >= 0.85
+          ? '★ ほとんどが <b>やさしい問題</b> でした。診断の直後や、下の学年をやり直している時期はこうなります。ここが何日も続くようなら、前提の穴が埋まっていないサインです。'
+          : '新しい所とやさしい所が混ざっています。土台なおしと前進の両方に手が伸びている状態です。'}
+      </div>`;
+  })();
+
+  /* ================= 志望校ゴールと逆算 ================= */
+  const V = { ok:['gl-ok','間に合う'], tight:['gl-tight','ぎりぎり'], behind:['gl-behind','遅れています'] };
+  const mmss = sec => sec == null ? '—' : (sec >= 60 ? `${Math.floor(sec/60)}分${sec%60}秒` : `${sec}秒`);
+
+  function renderGoal() {
+    const host = document.getElementById('goal-card');
+    const g = Goal.get();
+    if (!g) {
+      host.innerHTML = `<h2>🎓 志望校</h2>
+        <p class="muted" style="margin-bottom:10px">志望校を決めると、入試日から逆算して「1日に何問やれば間に合うか」を毎日出します。</p>
+        <div class="gl-row"><span class="gl-k">いまの学年</span>
+          <select class="in" id="gl-grade" style="max-width:9em">
+            ${[1,2,3,4,5,6].map(g=>`<option value="${g}"${g===4?' selected':''}>小${g}</option>`).join('')}
+          </select>
+          <span class="muted" style="font-size:.8rem">入試の年を決めるのに使います</span></div>
+        ${Goal.schools().map(x=>`<button class="btn wide blue gl-set" data-id="${x.id}" style="margin-top:8px">${x.name} にする（偏差値 ${x.hensachi}）</button>`).join('')}`;
+      host.querySelectorAll('.gl-set').forEach(b => b.onclick = () => {
+        const grade = Number(document.getElementById('gl-grade').value) || 4;
+        Goal.set(b.dataset.id, null, grade); renderGoal();
+      });
+      return;
+    }
+    const s = Goal.state();
+    const [cls, word] = V[s.verdict];
+    const months = (s.daysLeft/30.4).toFixed(1);
+    const sp = s.speed;
+    host.innerHTML = `
+      <h2>🎓 ${s.sch.name}まで</h2>
+      <p class="muted" style="margin-bottom:10px">${s.sch.note}<br>算数 ${s.sch.math.minutes}分 ${s.sch.math.points}点・合格ラインは得点率${Math.round(s.sch.passRate*100)}%前後。</p>
+      <div class="stats" style="margin-bottom:10px">
+        <div class="stat"><div class="ico">📅</div><div class="n">${s.daysLeft}</div><div class="l">入試まで日<br>${s.exam}</div></div>
+        <div class="stat crown"><div class="ico">🎯</div><div class="n">${s.pct}%</div><div class="l">必要単元の到達<br>${s.doneTotal}/${s.needTotal}</div></div>
+        <div class="stat ${s.verdict==='ok'?'':'hot'}"><div class="ico">📝</div><div class="n">${s.perDayNeeded}</div><div class="l">1日に必要な<br>問題数</div></div>
+        <div class="stat coin"><div class="ico">⚡️</div><div class="n">${s.perDayNow}</div><div class="l">いまのペース<br>（3週平均）</div></div>
+      </div>
+      <div class="gl-row"><span class="gl-k">判定</span><span class="gl-v ${cls}">${word}</span>
+        <span class="muted" style="font-size:.8rem">必要 ${s.perDayNeeded}問/日 に対して いま ${s.perDayNow}問/日</span></div>
+      <div class="gl-row"><span class="gl-k">残りの量</span><span class="gl-v">${s.attemptsLeft.toLocaleString()}問</span>
+        <span class="muted" style="font-size:.8rem">残り${s.left}単元 × 1単元あたり${s.perUnit}問（正答率${s.rate==null?'—':Math.round(s.rate*100)+'%'}での実測値）</span></div>
+      <div class="gl-row"><span class="gl-k">終わる時期</span><span class="gl-v">${s.finishAtNow?Math.round(s.finishAtNow/30.4)+'ヶ月後':'—'}</span>
+        <span class="muted" style="font-size:.8rem">設定どおり${s.goalSet}問なら ${Math.round(s.finishAtGoal/30.4)}ヶ月後・入試まで${months}ヶ月</span></div>
+      <div class="gl-row"><span class="gl-k">1問の時間</span><span class="gl-v ${sp.ok===null?'':(sp.ok?'gl-ok':'gl-behind')}">${mmss(sp.avgSec)}</span>
+        <span class="muted" style="font-size:.8rem">入試の目安 ${mmss(sp.targetSec)}／問（${s.sch.math.minutes}分で${s.sch.math.items}問と仮定）${sp.n<20?'・まだ計測中':''}</span></div>
+
+      <h3 style="margin-top:14px">分野べつの到達（出題の多い順）</h3>
+      ${s.areaRows.map(a => `<div style="margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800">
+          <span>${a.name}${a.w>=1.4?' <span style="color:var(--a)">★よく出る</span>':''}</span>
+          <span class="muted">${a.done}/${a.total}</span></div>
+        <div class="bar"><i style="width:${Math.round(a.done/a.total*100)}%;background:${a.w>=1.4?'var(--a)':'var(--b)'}"></i></div>
+      </div>`).join('')}
+      <button class="btn ghost sm" id="gl-clear" style="margin-top:10px">志望校をやめる</button>`;
+    document.getElementById('gl-clear').onclick = () => { if (confirm('志望校の設定を消しますか？')) { Goal.clear(); renderGoal(); } };
+  }
+  renderGoal();
+
+  /* ================= 学力の推移（週ごと） ================= */
+  (() => {
+    const w = Goal.weekly(12).filter(x => x.done > 0 || x.units > 0);
+    const t = document.getElementById('trend');
+    if (!w.length) { t.outerHTML = '<p class="muted">まだ記録がありません。</p>'; return; }
+    t.innerHTML = '<tr><th>週</th><th>問題数</th><th>正答率</th><th>学習時間</th><th>やった日</th><th>クリア単元</th></tr>'
+      + w.map((x,i) => {
+          const prev = i ? w[i-1] : null;
+          const up = prev ? x.units - prev.units : 0;
+          return `<tr><td>${x.from.slice(5)}〜</td><td>${x.done}</td>
+            <td>${x.rate==null?'—':Math.round(x.rate*100)+'%'}</td>
+            <td>${x.min}分</td><td>${x.activeDays}/7</td>
+            <td>${x.units}${up>0?` <span style="color:#16a34a;font-weight:800">+${up}</span>`:''}</td></tr>`;
+        }).join('');
+  })();
+
+  /* ================= 塾のテストの記録 ================= */
+  function renderMocks() {
+    const list = document.getElementById('mock-list');
+    const ms = (Store.state.mocks || []);
+    list.innerHTML = ms.length ? ms.slice().reverse().map((m, ri) => {
+      const i = ms.length - 1 - ri;
+      return `<div class="gl-row"><span class="gl-k">${m.d}</span>
+        <span class="gl-v" style="flex:1">${m.name || 'テスト'}
+          ${m.hensachi ? `<span style="color:var(--a)">偏差値${m.hensachi}</span>` : ''}
+          ${m.score ? ` 算数${m.score}点` : ''}
+          ${m.rank && m.of ? ` ${m.rank}/${m.of}位（上位${Math.round(m.rank/m.of*100)}%）` : ''}</span>
+        <button class="btn ghost sm mk-del" data-i="${i}">消す</button></div>`;
+    }).join('') : '<p class="muted">まだ記録がありません。</p>';
+    list.querySelectorAll('.mk-del').forEach(b => b.onclick = () => {
+      Store.removeMock(Number(b.dataset.i)); renderMocks();
+    });
+  }
+  renderMocks();
+  document.getElementById('mk-add').onclick = () => {
+    const num = id => { const v = document.getElementById(id).value; return v === '' ? null : Number(v); };
+    const d = document.getElementById('mk-d').value || Store.today();
+    const name = document.getElementById('mk-name').value.trim();
+    const h = num('mk-h'), sc = num('mk-s'), r = num('mk-r'), of = num('mk-of');
+    if (h == null && sc == null && r == null) { Quiz.toast('偏差値か点数か順位のどれかを入れてください'); return; }
+    Store.addMock({ d, name, hensachi:h, score:sc, rank:r, of });
+    ['mk-name','mk-h','mk-s','mk-r','mk-of'].forEach(id => document.getElementById(id).value = '');
+    renderMocks(); Quiz.toast('記録しました');
+  };
 
   // データ
   document.getElementById('exp').onclick = async () => {

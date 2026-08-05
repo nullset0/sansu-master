@@ -13,7 +13,17 @@ const SW = path.join(APP, 'service-worker.js');
 
 const swSrc = fs.readFileSync(SW, 'utf8');
 const cur = Number((swSrc.match(/sansu-master-v(\d+)/) || [])[1] || 0);
-const ver = Number(process.argv[2]) || cur + 1;
+
+// 版はコミット数から作る。ファイルに書いた数字を1つずつ上げる方式だと、
+// デプロイで書き換えたぶんをコミットし忘れた瞬間に版が巻き戻り、
+// 古い版と新しい中身が同じURLで衝突する。コミット数なら必ず増える。
+let counted = 0;
+try {
+  counted = Number(require('child_process')
+    .execSync('git rev-list --count HEAD', { cwd: APP, stdio: ['ignore','pipe','ignore'] })
+    .toString().trim()) || 0;
+} catch (e) { /* gitが無い環境ではファイルの数字を使う */ }
+const ver = Number(process.argv[2]) || Math.max(counted, cur + 1);
 
 // 1) Service Worker の版と、precache するURLに版を打つ
 let sw = swSrc.replace(/sansu-master-v\d+/g, `sansu-master-v${ver}`);
