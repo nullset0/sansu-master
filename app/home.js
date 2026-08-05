@@ -11,7 +11,8 @@ const who = st.chara || 'pika';
 /* ---- あいさつ ---- */
 const h = new Date().getHours();
 const greet = h < 9 ? 'おはよう！' : h < 17 ? 'こんにちは！' : h < 20 ? 'おかえり！' : 'こんばんは！';
-// 1日の量は志望校から自動で決まる（「おまかせ」のとき）。手で決めていればそれに従う。
+// 1日の量は入試日からの逆算で自動的に決まる（「おまかせ」のとき）。
+// 子どもには数だけ見せる。目標校も残り日数も画面には出さない。
 const goal = (typeof Goal !== 'undefined' && Goal.dailyCount()) || Number(Store.get('dailyGoal')) || 5;
 const left = Math.max(0, goal - st.day.done);
 const expr = left === 0 ? 'excited' : (h >= 21 ? 'sleep' : 'happy');
@@ -79,32 +80,6 @@ if (tr && Mastery.placementDone() && !due) {
       ${Chara.tag(who,'wink', say, 92)}
       <a class="btn wide blue" href="train.html?mode=${tr.mode}" style="margin-top:8px">▶︎ ${esc(tr.name)}をやる（3〜5分）</a>
       <p class="muted" style="text-align:center;margin-top:8px">${esc(tr.why)}</p>
-    </div>`;
-}
-
-/* ---- ③-b 志望校まで（決めていれば）---- */
-if (typeof Goal !== 'undefined' && Goal.get()) {
-  const gs = Goal.state();
-  const word = { ok:['間に合う','#16a34a'], tight:['ぎりぎり','#d97706'], behind:['ペースが足りない','#dc2626'] }[gs.verdict];
-  // 数字をにらませない。「きょうの分をやれば届く」かどうかだけ言う。
-  const auto = Store.get('dailyGoal') === 'auto';
-  const line = gs.left <= 0
-    ? `${esc(gs.sch.name)}に必要な単元は ぜんぶ終わっています。あとは仕上げ。`
-    : auto
-      ? `<b>きょうの${goal}問</b>は、${esc(gs.sch.name)}に間に合うように毎日決めています。これをやっていけば届きます。`
-      : `${esc(gs.sch.name)}に間に合わせるなら <b>1日${gs.perDayNeeded}問</b>。いまは1日${gs.perDayNow}問です。`;
-  const warn = (!auto && gs.verdict === 'behind')
-      ? `<p class="muted" style="margin:8px 0 0;color:#dc2626;font-weight:800">いまのペースだと間に合いません。「おまかせ」にすると自動で合わせます。</p>`
-      : (auto && gs.perDayNeeded >= 25
-        ? `<p class="muted" style="margin:8px 0 0;color:#dc2626;font-weight:800">1日25問でも足りない計算です。志望校か日程を見直す時期かもしれません。</p>` : '');
-  $('#checkcard').innerHTML += `
-    <div class="card">
-      <h2>🎓 ${esc(gs.sch.name)}まで あと ${gs.daysLeft}日</h2>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
-        <div class="bar" style="flex:1"><i style="width:${gs.pct}%"></i></div>
-        <span style="font-weight:900">${gs.pct}%</span>
-      </div>
-      <p class="muted" style="margin:0">${line}</p>${warn}
     </div>`;
 }
 

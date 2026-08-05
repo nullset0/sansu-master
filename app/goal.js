@@ -9,8 +9,12 @@ const Goal = (() => {
 
 const st = () => Store.state;
 
-/* ---------- 学校ごとの「入試で何がどれだけ要るか」 ----------
-   同志社香里（出典＝学校の入試概要と各塾の入試分析）:
+/* ---------- 到達の目安（画面には出さない） ----------
+   ★ 志望校は表示しない。ここは「どのくらいの学力まで持っていくか」を
+     決めるための内部の目安であって、子どもに見せる目標ではない。
+     上限でもない。目安ぶんが終わったら、そのまま先へ進む。
+
+   目安に使った実在の入試（出典＝学校の入試概要と各塾の入試分析）:
    ・前期は1月中旬の土曜（2026年度=1/17、2027年度=1/16）
    ・算数は50分120点。大問7題。
      大問1＝計算2問＋文章題1問／大問2＝図形の小問集合／
@@ -20,18 +24,18 @@ const st = () => Store.state;
    ※ 小問数は公表されていないため 20問と仮定している（1問あたり150秒の根拠）。
 ------------------------------------------------------------ */
 const SCHOOLS = {
-  'doshisha-kori': {
-    id:'doshisha-kori', name:'同志社香里', short:'同志社香里',
-    examMD: '01-16',                       // 前期。1月中旬の土曜
+  'chuken-standard': {
+    id:'chuken-standard', name:'中学受験（中堅上位）', short:'中学受験',
+    examMD: '01-16',                       // 関西の私立中入試は1月中旬
     math: { minutes:50, points:120, items:20 },
-    passRate: 0.70,                        // 65〜75%のまん中
+    passRate: 0.70,                        // 合格ラインは得点率65〜75%のまん中
     hensachi: '53〜59',
     // 出題の重み。1.0を基準に、厚いところを上げる（出題分析より）
     weights: { 'jk-geo':1.5, 'jk-geo2':1.5, 'jk-calc':1.4, 'jk-speed':1.2, 'jk-speed2':1.2,
                'jk-num':1.2, 'jk-num2':1.2, 'jk-toku':1.2, 'jk-ratio':1.0, 'jk-drill':1.0 },
     // 難関チャレンジはこの学校には過剰。必須から外す
     exclude: ['jk-hard'],
-    note: '図形（角度・平面・立体・水量）の比率が高い。計算の速さと正確さが土台。',
+    note: '私立中入試は図形（角度・平面・立体・水量）の比重が高く、計算の速さと正確さが土台になります。',
   },
 };
 
@@ -177,7 +181,8 @@ function state() {
            pct: need.length ? Math.round(done.length / need.length * 100) : 0,
            rate, perUnit: +per.toFixed(1), attemptsLeft,
            perDayNeeded, perDayNow, goalSet, finishAtNow, finishAtGoal,
-           verdict, speed: speed(sch), areaRows };
+           verdict, speed: speed(sch), areaRows,
+           beyond: left <= 0 };                              // 目安ぶんは終わり、先へ進んでいる
 }
 
 /* ---------- きょう何問やればいいか（自動） ----------
@@ -192,8 +197,13 @@ function dailyCount() {
   if (!g) return null;
   if (Store.get('dailyGoal') !== 'auto') return null;      // 手で決めているなら従う
   const s = state();
-  if (!s || s.left <= 0) return 5;                          // 到達後は維持のぶんだけ
-  const raw = s.daysLeft > 0 ? s.attemptsLeft / s.daysLeft : 25;
+  if (!s) return null;
+  // 目安ぶんが終わったら、そこで止めずに残り全部（難関ふくむ）へ切りかえる。
+  // 「もっと上へ行けるなら行っていい」ので、ここを上限にしない。
+  let left = s.left, per = perUnit(s.rate == null ? 0.6 : s.rate);
+  if (left <= 0) left = DATA.units.filter(u => !Mastery.unitState(u.id).done).length;
+  if (left <= 0) return 5;                                   // 全単元おわり＝維持
+  const raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
   return STEPS.find(x => x >= raw) || 25;
 }
 
