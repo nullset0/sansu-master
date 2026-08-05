@@ -78,10 +78,19 @@ function set(schoolId, examDate, gradeNow) {
   if (!sch) return null;
   st().goal = { school: schoolId, exam: examDate || defaultExamDate(sch, gradeNow || 4),
                 setAt: Store.today() };
+  _need = null; _needFor = null;
+  // 志望校を決めたら、1日の量はアプリが決める。親が数をにらむ必要をなくす。
+  if (!st().settings.dailyGoalPinned) Store.set('dailyGoal', 'auto');
   Store.save();
   return st().goal;
 }
-function clear() { st().goal = null; Store.save(); }
+function clear() {
+  st().goal = null;
+  _need = null; _needFor = null;
+  // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
+  if (Store.get('dailyGoal') === 'auto') Store.set('dailyGoal', 5);
+  Store.save();
+}
 function get() {
   const g = st().goal;
   if (!g || !SCHOOLS[g.school]) return null;
@@ -171,6 +180,40 @@ function state() {
            verdict, speed: speed(sch), areaRows };
 }
 
+/* ---------- きょう何問やればいいか（自動） ----------
+   親が数を決めるのではなく、入試日までの残りから毎日はじき出す。
+   ただし子どもがやる量なので、上限をつける。25問を超えて必要なら、
+   それは「量で挽回できる範囲を超えた」ということなので、
+   数を吊り上げずに 間に合わない と伝えるほうが正直。
+------------------------------------------------------------ */
+const STEPS = [5, 6, 8, 10, 12, 15, 20, 25];
+function dailyCount() {
+  const g = get();
+  if (!g) return null;
+  if (Store.get('dailyGoal') !== 'auto') return null;      // 手で決めているなら従う
+  const s = state();
+  if (!s || s.left <= 0) return 5;                          // 到達後は維持のぶんだけ
+  const raw = s.daysLeft > 0 ? s.attemptsLeft / s.daysLeft : 25;
+  return STEPS.find(x => x >= raw) || 25;
+}
+
+/* ---------- その単元は志望校に要るか・どれくらい出るか ----------
+   0 なら「この学校には要らない」。毎日の出題はこれで並べかえる。
+------------------------------------------------------------ */
+let _need = null, _needFor = null;
+function needSet() {
+  const g = get(); if (!g) return null;
+  if (_need && _needFor === g.school) return _need;
+  _needFor = g.school; _need = new Set(targetUnits(g.sch));
+  return _need;
+}
+function unitWeight(id) {
+  const g = get(); if (!g) return 1;
+  const u = DATA.unit(id); if (!u) return 0;
+  if (!needSet().has(id)) return 0;                         // この学校には要らない
+  return (g.sch.weights || {})[u.area] || 1;
+}
+
 /* ---------- 学力の推移（週ごと） ---------- */
 function weekly(weeks = 12) {
   const days = Store.lastDays(weeks * 7);
@@ -189,6 +232,7 @@ function weekly(weeks = 12) {
 }
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
-         targetUnits, recentRate, perUnit, speed, state, weekly };
+         targetUnits, recentRate, perUnit, speed, state, weekly,
+         dailyCount, unitWeight, needSet, STEPS };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;

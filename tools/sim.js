@@ -35,10 +35,10 @@ const SRC = ['app/store.js', 'data/core.js',
   'questions/g1.js','questions/g2.js','questions/g3.js','questions/g4.js','questions/g5.js','questions/g6.js',
   'data/elem.js','data/jk-num.js','data/jk-ratio.js','data/jk-toku.js','data/jk-speed.js','data/jk-geo.js',
   'data/jk-calc.js','data/jk-speed2.js','data/jk-geo2.js','data/jk-num2.js','data/jk-drill.js','data/hard.js',
-  'data/graph.js','app/mastery.js'];
+  'data/graph.js','app/mastery.js','app/goal.js'];
 SRC.forEach(f => vm.runInContext(fs.readFileSync(path.join(APP, f), 'utf8'), sandbox, { filename: f }));
 
-const { Store, DATA, Graph, Mastery } = sandbox;
+const { Store, DATA, Graph, Mastery, Goal } = sandbox;
 
 // ---- 生徒モデル（_simtest.html と同一）
 const rng = seed => { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
@@ -52,16 +52,23 @@ function pOf(q, p0) {
   return Math.max(0.05, Math.min(0.97, p));
 }
 
-function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {}) {
+function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
+                goal = null, auto = false } = {}) {
   const rnd = rng(seed);
   Object.keys(store).forEach(k => delete store[k]);
   DAY = 0;
   Store.importJSON('{}');
   Store.state.settings.dailyGoal = perDay;
   if (placeAt) Mastery.GRADES.slice(0, Mastery.GRADES.indexOf(placeAt) + 1).forEach(g => Mastery.assumeGrade(g));
+  if (goal) {
+    Goal.set(goal, null, 4);
+    if (!auto) Store.set('dailyGoal', perDay);
+    // NOWEIGHT=1 … 到達は測るが、出題の並べかえは効かせない（比較用）
+    if (process.env.NOWEIGHT === '1') Goal.unitWeight = () => 1;
+  }
   Store.save();
 
-  const daily = [];   // 毎日の到達点
+  const daily = [], goalHist = [];   // 毎日の到達点
   let stall = 0, checks = 0, demotes = 0, explains = 0, explainPass = 0;
   for (let d = 0; d < days; d++) {
     DAY = d;
@@ -87,20 +94,35 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3' } = {
       if (ok / N >= Mastery.EXPLAIN_MIN) explainPass++;
     });
 
+    if (auto) { const n = Goal.dailyCount(); if (n) budget = Math.max(1, n - (perDay - budget)); }
     const plan = Mastery.plan(budget);
     if (!plan.length) stall++;
     plan.forEach(q => Store.grade(q.id, rnd() < pOf(q, p0), q.unit, {}));
     const s = Mastery.summary();
     daily.push({ done: s.done, jk: s.jkDone });
+    if (goal) {
+      const need = Goal.needSet();
+      let n = 0; need.forEach(id => { if (Mastery.unitState(id).done) n++; });
+      goalHist.push(n);
+    }
   }
   const first = f => { const i = daily.findIndex(f); return i < 0 ? null : +( (i+1) / 30.4 ).toFixed(1); };
   const s = Mastery.summary();
+  // 志望校に必要な単元がどこまで終わったか
+  let goalDone = null, goalTotal = null, moGoal = null;
+  if (goal) {
+    const need = Goal.targetUnits(Goal.get().sch);
+    goalTotal = need.length;
+    goalDone = need.filter(id => Mastery.unitState(id).done).length;
+    const i = goalHist.findIndex(x => x >= goalTotal);
+    moGoal = i < 0 ? null : +((i + 1) / 30.4).toFixed(1);
+  }
   return { perDay, p0, days,
     done: s.done, total: s.total, jk: s.jkDone, jkTotal: s.jkTotal,
     y1_done: (daily[364] || daily[daily.length-1]).done,
     y1_jk:   (daily[364] || daily[daily.length-1]).jk,
     mo_jk30: first(x => x.jk >= 30), mo_jk60: first(x => x.jk >= 60), mo_all: first(x => x.done >= s.total),
-    stall, checks, demotes, explains, explainPass };
+    stall, checks, demotes, explains, explainPass, goalDone, goalTotal, moGoal };
 }
 
 /* 使い方: node tools/sim.js <1日の問題数,…> <日数> <素の正答率> <開始学年>
@@ -109,7 +131,8 @@ const rows = [];
 const P0 = Number(process.argv[4] || 0.80);
 const PLACE = process.argv[5] || 'g3';
 for (const perDay of (process.argv[2] || '3,5,8,10,15').split(',').map(Number)) {
-  const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE });
+  const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE,
+                  goal: process.env.GOAL || null, auto: process.env.AUTO === '1' });
   rows.push(r);
   console.log(JSON.stringify(r));
 }

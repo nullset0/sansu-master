@@ -161,7 +161,9 @@ const memoHTML = `
    ========================================================= */
 function start(opts) {
   const pool = opts.pool.map(q => normalize(q, opts));
-  const n = opts.count || Store.get('dailyGoal') || 5;
+  const n = opts.count
+    || (typeof Goal !== 'undefined' && Goal.dailyCount())
+    || Number(Store.get('dailyGoal')) || 5;
   // ★ list も必ず normalize する。normalize は新しいオブジェクトを返すので、
   //   pool だけ通しても list の中身は生のまま＝q.hints が無く render() で落ちる。
   //   （train.html の「きょうの5問」は pool と list に同じ配列を渡していて、

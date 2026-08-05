@@ -84,7 +84,7 @@
       <a class="btn ghost sm" href="train.html?mode=placement">診断する</a></div>
     <div class="row"><div><div class="lbl">くわしく測る</div><div class="hint">診断は各学年3問なので、うっかりミス1つでも低く出ます。1学年6問ずつ・ヒント無しで測り直します</div></div>
       <a class="btn ghost sm" href="sokutei.html">くわしく測る</a></div>
-    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint">中受範囲(60単元)を一周するまでの目安。<b>だいたい解ける（正答率8割）</b>なら 5問=約28ヶ月／10問=約15ヶ月／20問=約8ヶ月。<b>つまずきがある（正答率5〜6割）</b>なら 5問では3年かけても届かず、10問=20〜27ヶ月／20問=11〜16ヶ月。★<b>苦手なほど必要な総量は増えます</b>（8割の子は約4,300問／5割台の子は約8,700問）。穴をふさいで正答率が上がると、必要量そのものが半分になります。ただし<b>続かないと意味がない</b>ので、続く量を選んでください</div></div>
+    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint" id="goal-auto-hint"></div><div class="hint">中受範囲(60単元)を一周するまでの目安。<b>だいたい解ける（正答率8割）</b>なら 5問=約28ヶ月／10問=約15ヶ月／20問=約8ヶ月。<b>つまずきがある（正答率5〜6割）</b>なら 5問では3年かけても届かず、10問=20〜27ヶ月／20問=11〜16ヶ月。★<b>苦手なほど必要な総量は増えます</b>（8割の子は約4,300問／5割台の子は約8,700問）。穴をふさいで正答率が上がると、必要量そのものが半分になります。ただし<b>続かないと意味がない</b>ので、続く量を選んでください</div></div>
       <div class="seg" id="set-goal"></div></div>
     <div class="row"><div><div class="lbl">効果音</div></div><div class="seg" id="set-sound"></div></div>
     <div class="row"><div><div class="lbl">問題の自動よみあげ</div><div class="hint">音読すると記憶に残りやすくなります</div></div>
@@ -250,12 +250,30 @@
       b.classList.add('on'); SFX.tap(); onPick(b.dataset.v);
     }));
   }
-  seg(document.getElementById('set-goal'), [[3,'3問'],[5,'5問'],[8,'8問'],[10,'10問'],[20,'20問']],
-      Store.get('dailyGoal'), v => Store.set('dailyGoal', Number(v)));
+  seg(document.getElementById('set-goal'),
+      [['auto','おまかせ'],[3,'3問'],[5,'5問'],[8,'8問'],[10,'10問'],[20,'20問']],
+      Store.get('dailyGoal'), v => {
+        // 手で選んだら以後アプリは触らない（志望校を決め直しても上書きしない）
+        Store.set('dailyGoalPinned', v !== 'auto');
+        Store.set('dailyGoal', v === 'auto' ? 'auto' : Number(v));
+        location.reload();
+      });
   seg(document.getElementById('set-sound'), [['on','あり'],['off','なし']],
       Store.get('sound') === false ? 'off' : 'on', v => Store.set('sound', v === 'on'));
   seg(document.getElementById('set-read'), [['on','する'],['off','しない']],
       Store.get('autoRead') ? 'on' : 'off', v => Store.set('autoRead', v === 'on'));
+
+  /* ---- 「おまかせ」がいま何問と言っているか ---- */
+  (() => {
+    const el = document.getElementById('goal-auto-hint');
+    const n = Goal.dailyCount();
+    const g = Goal.get();
+    el.innerHTML = !g
+      ? '<b>おまかせ</b>にすると、志望校を決めたあと入試日から逆算して毎日の数をアプリが決めます。'
+      : (Store.get('dailyGoal') === 'auto'
+          ? `いまは<b>おまかせ</b>＝<b>1日${n}問</b>。${g.sch.name}の入試日から毎日はじき直します（遅れれば増え、進めば減ります・上限25問）。`
+          : `いまは手で決めた <b>${Store.get('dailyGoal')}問</b>。おまかせにすると ${Goal.STEPS && ''}入試日から自動で決まります。`);
+  })();
 
   /* ================= きょうの内わけ =================
      「105問やった」の中身を出す。やさしい計算ばかりなのか、

@@ -126,6 +126,12 @@ function markDone(id) {
 /* ---------- いま取り組む単元（フロンティア） ---------- */
 function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area] || {}).order || 99; }
 
+// 志望校が決まっていれば、その学校に要る単元・出題の多い分野を先に回す。
+// 決まっていなければ全部おなじ重み（＝これまでどおり）。
+function goalW(id) {
+  return (typeof Goal !== 'undefined' && Goal.get()) ? Goal.unitWeight(id) : 1;
+}
+
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
@@ -135,7 +141,12 @@ function frontier(k = MAX_ACTIVE) {
     // ① やりかけを優先 ② 前提の浅い（＝準備ができている）順
     // ③ 同じ深さなら 学年・分野の順 ④ やさしいレベルから
     // 学年ではなく「前提が満たされたか」で並ぶので、自然に上の学年へ入っていく
-    .sort((a,b) => (b.s.started - a.s.started) || (a.d - b.d)
+    // ①やりかけ ②志望校に要るもの ③前提の浅い順 ④出題の多い分野
+    // ⑤学年・分野の順 ⑥やさしいレベルから
+    .sort((a,b) => (b.s.started - a.s.started)
+                || ((goalW(b.u.id) > 0) - (goalW(a.u.id) > 0))
+                || (a.d - b.d)
+                || (goalW(b.u.id) - goalW(a.u.id))
                 || (areaOrder(a.u.id) - areaOrder(b.u.id)) || (a.u.lv - b.u.lv));
   // 同じ分野ばかりにならないよう、できるだけ分野を散らす
   const out = [], seenArea = new Set();
