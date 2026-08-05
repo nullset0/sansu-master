@@ -269,9 +269,9 @@
     const n = Goal.dailyCount();
     const g = Goal.get();
     el.innerHTML = !g
-      ? '<b>おまかせ</b>にすると、志望校を決めたあと入試日から逆算して毎日の数をアプリが決めます。'
+      ? '<b>おまかせ</b>にすると、受験の予定を入れたあと入試日から逆算して毎日の数をアプリが決めます。'
       : (Store.get('dailyGoal') === 'auto'
-          ? `いまは<b>おまかせ</b>＝<b>1日${n}問</b>。${g.sch.name}の入試日から毎日はじき直します（遅れれば増え、進めば減ります・上限25問）。`
+          ? `いまは<b>おまかせ</b>＝<b>1日${n}問</b>。入試日から毎日はじき直します（遅れれば増え、進めば減ります・上限25問）。`
           : `いまは手で決めた <b>${Store.get('dailyGoal')}問</b>。おまかせにすると ${Goal.STEPS && ''}入試日から自動で決まります。`);
   })();
 
@@ -331,14 +331,18 @@
     const host = document.getElementById('goal-card');
     const g = Goal.get();
     if (!g) {
-      host.innerHTML = `<h2>🎓 志望校</h2>
-        <p class="muted" style="margin-bottom:10px">志望校を決めると、入試日から逆算して「1日に何問やれば間に合うか」を毎日出します。</p>
+      host.innerHTML = `<h2>⏱ ペースの見立て</h2>
+        <p class="muted" style="margin-bottom:10px">受験の予定を入れると、入試日から逆算して
+          <b>1日に何問やれば間に合うか</b>をアプリが毎日決めます。子どもの画面には数字は出ません。
+          学校名も出しません（どこを受けるかは後で決められます）。</p>
         <div class="gl-row"><span class="gl-k">いまの学年</span>
           <select class="in" id="gl-grade" style="max-width:9em">
             ${[1,2,3,4,5,6].map(g=>`<option value="${g}"${g===4?' selected':''}>小${g}</option>`).join('')}
           </select>
           <span class="muted" style="font-size:.8rem">入試の年を決めるのに使います</span></div>
-        ${Goal.schools().map(x=>`<button class="btn wide blue gl-set" data-id="${x.id}" style="margin-top:8px">${x.name} にする（偏差値 ${x.hensachi}）</button>`).join('')}`;
+        ${Goal.schools().map(x=>`<button class="btn wide blue gl-set" data-id="${x.id}" style="margin-top:8px">▶︎ 中学受験する（小6の1月）</button>`).join('')}
+        <p class="muted" style="font-size:.78rem;margin-top:8px">到達の目安は<b>中堅上位の私立中入試</b>（算数50分120点・合格ライン得点率70%前後）に合わせています。
+          目安ぶんが終わったら、そこで止めずに先へ進みます。</p>`;
       host.querySelectorAll('.gl-set').forEach(b => b.onclick = () => {
         const grade = Number(document.getElementById('gl-grade').value) || 4;
         Goal.set(b.dataset.id, null, grade); renderGoal();
@@ -350,11 +354,13 @@
     const months = (s.daysLeft/30.4).toFixed(1);
     const sp = s.speed;
     host.innerHTML = `
-      <h2>🎓 ${s.sch.name}まで</h2>
-      <p class="muted" style="margin-bottom:10px">${s.sch.note}<br>算数 ${s.sch.math.minutes}分 ${s.sch.math.points}点・合格ラインは得点率${Math.round(s.sch.passRate*100)}%前後。</p>
+      <h2>⏱ ペースの見立て</h2>
+      <p class="muted" style="margin-bottom:10px">${s.sch.note}<br>
+        到達の目安は 算数${s.sch.math.minutes}分${s.sch.math.points}点・合格ライン得点率${Math.round(s.sch.passRate*100)}%前後の入試。
+        ${s.beyond ? '<b>目安ぶんは終わっています。いまは その先を進んでいます。</b>' : 'ここは上限ではありません。終わったら先へ進みます。'}</p>
       <div class="stats" style="margin-bottom:10px">
         <div class="stat"><div class="ico">📅</div><div class="n">${s.daysLeft}</div><div class="l">入試まで日<br>${s.exam}</div></div>
-        <div class="stat crown"><div class="ico">🎯</div><div class="n">${s.pct}%</div><div class="l">必要単元の到達<br>${s.doneTotal}/${s.needTotal}</div></div>
+        <div class="stat crown"><div class="ico">🎯</div><div class="n">${s.pct}%</div><div class="l">目安への到達<br>${s.doneTotal}/${s.needTotal}</div></div>
         <div class="stat ${s.verdict==='ok'?'':'hot'}"><div class="ico">📝</div><div class="n">${s.perDayNeeded}</div><div class="l">1日に必要な<br>問題数</div></div>
         <div class="stat coin"><div class="ico">⚡️</div><div class="n">${s.perDayNow}</div><div class="l">いまのペース<br>（3週平均）</div></div>
       </div>
@@ -374,8 +380,8 @@
           <span class="muted">${a.done}/${a.total}</span></div>
         <div class="bar"><i style="width:${Math.round(a.done/a.total*100)}%;background:${a.w>=1.4?'var(--a)':'var(--b)'}"></i></div>
       </div>`).join('')}
-      <button class="btn ghost sm" id="gl-clear" style="margin-top:10px">志望校をやめる</button>`;
-    document.getElementById('gl-clear').onclick = () => { if (confirm('志望校の設定を消しますか？')) { Goal.clear(); renderGoal(); } };
+      <button class="btn ghost sm" id="gl-clear" style="margin-top:10px">見立てをやめる</button>`;
+    document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); renderGoal(); } };
   }
   renderGoal();
 

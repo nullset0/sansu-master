@@ -126,8 +126,8 @@ function markDone(id) {
 /* ---------- いま取り組む単元（フロンティア） ---------- */
 function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area] || {}).order || 99; }
 
-// 志望校が決まっていれば、その学校に要る単元・出題の多い分野を先に回す。
-// 決まっていなければ全部おなじ重み（＝これまでどおり）。
+// 受験の予定が入っていれば、到達の目安に要る単元・出題の多い分野を先に回す。
+// 入っていなければ全部おなじ重み（＝これまでどおり）。
 function goalW(id) {
   return (typeof Goal !== 'undefined' && Goal.get()) ? Goal.unitWeight(id) : 1;
 }
