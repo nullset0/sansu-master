@@ -17,6 +17,13 @@ echo "  ローカル: $APP_DIR"
 echo "  VPS:    $VPS_HOST:$REMOTE_DIR"
 echo ""
 
+# 0. JS/CSS のURLに版を打つ（端末が古いJSを掴むのを防ぐ）
+if command -v node >/dev/null 2>&1; then
+  node "$APP_DIR/tools/stamp.js"
+else
+  echo "⚠️  node が無いので版打ちを飛ばします（古いJSが端末に残る可能性あり）"
+fi
+
 # 1. リモートディレクトリ準備
 echo "📁 リモートディレクトリ作成..."
 ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/app"
