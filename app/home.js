@@ -12,7 +12,7 @@ const who = st.chara || 'pika';
 const h = new Date().getHours();
 const greet = h < 9 ? 'おはよう！' : h < 17 ? 'こんにちは！' : h < 20 ? 'おかえり！' : 'こんばんは！';
 // 1日の量は志望校から自動で決まる（「おまかせ」のとき）。手で決めていればそれに従う。
-const goal = (typeof Goal !== 'undefined' && Goal.dailyCount()) || Store.get('dailyGoal') || 5;
+const goal = (typeof Goal !== 'undefined' && Goal.dailyCount()) || Number(Store.get('dailyGoal')) || 5;
 const left = Math.max(0, goal - st.day.done);
 const expr = left === 0 ? 'excited' : (h >= 21 ? 'sleep' : 'happy');
 

@@ -84,7 +84,13 @@ function set(schoolId, examDate, gradeNow) {
   Store.save();
   return st().goal;
 }
-function clear() { st().goal = null; Store.save(); }
+function clear() {
+  st().goal = null;
+  _need = null; _needFor = null;
+  // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
+  if (Store.get('dailyGoal') === 'auto') Store.set('dailyGoal', 5);
+  Store.save();
+}
 function get() {
   const g = st().goal;
   if (!g || !SCHOOLS[g.school]) return null;

@@ -68,7 +68,7 @@
   const mode = P.get('mode') || 'plan';
   const count = Number(P.get('n'))
     || (typeof Goal !== 'undefined' && Goal.dailyCount())
-    || Store.get('dailyGoal') || 5;
+    || Number(Store.get('dailyGoal')) || 5;
   const setHead = (t, sub) => {
     document.getElementById('t-title').textContent = t;
     document.getElementById('t-sub').textContent = sub || '';
