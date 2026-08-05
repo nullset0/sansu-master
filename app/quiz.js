@@ -162,7 +162,12 @@ const memoHTML = `
 function start(opts) {
   const pool = opts.pool.map(q => normalize(q, opts));
   const n = opts.count || Store.get('dailyGoal') || 5;
-  const list = opts.list || Store.buildSession(pool, n, { only: opts.only });
+  // ★ list も必ず normalize する。normalize は新しいオブジェクトを返すので、
+  //   pool だけ通しても list の中身は生のまま＝q.hints が無く render() で落ちる。
+  //   （train.html の「きょうの5問」は pool と list に同じ配列を渡していて、
+  //     この経路がまるごと白画面になっていた）
+  const list = (opts.list || Store.buildSession(pool, n, { only: opts.only }))
+    .map(q => normalize(q, opts));
   if (!list.length) { opts.host.innerHTML = `<div class="card"><p class="muted">出せる問題がありません。</p></div>`; return; }
   S = {
     list, i:0, host:opts.host, title:opts.title||'', unitId:opts.unitId,
