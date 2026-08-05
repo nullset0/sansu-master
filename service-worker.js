@@ -1,13 +1,13 @@
 // 算数マスター Service Worker
-const CACHE_NAME = 'sansu-master-v77';
+const CACHE_NAME = 'sansu-master-v78';
 const ASSETS = [
   './', './index.html', './train.html', './sokutei.html', './learn.html', './zukan.html', './parent.html', './print.html',
   './manifest.json', './icon.svg',
-  './app/style.css?v=77', './app/fig.js?v=77', './app/chara.js?v=77', './app/store.js?v=77', './app/quiz.js?v=77', './app/home.js?v=77',
-  './data/core.js?v=77', './data/elem.js?v=77',
-  './data/jk-num.js?v=77', './data/jk-ratio.js?v=77', './data/jk-toku.js?v=77', './data/jk-speed.js?v=77', './data/jk-geo.js?v=77', './data/jk-calc.js?v=77', './data/jk-speed2.js?v=77', './data/jk-geo2.js?v=77', './data/jk-num2.js?v=77', './data/jk-drill.js?v=77', './data/hard.js?v=77', './data/graph.js?v=77', './app/mastery.js?v=77', './app/modes.js?v=77',
-  './questions/g1.js?v=77', './questions/g2.js?v=77', './questions/g3.js?v=77',
-  './questions/g4.js?v=77', './questions/g5.js?v=77', './questions/g6.js?v=77',
+  './app/style.css?v=78', './app/fig.js?v=78', './app/chara.js?v=78', './app/store.js?v=78', './app/quiz.js?v=78', './app/home.js?v=78',
+  './data/core.js?v=78', './data/elem.js?v=78',
+  './data/jk-num.js?v=78', './data/jk-ratio.js?v=78', './data/jk-toku.js?v=78', './data/jk-speed.js?v=78', './data/jk-geo.js?v=78', './data/jk-calc.js?v=78', './data/jk-speed2.js?v=78', './data/jk-geo2.js?v=78', './data/jk-num2.js?v=78', './data/jk-drill.js?v=78', './data/hard.js?v=78', './data/graph.js?v=78', './app/mastery.js?v=78', './app/modes.js?v=78',
+  './questions/g1.js?v=78', './questions/g2.js?v=78', './questions/g3.js?v=78',
+  './questions/g4.js?v=78', './questions/g5.js?v=78', './questions/g6.js?v=78',
   // 旧バージョン（残してある）
   './shared.css', './shared.js',
   './1年.html', './2年.html', './3年.html', './4年.html', './5年.html', './6年.html',
