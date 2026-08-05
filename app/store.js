@@ -20,7 +20,7 @@ const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T
 
 const DEFAULTS = {
   v: 2,
-  settings: { dailyGoal:5, sound:true, speak:false, autoRead:false, numpad:true, hardMode:false, home:'g4' },
+  settings: { dailyGoal:5, dailyGoalPinned:false, sound:true, speak:false, autoRead:false, numpad:true, hardMode:false, home:'g4' },
   cards: {}, units: {}, badges: {},
   day: { date: today(), done:0, correct:0, coins:0, ms:0, units:0 },
   streak: { n:0, last:null, best:0 },
