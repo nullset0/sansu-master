@@ -5,7 +5,7 @@ const ASSETS = [
   './manifest.json', './icon.svg',
   './app/style.css?v=78', './app/fig.js?v=78', './app/chara.js?v=78', './app/store.js?v=78', './app/quiz.js?v=78', './app/home.js?v=78',
   './data/core.js?v=78', './data/elem.js?v=78',
-  './data/jk-num.js?v=78', './data/jk-ratio.js?v=78', './data/jk-toku.js?v=78', './data/jk-speed.js?v=78', './data/jk-geo.js?v=78', './data/jk-calc.js?v=78', './data/jk-speed2.js?v=78', './data/jk-geo2.js?v=78', './data/jk-num2.js?v=78', './data/jk-drill.js?v=78', './data/hard.js?v=78', './data/graph.js?v=78', './app/mastery.js?v=78', './app/modes.js?v=78',
+  './data/jk-num.js?v=78', './data/jk-ratio.js?v=78', './data/jk-toku.js?v=78', './data/jk-speed.js?v=78', './data/jk-geo.js?v=78', './data/jk-calc.js?v=78', './data/jk-speed2.js?v=78', './data/jk-geo2.js?v=78', './data/jk-num2.js?v=78', './data/jk-drill.js?v=78', './data/hard.js?v=78', './data/graph.js?v=78', './app/mastery.js?v=78', './app/goal.js?v=78', './app/modes.js?v=78',
   './questions/g1.js?v=78', './questions/g2.js?v=78', './questions/g3.js?v=78',
   './questions/g4.js?v=78', './questions/g5.js?v=78', './questions/g6.js?v=78',
   // 旧バージョン（残してある）
