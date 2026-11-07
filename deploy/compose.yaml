@@ -27,6 +27,27 @@ services:
       - traefik.http.middlewares.sansu-redirect.redirectscheme.permanent=true
       - traefik.http.services.sansu.loadbalancer.server.port=80
 
+  # 学習記録の受け口（POST /api/log）。書き込み専用・読むのは ssh で /root/sansu-master/data
+  sansu-log:
+    image: python:3.12-alpine
+    container_name: sansu-log
+    restart: always
+    command: ["python", "-u", "/srv/logsrv.py"]
+    volumes:
+      - ./logsrv.py:/srv/logsrv.py:ro
+      - ./data:/data
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n-compose_default
+      - traefik.http.routers.sansu-log.rule=Host(`sansu.ecaiclub.com`) && PathPrefix(`/api/`)
+      - traefik.http.routers.sansu-log.entrypoints=websecure
+      - traefik.http.routers.sansu-log.priority=300
+      - traefik.http.routers.sansu-log.tls=true
+      - traefik.http.routers.sansu-log.tls.certresolver=mytlschallenge
+      - traefik.http.services.sansu-log.loadbalancer.server.port=8080
+
 networks:
   traefik:
     name: n8n-compose_default

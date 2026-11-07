@@ -315,7 +315,7 @@ function judge(q, given, ok, btn) {
   }
 
   const res = Store.grade(q.id, ok, q.unit,
-    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0 });
+    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0, given });
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);
