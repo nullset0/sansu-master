@@ -98,10 +98,9 @@ class H(BaseHTTPRequestHandler):
         now = datetime.now(JST)
         day = now.strftime("%Y-%m-%d")
         qt = quota(day)
-        if dev not in known_devs():
-            if qt["new"] >= MAX_NEW_DEVS_PER_DAY:
-                return self._send(429, {"ok": False, "why": "devs"})
-            qt["new"] += 1
+        is_new = dev not in known_devs()
+        if is_new and qt["new"] >= MAX_NEW_DEVS_PER_DAY:
+            return self._send(429, {"ok": False, "why": "devs"})
 
         # 先に全部確かめてから書く。受け取れない部分は捨てて 200 を返す
         # （エラーを返すと端末が同じ記録を送り直しつづける）
@@ -133,6 +132,8 @@ class H(BaseHTTPRequestHandler):
             if not os.path.isdir(daily) or len(os.listdir(daily)) < MAX_STATE_DAYS:
                 write_atomic(os.path.join(daily, day + ".json"), st_text)
         qt["bytes"] += len(ev_text) + len(st_text)
+        if is_new and (ev_text or st_text):   # 実際に書いて端末として載ったときだけ枠を使う
+            qt["new"] += 1
         if skipped:
             sys.stderr.write("skipped %s dev=%s\n" % (",".join(skipped), dev))
         return self._send(200, {"ok": True, "n": len(events), "skipped": skipped})
