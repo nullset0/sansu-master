@@ -32,7 +32,7 @@ fi
 
 # 1. リモートディレクトリ準備
 echo "📁 リモートディレクトリ作成..."
-ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/app"
+ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/app $REMOTE_DIR/data"
 
 # 2. アプリ本体を rsync で転送
 echo "📤 アプリ本体を転送..."
@@ -46,7 +46,7 @@ rsync -avz --delete \
 echo "📤 設定ファイルを転送..."
 rsync -avz \
   -e "ssh -o StrictHostKeyChecking=accept-new" \
-  "$DEPLOY_DIR/compose.yaml" "$DEPLOY_DIR/nginx.conf" \
+  "$DEPLOY_DIR/compose.yaml" "$DEPLOY_DIR/nginx.conf" "$DEPLOY_DIR/logsrv.py" \
   "$VPS_HOST:$REMOTE_DIR/"
 
 # 4. コンテナ起動 / 再起動
@@ -56,7 +56,7 @@ ssh "$VPS_HOST" "cd $REMOTE_DIR && docker compose up -d --force-recreate"
 # 5. 起動確認
 echo ""
 echo "📋 コンテナの状態:"
-ssh "$VPS_HOST" "docker ps --filter name=sansu-master --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+ssh "$VPS_HOST" "docker ps --filter name=sansu- --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 
 echo ""
 echo "🎉 デプロイ完了！"

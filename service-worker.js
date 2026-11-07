@@ -3,7 +3,7 @@ const CACHE_NAME = 'sansu-master';
 const ASSETS = [
   './', './index.html', './train.html', './sokutei.html', './learn.html', './zukan.html', './parent.html', './print.html',
   './manifest.json', './icon.svg',
-  './app/style.css', './app/fig.js', './app/chara.js', './app/store.js', './app/quiz.js', './app/notice.js', './app/home.js',
+  './app/style.css', './app/fig.js', './app/chara.js', './app/store.js', './app/sync.js', './app/quiz.js', './app/notice.js', './app/home.js',
   './data/core.js', './data/elem.js',
   './data/jk-num.js', './data/jk-ratio.js', './data/jk-toku.js', './data/jk-speed.js', './data/jk-geo.js', './data/jk-calc.js', './data/jk-speed2.js', './data/jk-geo2.js', './data/jk-num2.js', './data/jk-drill.js', './data/hard.js', './data/graph.js', './app/mastery.js', './app/goal.js', './app/modes.js',
   './questions/g1.js', './questions/g2.js', './questions/g3.js',
@@ -42,6 +42,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   // おうちの人からのひとことは、必ずネットワークから取る
   if (req.url.indexOf('/notice.json') >= 0) return;
+  if (req.url.indexOf('/api/') >= 0) return;
   if (new URL(req.url).origin !== location.origin) return;
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
