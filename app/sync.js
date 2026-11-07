@@ -4,7 +4,8 @@
    目的: 端末の中にしかなかった記録を貯めて、苦手・遅い・同じまちがいを
    見つけ、出題を直していくため。ログインは使わない。
      ・1問ごと: 問題ID / 単元 / 正誤 / かかった時間 / ヒント / 答えた値
-     ・全体: Store.state のまるごと（10分に1回まで）
+     ・全体: Store.state のまるごと（10分に1回まで）。設定・志望校・塾テストの記録も入る
+   名前や連絡先は持っていないので送らない。端末はランダムなIDで区別する。
    送れなかった分は localStorage に貯めておき、次に開いたときに送る。
    本番のドメイン以外（開発・シミュレーション）では何も送らない。
    ========================================================= */
@@ -23,7 +24,7 @@ const ls = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
 };
 
-// 端末ID（ランダム）。名前や個人情報は送らない
+// 端末ID（ランダム）
 let dev = ls.get(DKEY, null);
 if (!dev || !/^[a-z0-9]{8,40}$/.test(dev)) {
   dev = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toLowerCase();
@@ -32,9 +33,18 @@ if (!dev || !/^[a-z0-9]{8,40}$/.test(dev)) {
 
 const page = () => (location.pathname.split('/').pop() || 'index.html') + location.search;
 
+// 1件ごとに一意のIDをつける。送れたものはIDで消す（数で消すと、送信中に
+// beacon が先頭を消していた場合に未送信の分まで消える）。二重に届いても週報はIDで1件にまとめる
+let seq = 0;
+const newId = () => Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 6);
+function dropSent(events) {
+  const sent = new Set(events.map(e => e.id));
+  ls.set(QKEY, ls.get(QKEY, []).filter(e => !sent.has(e.id)));
+}
 function push(ev) {
+  if (!LIVE) return;   // 送らない環境では貯めない（localStorage を食って本体の保存が落ちるのを防ぐ）
   const q = ls.get(QKEY, []);
-  q.push(Object.assign({ t: new Date().toISOString(), p: page() }, ev));
+  q.push(Object.assign({ id: newId(), t: new Date().toISOString(), p: page() }, ev));
   ls.set(QKEY, q.length > QMAX ? q.slice(-QMAX) : q);
   schedule();
 }
@@ -74,11 +84,9 @@ async function flush() {
     const res = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify(body), keepalive: false });
     if (res.ok) {
-      // 送っている間に増えた分は残す
-      const now = ls.get(QKEY, []);
-      ls.set(QKEY, now.slice(events.length));
+      dropSent(events);
       if (wantState) ls.set(SKEY, Date.now());
-      if (now.length > events.length) schedule(1000);
+      if (ls.get(QKEY, []).length) schedule(1000);
     }
   } catch (e) { /* 圏外など。次の機会に送る */ }
   busy = false;
@@ -86,12 +94,12 @@ async function flush() {
 
 // 閉じる・裏に回るときは小さく送る（全体は送らない＝sendBeacon の上限64KB対策）
 function beacon() {
-  if (!LIVE) return;
+  if (!LIVE || busy) return;   // 送信中なら任せる（同じ記録を二重に送らない）
   const q = ls.get(QKEY, []);
   if (!q.length || !navigator.sendBeacon) return;
   const events = q.slice(0, 200);
   const ok = navigator.sendBeacon(URL_, new Blob([JSON.stringify({ dev, v: 1, events })], { type: 'application/json' }));
-  if (ok) ls.set(QKEY, q.slice(events.length));
+  if (ok) dropSent(events);
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') beacon(); else schedule(500); });
 window.addEventListener('pagehide', beacon);

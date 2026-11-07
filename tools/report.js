@@ -27,11 +27,30 @@ const sandbox = {
 };
 sandbox.window = sandbox; sandbox.globalThis = sandbox;
 
-// いちばん新しく全体状態を送ってきた端末を主にする（複数端末なら全部の1問記録は合算）
-const stDir = path.join(DIR, 'state');
-const devs = fs.existsSync(stDir) ? fs.readdirSync(stDir).filter(f => f.endsWith('.json'))
-  .map(f => ({ dev: f.slice(0, -5), m: fs.statSync(path.join(stDir, f)).mtimeMs })).sort((a, b) => b.m - a.m) : [];
-if (devs.length) ls['sansu-v2'] = fs.readFileSync(path.join(stDir, devs[0].dev + '.json'), 'utf8');
+// ---- 1問ごとの記録（直近 DAYS 日・日本時間の日付）。端末ごとに読む
+const jstDay = iso => new Date(new Date(iso).getTime() + 9 * 3600e3).toISOString().slice(0, 10);
+const since = jstDay(new Date(Date.now() - (DAYS - 1) * 86400e3).toISOString());
+const evDir = path.join(DIR, 'events'), stDir = path.join(DIR, 'state');
+const byDev = {};
+if (fs.existsSync(evDir)) for (const dev of fs.readdirSync(evDir)) {
+  const seen = new Set(), list = byDev[dev] = [];
+  for (const f of fs.readdirSync(path.join(evDir, dev))) {
+    for (const line of fs.readFileSync(path.join(evDir, dev, f), 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const e = JSON.parse(line);
+        if (e.id) { if (seen.has(e.id)) continue; seen.add(e.id); }   // 二重に届いた分は1件に
+        e.day = jstDay(e.t || e.rt); if (e.day >= since) list.push(e);
+      } catch (_) {}
+    }
+  }
+}
+// どの端末の週報か: SANSU_DEV で指定。無ければ期間中にいちばん多く解いた端末
+// （親のスマホや動作確認の端末を混ぜない）
+const DEV = process.env.SANSU_DEV || Object.keys(byDev)
+  .sort((a, b) => byDev[b].filter(e => e.k === 'g').length - byDev[a].filter(e => e.k === 'g').length)[0];
+const devs = DEV && fs.existsSync(path.join(stDir, DEV + '.json')) ? [DEV] : [];
+if (devs.length) ls['sansu-v2'] = fs.readFileSync(path.join(stDir, DEV + '.json'), 'utf8');
 
 vm.createContext(sandbox);
 ['app/store.js', 'data/core.js',
@@ -46,19 +65,7 @@ const QBY = Object.fromEntries(ALL.map(q => [q.id, q]));
 const uname = id => { const u = DATA.unit(id); return u ? u.name : id; };
 const aname = id => { const u = DATA.unit(id); return u ? ((DATA.AREAS[u.area] || {}).name || u.area) : ''; };
 
-// ---- 1問ごとの記録（直近 DAYS 日・日本時間の日付）
-const jstDay = iso => new Date(new Date(iso).getTime() + 9 * 3600e3).toISOString().slice(0, 10);
-const since = jstDay(new Date(Date.now() - (DAYS - 1) * 86400e3).toISOString());
-const evs = [];
-const evDir = path.join(DIR, 'events');
-if (fs.existsSync(evDir)) for (const dev of fs.readdirSync(evDir)) {
-  for (const f of fs.readdirSync(path.join(evDir, dev))) {
-    for (const line of fs.readFileSync(path.join(evDir, dev, f), 'utf8').split('\n')) {
-      if (!line.trim()) continue;
-      try { const e = JSON.parse(line); e.dev = dev; e.day = jstDay(e.t || e.rt); if (e.day >= since) evs.push(e); } catch (_) {}
-    }
-  }
-}
+const evs = (DEV && byDev[DEV]) || [];
 evs.sort((a, b) => (a.t < b.t ? -1 : 1));
 const g = evs.filter(e => e.k === 'g');
 
@@ -69,18 +76,22 @@ const P = s => out.push(s);
 
 P(`# 算数マスター 週報（${since} 〜 ${jstDay(new Date().toISOString())}・${DAYS}日）`);
 P('');
+const others = Object.keys(byDev).filter(d => d !== DEV && byDev[d].length);
+P(`端末 ${DEV || '-'}${others.length ? `（ほかに記録のある端末: ${others.map(d => `${d} ${byDev[d].length}件`).join('・')}。SANSU_DEV で切替）` : ''}`);
+P('');
 if (!devs.length && !evs.length) { P('記録がまだ届いていません。'); console.log(out.join('\n')); process.exit(0); }
 
 // ① ペース
 const days = [...new Set(evs.map(e => e.day))];
+const nOther = evs.filter(e => e.k === 'n'), okOther = nOther.filter(e => e.ok).length;
 const ok = g.filter(e => e.ok).length;
 const msAll = g.map(e => e.ms).filter(Boolean);
 const msSum = msAll.reduce((a, b) => a + b, 0);
 P('## ① ペース');
-P(`- やった日: ${days.length}/${DAYS}日・解いた数: ${g.length}問（ほか道具えらび等 ${evs.length - g.length}）・正答率: ${pct(ok, g.length)}`);
+P(`- やった日: ${days.length}/${DAYS}日・解いた数: ${g.length}問・正答率: ${pct(ok, g.length)}（ほか道具えらび等 ${nOther.length}回・${pct(okOther, nOther.length)}）`);
 P(`- 学習時間: 合計 ${Math.round(msSum / 60000)}分・1問平均 ${sec(msAll.length ? msSum / msAll.length : null)}`);
 const byDay = {};
-evs.forEach(e => { const d = byDay[e.day] || (byDay[e.day] = { n: 0, ok: 0 }); d.n++; if (e.ok) d.ok++; });
+g.forEach(e => { const d = byDay[e.day] || (byDay[e.day] = { n: 0, ok: 0 }); d.n++; if (e.ok) d.ok++; });
 P(`- 日ごと: ${Object.entries(byDay).map(([d, x]) => `${d.slice(5)} ${x.n}問(${pct(x.ok, x.n)})`).join(' / ') || 'なし'}`);
 if (devs.length) {
   const sm = Mastery.summary();
