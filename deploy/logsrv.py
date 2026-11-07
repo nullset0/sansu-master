@@ -18,7 +18,8 @@ MAX_BODY = 2 * 1024 * 1024
 DEV_RE = re.compile(r"^[a-z0-9]{8,40}$")
 JST = timezone(timedelta(hours=9))
 # 認証は付けない（子どもの端末にログインさせない）。かわりに量で守る:
-MAX_DEVS = 20                    # 端末の数。これを超える新しい端末は受け付けない
+MAX_NEW_DEVS_PER_DAY = 10       # 1日に増やせる新しい端末の数（枠を埋められても翌日には戻る）
+MAX_BYTES_PER_DAY = 50 * 1024 * 1024   # 全端末あわせて1日に書く量
 MAX_EVENTS_FILE = 3 * 1024 * 1024   # 1端末1日の1問記録。子どもが1日に解く量の100倍以上
 MAX_STATE = 800 * 1024           # 全体状態1つ。全問を解いても200KB程度
 MAX_STATE_DAYS = 800             # 日ごとの全体状態を残す日数の上限（端末ごと）
@@ -50,7 +51,17 @@ def known_devs():
     return a
 
 
+_quota = {"day": None, "new": 0, "bytes": 0}
+
+
+def quota(day):
+    if _quota["day"] != day:
+        _quota.update(day=day, new=0, bytes=0)
+    return _quota
+
+
 class H(BaseHTTPRequestHandler):
+    timeout = 20   # 途中で止まった接続にスレッドを握らせない
     def _send(self, code, obj):
         b = json.dumps(obj).encode()
         self.send_response(code)
@@ -83,35 +94,48 @@ class H(BaseHTTPRequestHandler):
         dev = str(body.get("dev") or "")
         if not DEV_RE.match(dev):
             return self._send(400, {"ok": False})
-        if dev not in known_devs() and len(known_devs()) >= MAX_DEVS:
-            return self._send(429, {"ok": False, "why": "devs"})
 
         now = datetime.now(JST)
         day = now.strftime("%Y-%m-%d")
+        qt = quota(day)
+        if dev not in known_devs():
+            if qt["new"] >= MAX_NEW_DEVS_PER_DAY:
+                return self._send(429, {"ok": False, "why": "devs"})
+            qt["new"] += 1
+
+        # 先に全部確かめてから書く。受け取れない部分は捨てて 200 を返す
+        # （エラーを返すと端末が同じ記録を送り直しつづける）
+        skipped = []
         events = body.get("events") or []
         if not isinstance(events, list):
             events = []
         events = [e for e in events[:1000] if isinstance(e, dict)]
-        if events:
-            path = os.path.join(DATA, "events", dev, day + ".jsonl")
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            if os.path.exists(path) and os.path.getsize(path) > MAX_EVENTS_FILE:
-                return self._send(429, {"ok": False, "why": "events"})
-            rt = now.isoformat(timespec="seconds")
-            with open(path, "a", encoding="utf-8") as f:
-                for e in events:
-                    e["rt"] = rt
-                    f.write(json.dumps(e, ensure_ascii=False) + "\n")
+        rt = now.isoformat(timespec="seconds")
+        ev_text = "".join(json.dumps(dict(e, rt=rt), ensure_ascii=False) + "\n" for e in events)
+        ev_path = os.path.join(DATA, "events", dev, day + ".jsonl")
+        if events and ((os.path.exists(ev_path) and os.path.getsize(ev_path) > MAX_EVENTS_FILE)
+                       or qt["bytes"] + len(ev_text) > MAX_BYTES_PER_DAY):
+            ev_text = ""
+            skipped.append("events")
         st = body.get("state")
-        if isinstance(st, dict):
-            text = json.dumps(st, ensure_ascii=False)
-            if len(text) > MAX_STATE:
-                return self._send(413, {"ok": False, "why": "state"})
-            write_atomic(os.path.join(DATA, "state", dev + ".json"), text)
+        st_text = json.dumps(st, ensure_ascii=False) if isinstance(st, dict) else ""
+        if st_text and (len(st_text) > MAX_STATE or qt["bytes"] + len(ev_text) + len(st_text) > MAX_BYTES_PER_DAY):
+            st_text = ""
+            skipped.append("state")
+
+        if ev_text:
+            os.makedirs(os.path.dirname(ev_path), exist_ok=True)
+            with open(ev_path, "a", encoding="utf-8") as f:
+                f.write(ev_text)
+        if st_text:
+            write_atomic(os.path.join(DATA, "state", dev + ".json"), st_text)
             daily = os.path.join(DATA, "state", dev)
             if not os.path.isdir(daily) or len(os.listdir(daily)) < MAX_STATE_DAYS:
-                write_atomic(os.path.join(daily, day + ".json"), text)
-        return self._send(200, {"ok": True, "n": len(events)})
+                write_atomic(os.path.join(daily, day + ".json"), st_text)
+        qt["bytes"] += len(ev_text) + len(st_text)
+        if skipped:
+            sys.stderr.write("skipped %s dev=%s\n" % (",".join(skipped), dev))
+        return self._send(200, {"ok": True, "n": len(events), "skipped": skipped})
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s %s\n" % (self.log_date_time_string(), fmt % args))

@@ -34,7 +34,9 @@ const evDir = path.join(DIR, 'events'), stDir = path.join(DIR, 'state');
 const byDev = {};
 if (fs.existsSync(evDir)) for (const dev of fs.readdirSync(evDir)) {
   const seen = new Set(), list = byDev[dev] = [];
-  for (const f of fs.readdirSync(path.join(evDir, dev))) {
+  // ファイル名は受信日。期間より2日以上前のファイルは読まない（日付の境目ぶん余裕をみる）
+  const floor = new Date(new Date(since + 'T00:00:00Z').getTime() - 2 * 86400e3).toISOString().slice(0, 10);
+  for (const f of fs.readdirSync(path.join(evDir, dev)).filter(f => f.slice(0, 10) >= floor)) {
     for (const line of fs.readFileSync(path.join(evDir, dev, f), 'utf8').split('\n')) {
       if (!line.trim()) continue;
       try {
@@ -134,7 +136,7 @@ const miss = {};
 g.filter(e => !e.ok).forEach(e => { (miss[e.q] = miss[e.q] || []).push(e.a); });
 const rep = Object.entries(miss).filter(([, a]) => a.length >= 2).slice(0, 12);
 P(rep.length ? rep.map(([qid, a]) => {
-  const q = QBY[qid] || {};
+  const q = QBY[qid] || { unit: (g.find(e => e.q === qid) || {}).u };
   const mc = Array.isArray(q.opts) && q.a != null;
   const ans = mc ? q.opts[q.a] : `${q.ans}${q.unitLabel || ''}`;
   const given = a.map(x => (mc && x != null && /^\d+$/.test(x) ? q.opts[+x] : x)).join(' / ');

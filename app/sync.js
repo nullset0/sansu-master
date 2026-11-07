@@ -34,7 +34,7 @@ if (!dev || !/^[a-z0-9]{8,40}$/.test(dev)) {
 const page = () => (location.pathname.split('/').pop() || 'index.html') + location.search;
 
 // 1件ごとに一意のIDをつける。送れたものはIDで消す（数で消すと、送信中に
-// beacon が先頭を消していた場合に未送信の分まで消える）。二重に届いても週報はIDで1件にまとめる
+// 送信中に増えた分まで消える）。二重に届いても週報はIDで1件にまとめる
 let seq = 0;
 const newId = () => Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 6);
 function dropSent(events) {
@@ -55,7 +55,7 @@ Store.grade = function (qid, correct, unitId, opts = {}) {
   const r = g0.apply(this, arguments);
   try {
     push({ k: 'g', q: qid, u: unitId || null, ok: !!correct,
-           ms: Math.min(Number(opts.ms) || 0, 300000) || null,
+           ms: Math.min(Number(opts.ms || opts.logMs) || 0, 300000) || null,   // logMs=記録にだけ残す時間（タイムアタック）
            h: opts.usedHint ? 1 : 0,
            a: opts.given == null ? null : String(opts.given).slice(0, 40),
            box: r && r.box });
@@ -94,12 +94,14 @@ async function flush() {
 
 // 閉じる・裏に回るときは小さく送る（全体は送らない＝sendBeacon の上限64KB対策）
 function beacon() {
-  if (!LIVE || busy) return;   // 送信中なら任せる（同じ記録を二重に送らない）
+  if (!LIVE) return;
   const q = ls.get(QKEY, []);
   if (!q.length || !navigator.sendBeacon) return;
   const events = q.slice(0, 200);
   const ok = navigator.sendBeacon(URL_, new Blob([JSON.stringify({ dev, v: 1, events })], { type: 'application/json' }));
-  if (ok) dropSent(events);
+  // 待ち行列からは消さない。sendBeacon の true は「送る予定に入れた」だけで、届いた保証がない。
+  // 次に開いたとき fetch でもう一度送り、二重に届いた分は週報がIDで1件にまとめる
+  void ok;
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') beacon(); else schedule(500); });
 window.addEventListener('pagehide', beacon);
