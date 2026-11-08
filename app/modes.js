@@ -96,9 +96,7 @@ function timeAttack(host, opts = {}) {
     const correct = q.kind === 'mc' ? !!mcOK : Math.abs(parseFloat(buf) - q.ans) <= (q.tol||0) + 1e-9;
     times.push({ id:q.id, ms:dt, ok:correct, q });
     if (correct) { ok++; SFX.correct(); } else SFX.wrong();
-    Store.grade(q.id, correct, q.unit, { logMs: dt,
-      given: q.kind === 'mc' ? (btn ? (q._variant ? q.opts[+btn.dataset.i] : btn.dataset.i) : null) : buf,
-      gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
+    Store.grade(q.id, correct, q.unit, { logMs: dt, given: q.kind === 'mc' ? (btn ? btn.dataset.i : null) : buf });
     if (q.kind === 'mc') {
       $$('.opt').forEach(x => x.classList.add(Number(x.dataset.i) === q.a ? 'ok' : (x === btn ? 'ng' : 'dim')));
     } else $('#disp').classList.add(correct ? 'ok' : 'ng');
