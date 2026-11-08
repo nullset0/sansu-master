@@ -16,8 +16,22 @@ const rich = s => esc(s)
 let S = null;   // セッション状態
 
 /* ---------- 問題データの正規化 ---------- */
-function normalize(q, ctx = {}) {
+// 2回以上正解した問題は、3回に2回の割合で「同じ単元・同じレベルの新しい数字の問題」に差しかえる。
+// 答えの数字を覚えて正解する（＝解き方は身についていない）のを防ぐため。
+// 採点は元の問題のカード（q.id）につくので、単元の済の判定や進み方は変わらない。
+const VARIANT_MIN_OK = 2, VARIANT_RATE = 0.67;
+function variantOf(q) {
+  if (typeof Gen === 'undefined' || !Gen.has(q.unit) || q.lead || q.partTotal || q._variant) return null;
+  const c = Store.state.cards[q.id];
+  if (!c || (c.ok || 0) < VARIANT_MIN_OK || Math.random() >= VARIANT_RATE) return null;
+  const v = Gen.variant(q.unit, q.lv);
+  if (!v) return null;
   const o = Object.assign({}, q);
+  ['opts','a','ans','tol','unitLabel','fig','why','hints','hint','steps','given','lead','leadFig'].forEach(k => delete o[k]);
+  return Object.assign(o, v, { _variant: true });
+}
+function normalize(q, ctx = {}) {
+  const o = variantOf(q) || Object.assign({}, q);
   o.unit = o.unit || ctx.unit || 'misc';
   o.lv   = o.lv || ctx.lv || 1;
   o.kind = (o.ans != null) ? 'num' : 'mc';
@@ -188,6 +202,7 @@ function render() {
             : '<span class="chip rev">ふくしゅう</span>';
   const lv = q.lv >= 4 ? `<span class="chip lv">レベル${q.lv}</span>` : '';
   const pat = q.pattern ? `<span class="chip">${esc(q.pattern)}</span>` : '';
+  const vchip = q._variant ? `<span class="chip lv">🎲 数字がかわったよ</span>` : '';
   const check = S.mode === 'check';
   const WHY = {'なおし':['🔁','d'],'ふくしゅう':['♻️','rev'],'よわいところ':['🧱','new'],
                'あたらしい':['✨','new'],'おうよう':['🔥','lv'],'しあげ':['🏁','']};
@@ -202,7 +217,7 @@ function render() {
   <div class="q-shell">
     <div class="q-progress"><i style="width:${(S.i/S.list.length)*100}%"></i></div>
     <div class="q-meta">
-      <span class="chip">${S.i+1} / ${S.list.length}</span>${check?'<span class="chip new">チェック</span>':tag}${why}${lv}${part}${pat}
+      <span class="chip">${S.i+1} / ${S.list.length}</span>${check?'<span class="chip new">チェック</span>':tag}${why}${vchip}${lv}${part}${pat}
       ${q.tag && q.tag !== q.pattern ? `<span class="chip">${esc(q.tag)}</span>` : ''}
     </div>
     ${lead}${given}
@@ -315,7 +330,8 @@ function judge(q, given, ok, btn) {
   }
 
   const res = Store.grade(q.id, ok, q.unit,
-    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0, given });
+    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0, given,
+      gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);

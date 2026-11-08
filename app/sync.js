@@ -58,7 +58,9 @@ Store.grade = function (qid, correct, unitId, opts = {}) {
            ms: Math.min(Number(opts.ms || opts.logMs) || 0, 300000) || null,   // logMs=記録にだけ残す時間（タイムアタック）
            h: opts.usedHint ? 1 : 0,
            a: opts.given == null ? null : String(opts.given).slice(0, 40),
-           box: r && r.box });
+           box: r && r.box,
+           // 数字を変えた問題なら、そのとき出した問題文と正解も残す（週報で答えた値と見くらべる）
+           g: opts.gen ? { k: opts.gen.k, q: String(opts.gen.q).slice(0, 200), ans: String(opts.gen.ans) } : undefined });
   } catch (e) {}
   return r;
 };
