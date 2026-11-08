@@ -403,18 +403,29 @@ function toQuestion(o) {
   }
   if (o.fmt === 'ratio') return Object.assign(base, { opts: ratioOpts(String(a)), a: 0 });
   if (!finite(a)) return null;
-  const numOK = a.d === 1 || ((o.fmt === 'int' || o.fmt === 'dec' || o.fmt === 'any') && isTerm(a));
+  // 'any'（分数と小数のまじった計算）は、分数の答えを小数で打たせない（0.78125 など）→ 分数の4択
+  const numOK = a.d === 1 || ((o.fmt === 'int' || o.fmt === 'dec') && isTerm(a));
   if (numOK) return Object.assign(base, { ans: a.n / a.d, tol: 1e-6, unitLabel: unit });
   return Object.assign(base, { opts: fracOpts(a, unit), a: 0 });
 }
 
-// 道場のレベル(1〜3) ← 算数マスターの問題のレベル(1〜5)
-const levelOf = lv => (lv || 1) <= 1 ? 1 : (lv <= 2 ? 2 : 3);
+// 道場のレベル(1〜3) ← その単元の中で、元の問題が易しい方か難しい方か。
+// 算数マスターのレベル(1〜5)をそのまま詰めると、全問レベル3の「5年 分数」が
+// 道場の最難段（帯分数どうし）になってしまう。単元の最小〜最大を3つに分ける。
+// 単元の問題がみな同じレベルなら、いちばん易しい段（その単元の基本形）にする。
+function levelOf(unitId, lv) {
+  const qs = (typeof DATA !== 'undefined' && DATA.byUnit) ? DATA.byUnit(unitId) : [];
+  const ls = qs.map(q => q.lv || 1);
+  if (!ls.length) return 1;
+  const lo = Math.min.apply(null, ls), hi = Math.max.apply(null, ls);
+  if (hi === lo) return 1;
+  return 1 + Math.round(((lv || lo) - lo) / (hi - lo) * 2);
+}
 
-function make(key, lv) {
+function make(key, l) {   // l = 道場のレベル 1〜3
   for (let i = 0; i < 8; i++) {          // まれに条件を満たさない数が出るので作り直す
     let o = null;
-    try { o = G[key](levelOf(lv)); } catch (e) { o = null; }
+    try { o = G[key](l); } catch (e) { o = null; }
     const q = o && toQuestion(o);
     if (q && q.q && !/undefined|NaN|Infinity/.test(q.q + (q.opts || []).join() + (q.ans == null ? '' : q.ans))
         && (q.ans != null ? isFinite(q.ans) : (q.opts.length >= 2 && q.a >= 0))
@@ -432,8 +443,8 @@ const forUnit = unitId => BY_UNIT[unitId] || [];
 function variant(unitId, lv) {
   const ks = forUnit(unitId);
   if (!ks.length) return null;
-  return make(pick(ks), lv);
+  return make(pick(ks), levelOf(unitId, lv));
 }
 
-return { make, variant, has, forUnit, MAP, keys: () => Object.keys(G), text };
+return { make, variant, has, forUnit, levelOf, MAP, keys: () => Object.keys(G), text };
 })();

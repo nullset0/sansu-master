@@ -25,16 +25,18 @@ const VARIANT_MIN_OK = 2, VARIANT_RATE = 0.67;
 function variantOf(q) {
   if (typeof Gen === 'undefined' || q._vDone || !Gen.has(q.unit) || q.lead || q.partTotal) return null;
   const c = Store.state.cards[q.id];
-  // 2回以上正解していて、しかも直近は正解（run>0）のものだけ。最近まちがえた問題は元の問題で直す
-  if (!c || (c.ok || 0) < VARIANT_MIN_OK || !(c.run > 0) || Math.random() >= VARIANT_RATE) return null;
+  if (!c) return null;
+  // 数字を変えた問題をまちがえたカードは、数字を変えた問題で正解するまで毎回差しかえる
+  // （元の問題に戻すと、答えを覚えている問題で「直った」ことになってしまう）
+  const must = !!c.vNg;
+  // ふだんは、2回以上正解していて直近も正解（run>0）のものだけ。最近まちがえた問題は元の問題で直す
+  if (!must && ((c.ok || 0) < VARIANT_MIN_OK || !(c.run > 0) || Math.random() >= VARIANT_RATE)) return null;
   const v = Gen.variant(q.unit, q.lv);
   if (!v) return null;
-  const o = Object.assign({}, q);
-  // 元の問題に結びついた表示（説明の図・メモ・道具・タグ）は数字が合わないので持ちこまない
-  ['opts','a','ans','tol','unitLabel','fig','why','whyFig','memo','hints','hint','steps','given','lead','leadFig',
-   'pattern','tag'].forEach(k => delete o[k]);
   const u = DATA.unit(q.unit);
-  return Object.assign(o, v, { _variant: true, tag: u ? u.name : undefined });
+  // 元の問題から持ちこむのは、採点と出題の理由に要るものだけ（説明の図・メモ・並び順などは数字が合わない）
+  return Object.assign({ id: q.id, unit: q.unit, lv: q.lv, _why: q._why }, v,
+                       { _variant: true, tag: u ? u.name : undefined });
 }
 function normalize(q, ctx = {}) {
   const o = (!ctx.noVariant && variantOf(q)) || Object.assign({}, q);
@@ -341,6 +343,8 @@ function judge(q, given, ok, btn) {
     { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0,
       given: q._variant && q.kind === 'mc' && given != null ? q.opts[given] : given,   // 差しかえの4択は文字で残す
       gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
+  // 数字を変えた問題の結果をカードに覚えておく（まちがえたら、正解するまで次も数字を変えて出す）
+  if (q._variant) { const c = Store.state.cards[q.id]; if (c) { c.vNg = !ok; Store.save(); } }
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);

@@ -133,16 +133,15 @@ P('');
 
 P('## ④ 同じ問題を2回以上まちがえた（答えた値つき）');
 const miss = {};
-g.filter(e => !e.ok).forEach(e => { (miss[e.q] = miss[e.q] || []).push(e); });
+g.filter(e => !e.ok && !e.g).forEach(e => { (miss[e.q] = miss[e.q] || []).push(e); });   // 数字を変えた問題は⑤で別に出す
 const rep = Object.entries(miss).filter(([, a]) => a.length >= 2).slice(0, 12);
 P(rep.length ? rep.map(([qid, es]) => {
   const q = QBY[qid] || { unit: es[0].u };
   const mc = Array.isArray(q.opts) && q.a != null;
   const one = e => {
-    if (e.g) return `「${e.g.q.replace(/\s+/g, ' ').slice(0, 40)}」正解 ${e.g.ans}→${e.a}`;   // 数字を変えた問題
     const ans = mc ? q.opts[q.a] : `${q.ans}${q.unitLabel || ''}`;
     const given = mc && e.a != null && /^\d+$/.test(e.a) ? q.opts[+e.a] : e.a;   // 元の問題の4択は番号で残っている
-    return `正解 ${ans}→${given}`;
+    return `正解 ${ans}→${given == null ? 'わからない' : given}`;
   };
   return `- ${uname(q.unit)}「${String(q.q || qid).replace(/\s+/g, ' ').slice(0, 50)}」 ${es.map(one).join(' ／ ')}`;
 }).join('\n') : '- なし');
@@ -156,6 +155,8 @@ const gv = g.filter(e => e.g),
 const okN = a => a.filter(e => e.ok).length;
 P(gv.length ? `- 数字を変えた問題 ${okN(gv)}/${gv.length} = ${pct(okN(gv), gv.length)}・同じ条件で元の問題のまま出たもの ${okN(go)}/${go.length} = ${pct(okN(go), go.length)}`
             : '- まだ出ていない');
+const gNg = gv.filter(e => !e.ok).slice(-10);
+if (gNg.length) P(gNg.map(e => `  - ${uname(e.u)}「${e.g.q.replace(/\s+/g, ' ').slice(0, 50)}」 正解 ${e.g.ans}→${e.a == null ? 'わからない' : e.a}`).join('\n'));
 P('');
 
 P('## ⑥ ヒントに頼っている単元（ヒント率40%以上）');
