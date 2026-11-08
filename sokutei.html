@@ -66,6 +66,7 @@
 <script src="data/jk-num2.js"></script>
 <script src="data/jk-drill.js"></script>
 <script src="data/hard.js"></script>
+<script src="data/gen.js"></script>
 <script src="data/graph.js"></script>
 <script src="app/mastery.js"></script>
 <script src="app/goal.js"></script>
@@ -97,7 +98,7 @@
     const out = [];
     for (let r = 0; out.length < n && r < 40; r++)
       for (const b of buckets) { if (out.length >= n) break; if (b.length) out.push(b.pop()); }
-    return out.map(q => Quiz.normalize(q));
+    return out.map(q => Quiz.normalize(q, { noVariant: true }));   // 測定は元の問題で測る
   }
 
   const runGrade = (qs) => new Promise(res => {

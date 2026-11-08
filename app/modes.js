@@ -35,7 +35,7 @@ function timeAttack(host, opts = {}) {
   // すでに一度は正解した問題を優先（知らない問題でタイムを測っても意味がない）
   const known = all.filter(q => st.cards[q.id] && st.cards[q.id].ok > 0);
   const src = known.length >= n ? known : all;
-  const list = Store.shuffle(src).slice(0, n).map(q => Quiz.normalize(q));
+  const list = Store.shuffle(src).slice(0, n).map(q => Quiz.normalize(q, { noVariant: true }));   // タイムは同じ問題でくらべる
   if (list.length < 3) { host.innerHTML = '<div class="card"><p class="muted">まだ問題が足りません。ふつうの練習を少しやってから来てください。</p><a class="btn ghost wide" href="index.html">ホームへ</a></div>'; return; }
 
   let i = 0, ok = 0, t0 = 0, times = [], buf = '', tick = null;

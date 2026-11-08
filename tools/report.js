@@ -59,9 +59,9 @@ vm.createContext(sandbox);
  'questions/g1.js','questions/g2.js','questions/g3.js','questions/g4.js','questions/g5.js','questions/g6.js',
  'data/elem.js','data/jk-num.js','data/jk-ratio.js','data/jk-toku.js','data/jk-speed.js','data/jk-geo.js',
  'data/jk-calc.js','data/jk-speed2.js','data/jk-geo2.js','data/jk-num2.js','data/jk-drill.js','data/hard.js',
- 'data/graph.js','app/mastery.js','app/goal.js']
+ 'data/gen.js','data/graph.js','app/mastery.js','app/goal.js']
   .forEach(f => vm.runInContext(fs.readFileSync(path.join(APP, f), 'utf8'), sandbox, { filename: f }));
-const { Store, DATA, Mastery, Goal } = sandbox;
+const { Store, DATA, Mastery, Goal, Gen } = sandbox;
 const ALL = DATA.all();
 const QBY = Object.fromEntries(ALL.map(q => [q.id, q]));
 const uname = id => { const u = DATA.unit(id); return u ? u.name : id; };
@@ -133,18 +133,33 @@ P('');
 
 P('## ④ 同じ問題を2回以上まちがえた（答えた値つき）');
 const miss = {};
-g.filter(e => !e.ok).forEach(e => { (miss[e.q] = miss[e.q] || []).push(e.a); });
+g.filter(e => !e.ok && !e.g).forEach(e => { (miss[e.q] = miss[e.q] || []).push(e); });   // 数字を変えた問題は⑤で別に出す
 const rep = Object.entries(miss).filter(([, a]) => a.length >= 2).slice(0, 12);
-P(rep.length ? rep.map(([qid, a]) => {
-  const q = QBY[qid] || { unit: (g.find(e => e.q === qid) || {}).u };
+P(rep.length ? rep.map(([qid, es]) => {
+  const q = QBY[qid] || { unit: es[0].u };
   const mc = Array.isArray(q.opts) && q.a != null;
-  const ans = mc ? q.opts[q.a] : `${q.ans}${q.unitLabel || ''}`;
-  const given = a.map(x => (mc && x != null && /^\d+$/.test(x) ? q.opts[+x] : x)).join(' / ');
-  return `- ${uname(q.unit)}「${String(q.q || qid).replace(/\s+/g, ' ').slice(0, 50)}」 正解 ${ans} ／ 答えた ${given}`;
+  const one = e => {
+    const ans = mc ? q.opts[q.a] : `${q.ans}${q.unitLabel || ''}`;
+    const given = mc && e.a != null && /^\d+$/.test(e.a) ? q.opts[+e.a] : e.a;   // 元の問題の4択は番号で残っている
+    return `正解 ${ans}→${given == null ? 'わからない' : given}`;
+  };
+  return `- ${uname(q.unit)}「${String(q.q || qid).replace(/\s+/g, ' ').slice(0, 50)}」 ${es.map(one).join(' ／ ')}`;
 }).join('\n') : '- なし');
 P('');
 
-P('## ⑤ ヒントに頼っている単元（ヒント率40%以上）');
+// 数字を変えた問題の正答率（もとの問題より大きく低ければ、答えを覚えていた疑い）
+P('## ⑤ 数字を変えた問題と、もとの問題の正答率');
+// くらべる相手は「差しかえの条件を満たしていたのに、元の問題のまま出たもの」（2回以上正解・直近正解）
+const gv = g.filter(e => e.g),
+      go = g.filter(e => !e.g && (e.pk || 0) >= 2 && (e.pr || 0) > 0 && Gen.has(e.u || (QBY[e.q] || {}).unit));
+const okN = a => a.filter(e => e.ok).length;
+P(gv.length ? `- 数字を変えた問題 ${okN(gv)}/${gv.length} = ${pct(okN(gv), gv.length)}・同じ条件で元の問題のまま出たもの ${okN(go)}/${go.length} = ${pct(okN(go), go.length)}`
+            : '- まだ出ていない');
+const gNg = gv.filter(e => !e.ok).slice(-10);
+if (gNg.length) P(gNg.map(e => `  - ${uname(e.u)}「${e.g.q.replace(/\s+/g, ' ').slice(0, 50)}」 正解 ${e.g.ans}→${e.a == null ? 'わからない' : e.a}`).join('\n'));
+P('');
+
+P('## ⑥ ヒントに頼っている単元（ヒント率40%以上）');
 const hint = rows.filter(r => r.n >= 3 && r.h / r.n >= 0.4).sort((a, b) => b.h / b.n - a.h / a.n).slice(0, 6);
 P(hint.length ? hint.map(r => `- ${uname(r.id)}: ${r.h}/${r.n}`).join('\n') : '- なし');
 

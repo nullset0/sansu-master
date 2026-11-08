@@ -16,8 +16,31 @@ const rich = s => esc(s)
 let S = null;   // セッション状態
 
 /* ---------- 問題データの正規化 ---------- */
+// 2回以上正解した問題は、3回に2回の割合で「同じ単元・同じレベルの新しい数字の問題」に差しかえる。
+// 答えの数字を覚えて正解する（＝解き方は身についていない）のを防ぐため。
+// 採点は元の問題のカード（q.id）につくので、単元の済の判定や進み方は変わらない。
+const VARIANT_MIN_OK = 2, VARIANT_RATE = 0.67;
+// 1つの問題につき、差しかえるかどうかは1回だけ決める（_vDone）。
+// 呼び出し側で normalize してから start に渡す画面があり、2回くじを引くと割合が上がってしまう。
+function variantOf(q) {
+  if (typeof Gen === 'undefined' || q._vDone || !Gen.has(q.unit) || q.lead || q.partTotal) return null;
+  const c = Store.state.cards[q.id];
+  if (!c) return null;
+  // 数字を変えた問題をまちがえたカードは、数字を変えた問題で正解するまで毎回差しかえる
+  // （元の問題に戻すと、答えを覚えている問題で「直った」ことになってしまう）
+  const must = !!c.vNg;
+  // ふだんは、2回以上正解していて直近も正解（run>0）のものだけ。最近まちがえた問題は元の問題で直す
+  if (!must && ((c.ok || 0) < VARIANT_MIN_OK || !(c.run > 0) || Math.random() >= VARIANT_RATE)) return null;
+  const v = Gen.variant(q.unit, q.lv);
+  if (!v) return null;
+  const u = DATA.unit(q.unit);
+  // 元の問題から持ちこむのは、採点と出題の理由に要るものだけ（説明の図・メモ・並び順などは数字が合わない）
+  return Object.assign({ id: q.id, unit: q.unit, lv: q.lv, _why: q._why }, v,
+                       { _variant: true, tag: u ? u.name : undefined });
+}
 function normalize(q, ctx = {}) {
-  const o = Object.assign({}, q);
+  const o = (!ctx.noVariant && variantOf(q)) || Object.assign({}, q);
+  if (!ctx.noVariant) o._vDone = true;
   o.unit = o.unit || ctx.unit || 'misc';
   o.lv   = o.lv || ctx.lv || 1;
   o.kind = (o.ans != null) ? 'num' : 'mc';
@@ -160,7 +183,8 @@ const memoHTML = `
    セッション
    ========================================================= */
 function start(opts) {
-  const pool = opts.pool.map(q => normalize(q, opts));
+  // pool はまだ選ぶ前なので差しかえない（使わない問題まで作るのは無駄）。差しかえは list で決める
+  const pool = opts.pool.map(q => normalize(q, Object.assign({}, opts, { noVariant: true })));
   const n = opts.count
     || (typeof Goal !== 'undefined' && Goal.dailyCount())
     || Number(Store.get('dailyGoal')) || 5;
@@ -188,6 +212,7 @@ function render() {
             : '<span class="chip rev">ふくしゅう</span>';
   const lv = q.lv >= 4 ? `<span class="chip lv">レベル${q.lv}</span>` : '';
   const pat = q.pattern ? `<span class="chip">${esc(q.pattern)}</span>` : '';
+  const vchip = q._variant ? `<span class="chip lv">🎲 数字がかわったよ</span>` : '';
   const check = S.mode === 'check';
   const WHY = {'なおし':['🔁','d'],'ふくしゅう':['♻️','rev'],'よわいところ':['🧱','new'],
                'あたらしい':['✨','new'],'おうよう':['🔥','lv'],'しあげ':['🏁','']};
@@ -202,7 +227,7 @@ function render() {
   <div class="q-shell">
     <div class="q-progress"><i style="width:${(S.i/S.list.length)*100}%"></i></div>
     <div class="q-meta">
-      <span class="chip">${S.i+1} / ${S.list.length}</span>${check?'<span class="chip new">チェック</span>':tag}${why}${lv}${part}${pat}
+      <span class="chip">${S.i+1} / ${S.list.length}</span>${check?'<span class="chip new">チェック</span>':tag}${why}${vchip}${lv}${part}${pat}
       ${q.tag && q.tag !== q.pattern ? `<span class="chip">${esc(q.tag)}</span>` : ''}
     </div>
     ${lead}${given}
@@ -315,7 +340,11 @@ function judge(q, given, ok, btn) {
   }
 
   const res = Store.grade(q.id, ok, q.unit,
-    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0, given });
+    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0,
+      given: q._variant && q.kind === 'mc' && given != null ? q.opts[given] : given,   // 差しかえの4択は文字で残す
+      gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
+  // 数字を変えた問題の結果をカードに覚えておく（まちがえたら、正解するまで次も数字を変えて出す）
+  if (q._variant) { const c = Store.state.cards[q.id]; if (c) { c.vNg = !ok; Store.save(); } }
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {
     S.correct++; S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);

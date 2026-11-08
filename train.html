@@ -55,6 +55,7 @@
 <script src="data/jk-num2.js"></script>
 <script src="data/jk-drill.js"></script>
 <script src="data/hard.js"></script>
+<script src="data/gen.js"></script>
 <script src="data/graph.js"></script>
 <script src="app/modes.js"></script>
 <script src="app/mastery.js"></script>
@@ -83,7 +84,7 @@
     const step = () => {
       if (gi >= Mastery.GRADES.length) return finishPlacement();
       const g = Mastery.GRADES[gi];
-      const qs = Mastery.ladderFor(g, 3).map(q => Quiz.normalize(q));
+      const qs = Mastery.ladderFor(g, 3).map(q => Quiz.normalize(q, { noVariant: true }));   // 診断は元の問題で測る
       if (!qs.length) { gi++; return step(); }
       const name = (DATA.AREAS[g] || {}).name || g;
       host.innerHTML = `<div class="card" style="text-align:center">
