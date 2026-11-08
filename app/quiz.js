@@ -20,18 +20,25 @@ let S = null;   // セッション状態
 // 答えの数字を覚えて正解する（＝解き方は身についていない）のを防ぐため。
 // 採点は元の問題のカード（q.id）につくので、単元の済の判定や進み方は変わらない。
 const VARIANT_MIN_OK = 2, VARIANT_RATE = 0.67;
+// 1つの問題につき、差しかえるかどうかは1回だけ決める（_vDone）。
+// 呼び出し側で normalize してから start に渡す画面があり、2回くじを引くと割合が上がってしまう。
 function variantOf(q) {
-  if (typeof Gen === 'undefined' || !Gen.has(q.unit) || q.lead || q.partTotal || q._variant) return null;
+  if (typeof Gen === 'undefined' || q._vDone || !Gen.has(q.unit) || q.lead || q.partTotal) return null;
   const c = Store.state.cards[q.id];
-  if (!c || (c.ok || 0) < VARIANT_MIN_OK || Math.random() >= VARIANT_RATE) return null;
+  // 2回以上正解していて、しかも直近は正解（run>0）のものだけ。最近まちがえた問題は元の問題で直す
+  if (!c || (c.ok || 0) < VARIANT_MIN_OK || !(c.run > 0) || Math.random() >= VARIANT_RATE) return null;
   const v = Gen.variant(q.unit, q.lv);
   if (!v) return null;
   const o = Object.assign({}, q);
-  ['opts','a','ans','tol','unitLabel','fig','why','hints','hint','steps','given','lead','leadFig'].forEach(k => delete o[k]);
-  return Object.assign(o, v, { _variant: true });
+  // 元の問題に結びついた表示（説明の図・メモ・道具・タグ）は数字が合わないので持ちこまない
+  ['opts','a','ans','tol','unitLabel','fig','why','whyFig','memo','hints','hint','steps','given','lead','leadFig',
+   'pattern','tag'].forEach(k => delete o[k]);
+  const u = DATA.unit(q.unit);
+  return Object.assign(o, v, { _variant: true, tag: u ? u.name : undefined });
 }
 function normalize(q, ctx = {}) {
-  const o = variantOf(q) || Object.assign({}, q);
+  const o = (!ctx.noVariant && variantOf(q)) || Object.assign({}, q);
+  if (!ctx.noVariant) o._vDone = true;
   o.unit = o.unit || ctx.unit || 'misc';
   o.lv   = o.lv || ctx.lv || 1;
   o.kind = (o.ans != null) ? 'num' : 'mc';
@@ -174,7 +181,8 @@ const memoHTML = `
    セッション
    ========================================================= */
 function start(opts) {
-  const pool = opts.pool.map(q => normalize(q, opts));
+  // pool はまだ選ぶ前なので差しかえない（使わない問題まで作るのは無駄）。差しかえは list で決める
+  const pool = opts.pool.map(q => normalize(q, Object.assign({}, opts, { noVariant: true })));
   const n = opts.count
     || (typeof Goal !== 'undefined' && Goal.dailyCount())
     || Number(Store.get('dailyGoal')) || 5;
@@ -330,7 +338,8 @@ function judge(q, given, ok, btn) {
   }
 
   const res = Store.grade(q.id, ok, q.unit,
-    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0, given,
+    { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0,
+      given: q._variant && q.kind === 'mc' && given != null ? q.opts[given] : given,   // 差しかえの4択は文字で残す
       gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
   S.results.push({ id:q.id, unit:q.unit, ok, given, q });
   if (ok) {

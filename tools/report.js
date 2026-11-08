@@ -141,7 +141,7 @@ P(rep.length ? rep.map(([qid, es]) => {
   const one = e => {
     if (e.g) return `「${e.g.q.replace(/\s+/g, ' ').slice(0, 40)}」正解 ${e.g.ans}→${e.a}`;   // 数字を変えた問題
     const ans = mc ? q.opts[q.a] : `${q.ans}${q.unitLabel || ''}`;
-    const given = mc && e.a != null && /^\d+$/.test(e.a) ? q.opts[+e.a] : e.a;
+    const given = mc && e.a != null && /^\d+$/.test(e.a) ? q.opts[+e.a] : e.a;   // 元の問題の4択は番号で残っている
     return `正解 ${ans}→${given}`;
   };
   return `- ${uname(q.unit)}「${String(q.q || qid).replace(/\s+/g, ' ').slice(0, 50)}」 ${es.map(one).join(' ／ ')}`;
@@ -150,8 +150,11 @@ P('');
 
 // 数字を変えた問題の正答率（もとの問題より大きく低ければ、答えを覚えていた疑い）
 P('## ⑤ 数字を変えた問題と、もとの問題の正答率');
-const gv = g.filter(e => e.g), go = g.filter(e => !e.g && Gen.has(e.u || (QBY[e.q] || {}).unit));
-P(gv.length ? `- 数字を変えた問題 ${gv.filter(e => e.ok).length}/${gv.length} = ${pct(gv.filter(e => e.ok).length, gv.length)}・同じ単元のもとの問題 ${pct(go.filter(e => e.ok).length, go.length)}`
+// くらべる相手は「差しかえの条件を満たしていたのに、元の問題のまま出たもの」（2回以上正解・直近正解）
+const gv = g.filter(e => e.g),
+      go = g.filter(e => !e.g && (e.pk || 0) >= 2 && (e.pr || 0) > 0 && Gen.has(e.u || (QBY[e.q] || {}).unit));
+const okN = a => a.filter(e => e.ok).length;
+P(gv.length ? `- 数字を変えた問題 ${okN(gv)}/${gv.length} = ${pct(okN(gv), gv.length)}・同じ条件で元の問題のまま出たもの ${okN(go)}/${go.length} = ${pct(okN(go), go.length)}`
             : '- まだ出ていない');
 P('');
 

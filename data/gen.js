@@ -285,8 +285,14 @@ G.t15=l=>{const c=R(1,4),s=c+R(4,12);const u=s-c,d=s+c;
   const Dk=lcm(u,d)*R(1,2);const tt=Dk/u+Dk/d;return{q:`静水時の速さが時速 ${s} km の船で、流れの速さが時速 ${c} km の川を ${Dk} km 上ってから同じ道を下ります。往復で何時間かかりますか。`,a:Q(tt),fmt:'int',unit:'時間',steps:[`上り 時速 ${u} km：${Dk}÷${u}＝${Dk/u} 時間`,`下り 時速 ${d} km：${Dk}÷${d}＝${Dk/d} 時間`,`合計 ${tt} 時間`]}};
 G.t16=l=>{const h=l===1?R(1,5):R(1,11);
   if(l===1){const t=Q(60*h,11);return{q:`${h} 時ちょうどから、長針と短針が次に重なるのは ${h} 時何分ですか。`,a:t,fmt:'frac',unit:'分',steps:[`${h} 時ちょうどの 2 針の角度：30×${h}＝${30*h}°`,`長針は 1 分に 6°、短針は 0.5° → 1 分で 5.5° 縮まる`,`${30*h}÷5.5＝${frTxt(t)} 分`]}}
-  if(l===2){let deg=30*h,tdeg;if(deg>90)tdeg=deg-90;else tdeg=deg+90;if(deg===90)tdeg=180;const t=Q(tdeg*2,11);return{q:`${h} 時ちょうどのあと、長針と短針がはじめて直角になるのは ${h} 時何分ですか。${deg===90?'（ちょうど '+h+' 時は除く）':''}`,a:t,fmt:'frac',unit:'分',steps:[`${h} 時の角度は ${deg}°。直角（90°）になるまでに長針が短針より ${tdeg}° 多く進む`,`1 分で 5.5° 差がつく → ${tdeg}÷5.5＝${frTxt(t)} 分`]}}
-  const deg=30*h;const tdeg=deg<180?deg+180:deg-180;const t=Q(tdeg*2,11);return{q:`${h} 時ちょうどのあと、長針と短針がはじめて一直線（180°）になるのは ${h} 時何分ですか。${deg===180?'（ちょうど '+h+' 時は除く）':''}`,a:t,fmt:'frac',unit:'分',steps:[`${h} 時の角度は ${deg}°。一直線になるまでの差 ${tdeg}°`,`${tdeg}÷5.5＝${frTxt(t)} 分`]}};
+  // 直角・一直線: h時ちょうどの「短針が長針より先にいる角度」30h は、1分に5.5°ずつ減る。
+  // それが目標の角度（直角=90/270、一直線=180）にそろう最初の時刻を、h時台（60分未満）で探す。
+  // （元の式は 5時・6時・10時・11時 で h時台を越える／ずれる答えを出していた）
+  const targets=l===2?[90,270]:[180],nm=l===2?'直角':'一直線（180°）';
+  const first=hh=>{let best=null;targets.forEach(T=>{let g=((30*hh-T)%360+360)%360;if(g===0)g=360;if(best===null||g<best)best=g});return best};
+  const hs=[];for(let x=1;x<=11;x++){if(first(x)*2/11<60)hs.push(x)}
+  const hh=pick(hs),deg=30*hh,gap=first(hh),t=Q(gap*2,11),at=targets.some(T=>deg%360===T);
+  return{q:`${hh} 時ちょうどのあと、長針と短針がはじめて${nm}になるのは ${hh} 時何分ですか。${at?'（ちょうど '+hh+' 時は除く）':''}`,a:t,fmt:'frac',unit:'分',steps:[`${hh} 時ちょうど、短針は長針より ${deg}° 先にいる`,`長針は 1 分に 6°、短針は 0.5° → 1 分で 5.5° 差が縮まる`,`${nm}になるまでに縮める角度は ${gap}° → ${gap}÷5.5＝${frTxt(t)} 分`]}};
 G.t17=l=>{
   if(l===1){let W,p;do{W=pick([100,150,200,250,300,400,500]);p=pick([2,4,5,6,8,10,12,15,20])}while((W*p)%100!==0);return{q:`${p}% の食塩水 ${W} g には、食塩が何 g とけていますか。`,a:Q(W*p/100),fmt:'int',unit:'g',steps:[`食塩＝食塩水×濃度`,`${W}×${p/100}＝${W*p/100}`]}}
   if(l===2){let W1,p1,W2,p2,tr=0;do{W1=pick([100,200,300]);W2=pick([100,200,300,400]);p1=pick([4,5,6,8,10]);p2=pick([10,12,15,20]);tr++}while(((W1*p1+W2*p2)%(W1+W2)!==0||p1===p2)&&tr<300);const r=(W1*p1+W2*p2)/(W1+W2);return{q:`${p1}% の食塩水 ${W1} g と ${p2}% の食塩水 ${W2} g を混ぜると、何% の食塩水になりますか。`,a:Q(W1*p1+W2*p2,W1+W2),fmt:'any',unit:'%',steps:[`食塩：${W1}×${p1/100}＋${W2}×${p2/100}＝${(W1*p1+W2*p2)/100} g`,`食塩水：${W1+W2} g → ${(W1*p1+W2*p2)/100}÷${W1+W2}＝${ansTxt(Q(W1*p1+W2*p2,W1+W2),'any')}%`]}}
@@ -411,7 +417,10 @@ function make(key, lv) {
     try { o = G[key](levelOf(lv)); } catch (e) { o = null; }
     const q = o && toQuestion(o);
     if (q && q.q && !/undefined|NaN|Infinity/.test(q.q + (q.opts || []).join() + (q.ans == null ? '' : q.ans))
-        && (q.ans != null ? isFinite(q.ans) : (q.opts.length >= 2 && q.a >= 0))) {
+        && (q.ans != null ? isFinite(q.ans) : (q.opts.length >= 2 && q.a >= 0))
+        // 数字パッドにマイナスが無い／答えが0の問題は「同じ難しさ」の代わりにならない
+        && !(q.ans != null && q.ans <= 0) && !/^-/.test(q.opts ? q.opts[q.a] : '')
+        && !(q.opts && /^0(?![.\d])/.test(q.opts[q.a]))) {
       return Object.assign(q, { _gen: key });
     }
   }

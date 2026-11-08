@@ -52,13 +52,15 @@ function push(ev) {
 // Store の記録関数を包む（中身は変えない）
 const g0 = Store.grade, n0 = Store.note;
 Store.grade = function (qid, correct, unitId, opts = {}) {
+  const before = (Store.state.cards[qid] || {});
+  const pk = before.ok || 0, pr = before.run || 0;   // 答える前の正解回数・連続正解（週報の比較用）
   const r = g0.apply(this, arguments);
   try {
     push({ k: 'g', q: qid, u: unitId || null, ok: !!correct,
            ms: Math.min(Number(opts.ms || opts.logMs) || 0, 300000) || null,   // logMs=記録にだけ残す時間（タイムアタック）
            h: opts.usedHint ? 1 : 0,
            a: opts.given == null ? null : String(opts.given).slice(0, 40),
-           box: r && r.box,
+           box: r && r.box, pk, pr,
            // 数字を変えた問題なら、そのとき出した問題文と正解も残す（週報で答えた値と見くらべる）
            g: opts.gen ? { k: opts.gen.k, q: String(opts.gen.q).slice(0, 200), ans: String(opts.gen.ans) } : undefined });
   } catch (e) {}
