@@ -126,13 +126,16 @@ function markDone(id) {
 /* ---------- 予想点の推移を残す ----------
    その日の最後の値が履歴に残るよう、出題を作るときと1問答えるたびに取り直す */
 function noteScore() {
-  if (typeof Goal === 'undefined' || !Goal.predict) return;
-  try { const pr = Goal.predict(); if (pr) st().day.score = pr.total; }
-  catch (e) { console.warn('[予想点] 計算できませんでした', e); }
+  if (typeof Goal === 'undefined' || !Goal.score) return;
+  try {
+    const v = Goal.score();
+    if (v != null && st().day.score !== v) { st().day.score = v; Store.save(); }   // 閉じても最後の値が残るよう保存
+  } catch (e) { console.warn('[予想点] 計算できませんでした', e); }
 }
 if (typeof Store !== 'undefined' && Store.grade) {
-  const g0 = Store.grade;
+  const g0 = Store.grade, n0 = Store.note;
   Store.grade = function () { const r = g0.apply(this, arguments); noteScore(); return r; };
+  if (n0) Store.note = function () { const r = n0.apply(this, arguments); noteScore(); return r; };   // なぜ？チェックなど
 }
 
 /* ---------- いま取り組む単元（フロンティア） ---------- */

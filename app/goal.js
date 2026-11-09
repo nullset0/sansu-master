@@ -122,20 +122,39 @@ function target() { const g = st().goal; return (g && SCHOOLS[g.school]) || SCHO
 
 /* ---------- 本番の形で「いま受けたら何点か」 ----------
    単元ごとの「解ける見こみ」を出して、本番の大問ごとの配点にかける。
-     見こみ ＝ 届いている広さ（基本の何割・応用の何割を一度は正解したか）
-             × 当たる率（その単元の正答率。少ないうちは5割に寄せる）
-             × 覚えている度合い（復習の箱。忘れかけなら下げる）
+     見こみ ＝ 届いている広さ（その単元の問題の何割を一度は正解したか。8割で満点あつかい）
+             × いまの当たり（解いた問題のうち、最後に答えたとき正解だった割合。少ないうちは5割に寄せる）
+             × 覚えている度合い（復習の箱。期日を1回ぶん以上すぎて放ってある問題は半分に数える）
+   仕上げた単元はおよそ 0.8〜0.95 になる（＝本番でも8〜9割取れる見こみ）。
    はじめていない単元は 0。本番では解けないものとして数える。
    ★ 目安であって、模試の点ではない。上がり下がりを見るための物差し。
 ------------------------------------------------------------ */
+let _qs = null;
+function qsOfUnit(id) {
+  if (!_qs) { _qs = {}; DATA.all().forEach(q => (_qs[q.unit] = _qs[q.unit] || []).push(q.id)); }
+  return _qs[id] || [];
+}
+const BOX_DAYS_ = [0, 0, 1, 3, 7, 16, 35];
 function unitAbility(id) {
-  if (!DATA.unit(id)) return 0;
-  const s = Mastery.unitState(id);
-  if (!s.started) return 0;
-  const u = st().units[id] || { seen:0, ok:0 };
-  const acc = ((u.ok || 0) + 1) / ((u.seen || 0) + 2);
-  const reach = 0.4 * s.understand + 0.6 * s.apply;
-  return Math.max(0, Math.min(1, reach * acc * (0.7 + 0.3 * s.retain)));
+  const qs = qsOfUnit(id); if (!qs.length) return 0;
+  const cards = st().cards, today = Store.today();
+  let seen = 0, last = 0, ever = 0, keep = 0;
+  qs.forEach(q => {
+    const c = cards[q]; if (!c || !c.seen) return;
+    seen++; if (c.run > 0) last++;
+    if (c.ok > 0) {
+      ever++;
+      let r = Math.min(1, (c.box || 0) / 4);
+      const over = c.due ? Store.daysBetween(c.due, today) : 0;
+      if (over > (BOX_DAYS_[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
+      keep += r;
+    }
+  });
+  if (!seen) return 0;
+  const reach = Math.min(1, ever / qs.length / 0.8);
+  const acc = (last + 1) / (seen + 2);
+  const ret = ever ? 0.6 + 0.4 * keep / ever : 0.6;
+  return Math.max(0, Math.min(1, reach * acc * ret));
 }
 // 大問ごとに、その大問の単元と1単元あたりの点（配点 ÷ 単元数）。予想点と並べかえの両方がこれを使う
 function split(sch) {
@@ -143,6 +162,18 @@ function split(sch) {
     const units = b.units.filter(id => DATA.unit(id));
     return { b, units, per: units.length ? b.pts / units.length : 0 };
   });
+}
+// 合計だけ（1問答えるたびに呼ぶので、伸ばしどころの一覧は作らない）
+function score(sch = target()) {
+  if (!sch || !sch.blueprint) return null;
+  const ab = {};
+  return split(sch).reduce((t, { units, per }) =>
+    t + Math.round(units.reduce((a, id) => a + per * (id in ab ? ab[id] : (ab[id] = unitAbility(id))), 0)), 0);
+}
+// 予想点の推移（週に1つ・最後の日は必ず）。保護者画面と週報で同じ取り方にする
+function scoreTrend(n = 8) {
+  const h = st().history.filter(x => x.score != null);
+  return h.filter((_, i) => i % 7 === 6 || i === h.length - 1).slice(-n);
 }
 function predict(sch = target()) {
   if (!sch || !sch.blueprint) return null;
@@ -294,17 +325,22 @@ function needSet() {
 }
 // 並べかえの重み。本番の配点が厚い単元ほど大きい（計算・図形が上に来る）。
 // 配点の表に無い単元（前提の学年の単元など）は分野の重み。
-// ★ 受験の予定が無くても、目標校に要らない単元（難関チャレンジ）は 0＝後回し。
+// ★ 受験の予定が無くても、難関チャレンジは 0＝後回し。
 //   要る単元が全部終わるか開いていないときにだけ回ってくる（香里に合わせるための意図した動き）。
 // 学習の記録には左右されないので、学校ごとに1回だけ作って使い回す（並べかえで何千回も呼ばれる）。
 let _w = null, _wFor = null;
 function unitWeight(id) {
   const sch = target(); if (!sch) return 1;
-  if (_wFor !== sch.id) { _wFor = sch.id; _w = {}; }
+  const key = sch.id + (st().goal ? ':goal' : ':none');
+  if (_wFor !== key) { _wFor = key; _w = {}; }
   if (id in _w) return _w[id];
   const u = DATA.unit(id);
   let w;
-  if (!u || !needSet().has(id)) w = 0;                      // この学校には要らない
+  if (!u) w = 0;
+  else if (!needSet().has(id))
+    // この学校には要らない。ただし予定を入れていないときは、学校の単元（6年の比例など）は
+    // これまでどおり重み1で残し、後回しにするのは難関チャレンジだけにする
+    w = (st().goal || u.area === 'jk-hard') ? 0 : 1;
   else {
     // ★ 前提の単元にも点を渡す案は tools/sim.js で比べて差が誤差の内（±2点）だったので入れていない
     const p = unitPoints(id, sch);
@@ -332,6 +368,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS, target, predict, unitAbility, unitPoints };
+         dailyCount, unitWeight, needSet, STEPS, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;

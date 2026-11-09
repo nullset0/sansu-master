@@ -395,8 +395,7 @@
     if (!p) { host.remove(); return; }
     const b = p.bench || {};
     const tone = r => r >= 0.69 ? 'var(--b)' : r >= 0.4 ? 'var(--c)' : 'var(--a)';
-    const hist = Store.state.history.filter(x => x.score != null).slice(-120);
-    const pts = hist.filter((_, i) => i % 7 === 0 || i === hist.length - 1).slice(-8);
+    const pts = Goal.scoreTrend(8);
     const top = p.gains.filter(x => x.open && !x.done).slice(0, 3);
     const later = p.gains.filter(x => !x.open).slice(0, 3);
     host.innerHTML = `<h2>🎯 同志社香里の形で いま何点か</h2>
