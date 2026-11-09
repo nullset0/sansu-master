@@ -117,9 +117,15 @@ function grade(qid, correct, unitId, opts = {}) {
   S.day.done++; if (correct) S.day.correct++;
   const gain = correct ? (usedHint ? 4 : (c.box >= 4 ? 12 : 8)) : 1;
   S.coins += gain; S.day.coins += gain; S.xp += correct ? 10 : 3;
+  runRecordHooks();
   save();
   return { box:c.box, next:c.due, gain };
 }
+
+// 1問記録したあと・保存の直前に呼ぶもの（予想点の取り直しなど）。保存は grade/note の1回だけ
+const recordHooks = [];
+function onRecord(f) { recordHooks.push(f); }
+function runRecordHooks() { recordHooks.forEach(f => { try { f(); } catch (e) { console.warn('[記録のあと]', e); } }); }
 
 /* ---------- 軽い記録（道具えらび・手順ならべかえ用）----------
    間隔反復のカードは汚さず、単元の正答率と きょうの記録だけ動かす */
@@ -140,6 +146,7 @@ function note(unitId, correct) {
   S.day.done++; if (correct) S.day.correct++;
   const gain = correct ? 5 : 1;
   S.coins += gain; S.day.coins += gain;
+  runRecordHooks();
   save();
 }
 
@@ -337,7 +344,7 @@ function importJSON(t) { try { S = Object.assign(clone(DEFAULTS), JSON.parse(t))
 
 return {
   get state(){ return S; },
-  save, rollDay, card, isDue, isNew, grade, buildSession, boxCounts,
+  save, rollDay, card, isDue, onRecord, BOX_DAYS, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
   addMock, removeMock,

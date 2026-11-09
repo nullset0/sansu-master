@@ -127,16 +127,11 @@ function markDone(id) {
    その日の最後の値が履歴に残るよう、出題を作るときと1問答えるたびに取り直す */
 function noteScore() {
   if (typeof Goal === 'undefined' || !Goal.score) return;
-  try {
-    const v = Goal.score();
-    if (v != null && st().day.score !== v) { st().day.score = v; Store.save(); }   // 閉じても最後の値が残るよう保存
-  } catch (e) { console.warn('[予想点] 計算できませんでした', e); }
+  try { const v = Goal.score(); if (v != null) st().day.score = v; }
+  catch (e) { console.warn('[予想点] 計算できませんでした', e); }
 }
-if (typeof Store !== 'undefined' && Store.grade) {
-  const g0 = Store.grade, n0 = Store.note;
-  Store.grade = function () { const r = g0.apply(this, arguments); noteScore(); return r; };
-  if (n0) Store.note = function () { const r = n0.apply(this, arguments); noteScore(); return r; };   // なぜ？チェックなど
-}
+// 1問記録するたび（grade・note）、保存の直前に取り直す＝閉じても最後の値が残る
+if (typeof Store !== 'undefined' && Store.onRecord) Store.onRecord(noteScore);
 
 /* ---------- いま取り組む単元（フロンティア） ---------- */
 function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area] || {}).order || 99; }

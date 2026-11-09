@@ -134,7 +134,6 @@ function qsOfUnit(id) {
   if (!_qs) { _qs = {}; DATA.all().forEach(q => (_qs[q.unit] = _qs[q.unit] || []).push(q.id)); }
   return _qs[id] || [];
 }
-const BOX_DAYS_ = [0, 0, 1, 3, 7, 16, 35];
 function unitAbility(id) {
   const qs = qsOfUnit(id); if (!qs.length) return 0;
   const cards = st().cards, today = Store.today();
@@ -146,7 +145,7 @@ function unitAbility(id) {
       ever++;
       let r = Math.min(1, (c.box || 0) / 4);
       const over = c.due ? Store.daysBetween(c.due, today) : 0;
-      if (over > (BOX_DAYS_[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
+      if (over > (Store.BOX_DAYS[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
       keep += r;
     }
   });
@@ -164,18 +163,21 @@ function split(sch) {
   });
 }
 // 合計だけ（1問答えるたびに呼ぶので、伸ばしどころの一覧は作らない）
-function score(sch = target()) {
-  if (!sch || !sch.blueprint) return null;
-  const ab = {};
-  return split(sch).reduce((t, { units, per }) =>
-    t + Math.round(units.reduce((a, id) => a + per * (id in ab ? ab[id] : (ab[id] = unitAbility(id))), 0)), 0);
-}
-// 予想点の推移（週に1つ・最後の日は必ず）。保護者画面と週報で同じ取り方にする
+function score(sch = target()) { const p = predict(sch, { gains:false }); return p ? p.total : null; }
+// 予想点の推移。きょうから7日ずつさかのぼった週ごとに、その週の最後の値（きょうは いまの値）。
+// 保護者画面と週報で同じ取り方にする
 function scoreTrend(n = 8) {
-  const h = st().history.filter(x => x.score != null);
-  return h.filter((_, i) => i % 7 === 6 || i === h.length - 1).slice(-n);
+  const today = Store.today(), out = [];
+  const h = st().history.filter(x => x.score != null && x.d < today)
+    .concat([{ d: today, score: score() }]);
+  const seen = new Set();
+  for (let i = h.length - 1; i >= 0 && out.length < n; i--) {
+    const wk = Math.floor(Store.daysBetween(h[i].d, today) / 7);
+    if (!seen.has(wk)) { seen.add(wk); out.unshift(h[i]); }
+  }
+  return out;
 }
-function predict(sch = target()) {
+function predict(sch = target(), opt = {}) {
   if (!sch || !sch.blueprint) return null;
   const ab = {}; const A = id => (id in ab ? ab[id] : (ab[id] = unitAbility(id)));
   const gain = {};
@@ -187,10 +189,11 @@ function predict(sch = target()) {
              rate: b.pts ? got / b.pts : 0, units };
   });
   const total = sections.reduce((a, x) => a + x.got, 0);
+  if (opt.gains === false) return { total, max: sch.math.points, bench: sch.bench || null, sections };
   // 伸ばしどころ: いま取り組める単元のうち、仕上げると上がる点の多い順
   const gains = Object.entries(gain)
-    .map(([id, g]) => ({ id, name: DATA.unit(id).name, gain: +g.toFixed(1), ability: A(id),
-                         open: Mastery.unitState(id).open, done: Mastery.unitState(id).done }))
+    .map(([id, g]) => { const s = Mastery.unitState(id);
+      return { id, name: DATA.unit(id).name, gain: +g.toFixed(1), ability: A(id), open: s.open, done: s.done }; })
     .filter(x => x.gain >= 0.5)
     .sort((a, b) => (b.open - a.open) || (b.gain - a.gain));
   return { total, max: sch.math.points, bench: sch.bench || null, sections, gains };

@@ -100,7 +100,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
     if (!plan.length) stall++;
     plan.forEach(q => Store.grade(q.id, rnd() < pOf(q, p0), q.unit, {}));
     const s = Mastery.summary();
-    daily.push({ done: s.done, jk: s.jkDone, score: (Goal.predict() || {}).total });
+    daily.push({ done: s.done, jk: s.jkDone, score: Goal.score() });
     if (goal) {
       const need = Goal.needSet();
       let n = 0; need.forEach(id => { if (Mastery.unitState(id).done) n++; });
