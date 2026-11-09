@@ -142,19 +142,26 @@ function goalW(id) {
   return (typeof Goal !== 'undefined') ? Goal.unitWeight(id) : 1;   // 予定が無くても目標校の配点で並べる
 }
 
+// 3段の流れ（小4=小6まで理解／小5=特殊算／小6=過去問）で、いまの段の単元を先に。0が先
+function stageW(id) {
+  return (typeof Goal !== 'undefined' && Goal.stageRank) ? Goal.stageRank(id) : 0;
+}
+
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
     // チェック待ちは「練習が足りない」わけではないので、いま取り組む枠からは外す。
     // 外さないと3枠を占領して前進が止まる。
     .filter(x => x.s.open && !x.s.done && !x.s.waitingExplain)
+    .map(x => Object.assign(x, { r: stageW(x.u.id) }))   // 段は並べかえの前に1回だけ引く
     // ① やりかけを優先 ② 前提の浅い（＝準備ができている）順
     // ③ 同じ深さなら 学年・分野の順 ④ やさしいレベルから
     // 学年ではなく「前提が満たされたか」で並ぶので、自然に上の学年へ入っていく
-    // ①やりかけ ②志望校に要るもの ③前提の浅い順 ④出題の多い分野
-    // ⑤学年・分野の順 ⑥やさしいレベルから
+    // ①やりかけ ②志望校に要るもの ③いまの段（3段の流れ）の単元 ④前提の浅い順
+    // ⑤配点の厚い単元 ⑥学年・分野の順 ⑦やさしいレベルから
     .sort((a,b) => (b.s.started - a.s.started)
                 || ((goalW(b.u.id) > 0) - (goalW(a.u.id) > 0))
+                || (a.r - b.r)
                 || (a.d - b.d)
                 || (goalW(b.u.id) - goalW(a.u.id))
                 || (areaOrder(a.u.id) - areaOrder(b.u.id)) || (a.u.lv - b.u.lv));
@@ -258,6 +265,11 @@ function plan(count) {
        .forEach(q => push(q, 'ふくしゅう'));
   }
   return interleave(out);
+}
+
+// 「理解」まで来ているか（3段の流れの①で使う）。基本・応用を「済」と同じ割合まで一度は正解
+function understood(s) {
+  return s.done || s.waitingExplain || (s.understand >= DONE_U && s.apply >= DONE_A);
 }
 
 function phaseOf(s) {
@@ -466,6 +478,6 @@ return { unitState, isOpen, frontier, weakSpots, weakUnits, plan, phaseOf,
          checkDue, buildCheck, finishCheck, demote, doneUnits,
          GRADES, ladderFor, assumeGrade, placementDone, summary, markDone, trainingDue, TRAINING,
          needsExplain, explainOK, explainOf, recordExplain, explainDue, EXPLAIN_MIN,
-         BASIC, APPLY };
+         BASIC, APPLY, understood };
 })();
 if (typeof window !== 'undefined') window.Mastery = Mastery;

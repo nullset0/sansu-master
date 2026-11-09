@@ -95,17 +95,21 @@ function defaultExamDate(sch, gradeNow = 4, todayISO = Store.today()) {
 function set(schoolId, examDate, gradeNow) {
   const sch = SCHOOLS[schoolId];
   if (!sch) return null;
+  // 入れ直しても起点（setAt）は最初の日のまま。毎回きょうにすると、3段の区切りが後ろへずれて遅れが消える
+  const prev = st().goal;
   st().goal = { school: schoolId, exam: examDate || defaultExamDate(sch, gradeNow || 4),
-                setAt: Store.today() };
-  _need = null; _needFor = null;
+                setAt: (prev && prev.setAt) || st().examGuessAt || Store.today() };
+  _need = null; _needFor = null; _rm = null;   // 3段の流れも入試日が変わるので作り直す
   // 志望校を決めたら、1日の量はアプリが決める。親が数をにらむ必要をなくす。
   if (!st().settings.dailyGoalPinned) Store.set('dailyGoal', 'auto');
   Store.save();
   return st().goal;
 }
 function clear() {
+  // 見立てをやめても、入れた学年から決まった入試日は3段の流れに残す（小4の推測に戻さない）
+  if (st().goal && st().goal.exam) { st().examGuess = st().goal.exam; st().examGuessAt = st().goal.setAt || Store.today(); }
   st().goal = null;
-  _need = null; _needFor = null;
+  _need = null; _needFor = null; _rm = null;   // 3段の流れも入試日が変わるので作り直す
   // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
   if (Store.get('dailyGoal') === 'auto') Store.set('dailyGoal', 5);
   Store.save();
@@ -307,7 +311,8 @@ function dailyCount() {
   let left = s.left, per = perUnit(s.rate == null ? 0.6 : s.rate);
   if (left <= 0) left = DATA.units.filter(u => !Mastery.unitState(u.id).done).length;
   if (left <= 0) return 5;                                   // 全単元おわり＝維持
-  const raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
+  let raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
+  raw = Math.max(raw, roadmapPace(s.rate).need);   // 3段の区切りにも間に合わせる（段が全部おわれば0）
   return STEPS.find(x => x >= raw) || 25;
 }
 
@@ -347,6 +352,103 @@ function unitWeight(id) {
   return (_w[id] = w);
 }
 
+/* ---------- 3段の流れ（家の方針 2026-11-09） ----------
+   ① 小4のうちに小6までの内容を「理解」する   … 小4の2月末まで
+   ② 小5で特殊算・中受の図形を「仕上げる」     … 小5の1月末まで
+   ③ 小6は過去問を回す（このアプリは 忘れ止めと、予想点の低い大問の補強）… 入試まで
+   段の区切りは入試日から決める（入試の年の2年前の2月末・1年前の1月末）。
+   予定を入れていなければ、いま小4として数える。
+   いまの段＝まだ終わっていない最初の段。期限をすぎても終わるまではその段にいる（遅れとして出す）。
+   出題はいまの段の単元を先に回す（mastery.js の frontier）。先の段の単元も、手が空けば出る。
+------------------------------------------------------------ */
+// 予定を入れていなければ、はじめて数えた日に「いま小4」として決めた入試日を覚えておく
+// （毎回きょうから数えると、4月に学年が上がったとき入試日が1年ずれる）
+function examDate() {
+  const g = st().goal;
+  if (g && g.exam) return g.exam;
+  // 読むだけの関数なので保存はしない（次に1問記録したときの保存で一緒に残る）
+  if (!st().examGuess) { st().examGuess = defaultExamDate(target(), 4); st().examGuessAt = Store.today(); }
+  return st().examGuess;
+}
+// ①は「理解」まで（基本・応用を「済」と同じ割合まで一度は正解）。覚えている度合いは②の間の復習で上げる。
+// ②は「済」（理解・応用・定着・なぜ？チェックがそろう）。
+// ★ ①は香里に要る単元（中受の単元の前提になっている学校の単元）だけ。要らない小6の単元
+//   （比例・データなど）は効率のため段に入れない＝手が空いたときに出る。
+const febEnd = y => { const d = new Date(Date.UTC(y, 2, 0)); return d.toISOString().slice(0, 10); };   // うるう年も2月末
+let _rm = null, _rmRev = -1, _rmDay = null;
+function roadmap() {
+  if (_rm && _rmRev === Store.rev && _rmDay === Store.today()) return _rm;
+  const sch = target(), need = needSet(), exam = examDate(), y = Number(exam.slice(0, 4));
+  const ids = [...need].filter(id => DATA.byUnit(id).length);   // 問題の無い単元は数えない（永久に終わらなくなる）
+  const school = ids.filter(id => /^g\d$/.test(DATA.unit(id).area));
+  const jk = ids.filter(id => DATA.unit(id).area.indexOf('jk') === 0);
+  const today = Store.today();
+  // 小5・小6から始めたときは、区切りを始めた日から入試までの間に割りふり直す。
+  // ①は過ぎていれば はじめの25%まで、②は残りが入試までの半分より短ければ半分まで延ばす。
+  // 過ぎた・近すぎる期限のまま数えると、初日から「期限すぎ」で25問に張り付く。
+  const g0 = st().goal, start = (g0 && g0.setAt) || st().examGuessAt || today;
+  const span = Math.max(0, Store.daysBetween(start, exam));
+  const at = share => Store.addDays(start, Math.round(span * share));
+  const later = (a, b) => (a > b ? a : b), earlier = (a, b) => (a < b ? a : b);
+  const tokuEnd = later(`${y-1}-01-31`, at(0.5));
+  const baseEnd = earlier(febEnd(y - 2) < start ? at(0.25) : febEnd(y - 2), tokuEnd);   // ②より前
+  const stages = [
+    { key:'base', name:'小6までの内容を理解する', when:'小4', end:baseEnd, units:school, ok:Mastery.understood },
+    { key:'toku', name:'特殊算・図形を仕上げる',   when:'小5', end:tokuEnd, units:jk,     ok:s => s.done },
+    { key:'kako', name:'過去問を回す',             when:'小6', end:exam,          units:[],     ok:() => true },
+  ].map(x => {
+    const done = x.units.filter(id => x.ok(Mastery.unitState(id))).length;
+    return Object.assign(x, { total:x.units.length, done, left:x.units.length - done,
+                              daysLeft: Store.daysBetween(today, x.end) });
+  });
+  let cur = stages.findIndex(x => x.left > 0);
+  if (cur < 0) cur = stages.length - 1;
+  stages.forEach((x, i) => { x.current = i === cur; x.late = x.left > 0 && x.daysLeft < 0; });
+  const stageOf = {};
+  stages.forEach((x, i) => x.units.forEach(id => { if (!(id in stageOf)) stageOf[id] = i; }));
+  _rm = { exam, stages, cur, stageOf, assumed: !st().goal };
+  _rmRev = Store.rev; _rmDay = today;
+  return _rm;
+}
+// 並べかえ用: いまの段（とそれより前）の単元は0、先の段・どの段にも無い単元は1
+function stageRank(id) {
+  const r = roadmap(), i = r.stageOf[id];
+  return i == null || i > r.cur ? 1 : 0;
+}
+// ★ ①で「理解」まで来た単元を3枠から外す案は試してやめた（2026-11-09・シミュレーション）。
+//   上の単元が開くには前提の定着（箱）も要るので、外すと①の完了がかえって3〜4か月遅れた。
+// 段の期限に間に合う1日の問題数。期限の近い段ほど先に効く。前の段の残りも後ろの段の期限までに
+// 要るので、足しあわせて比べる。
+// ①の1単元あたりの量は perUnit の1.6倍（tools/sim 相当の実測: 2026-11 に小3まで済みから始めて、
+// 正答率0.7で残り25単元に2,251問＝90問/単元・0.8で1,811問＝72問/単元）。前提の定着を待つ間も
+// 復習が積まれるので「理解まで」でも全単元平均より多い。
+// ②は1.0倍だと最後の数単元が長びいて期限を3か月すぎた（1日の量を下げすぎる）ので、1.4倍で見る。
+const STAGE_PER = { base:1.6, toku:1.4 };
+// 戻り値: { need: いちばんきつい段に合わせた1日の数, perDay: 段ごとの1日の数（終わった段・単元なしは null） }
+// 残り日数は30日を下限にする。期限の直前に跳ね上がって、すぎた途端に下がる（遅れているのに
+// ゆるめる）のを防ぐ。期限をすぎた段は「1か月で取りもどす」量として数えつづける。
+// また、各段は期限の BUFFER_DAYS 日前に終える量で見る。最後の数単元は前提の定着待ち（日数）で
+// 縮まらないので、期限ぴったりに合わせると間に合わない（シミュレーションで②が2か月遅れた）。
+const CATCHUP_DAYS = 30, BUFFER_DAYS = 60;
+function roadmapPace(rate) {
+  const r = roadmap(), per = perUnit(rate == null ? 0.6 : rate);
+  let acc = 0, need = 0;
+  const perDay = r.stages.map(x => {
+    acc += x.left * per * (STAGE_PER[x.key] || 1);
+    if (!x.units.length || x.left <= 0) return null;
+    const v = acc / Math.max(CATCHUP_DAYS, x.daysLeft - BUFFER_DAYS);
+    need = Math.max(need, v);
+    return Math.ceil(v);
+  });
+  return { need, perDay };
+}
+// 段の状態のことば（保護者画面と週報で同じものを使う）
+function stageLabel(x) {
+  if (x.units.length && x.left === 0) return 'おわり';
+  if (x.late) return '期限すぎ';
+  return x.current ? 'いまここ' : '';
+}
+
 /* ---------- 学力の推移（週ごと） ---------- */
 function weekly(weeks = 12) {
   const days = Store.lastDays(weeks * 7);
@@ -366,6 +468,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS, target, predict, score, scoreTrend, unitAbility, unitPoints };
+         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, stageLabel, examDate, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;
