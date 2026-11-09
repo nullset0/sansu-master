@@ -99,7 +99,7 @@ function set(schoolId, examDate, gradeNow) {
   const prev = st().goal;
   st().goal = { school: schoolId, exam: examDate || defaultExamDate(sch, gradeNow || 4),
                 setAt: (prev && prev.setAt) || st().examGuessAt || Store.today() };
-  _need = null; _needFor = null;
+  _need = null; _needFor = null; _rm = null;   // 3段の流れも入試日が変わるので作り直す
   // 志望校を決めたら、1日の量はアプリが決める。親が数をにらむ必要をなくす。
   if (!st().settings.dailyGoalPinned) Store.set('dailyGoal', 'auto');
   Store.save();
@@ -109,7 +109,7 @@ function clear() {
   // 見立てをやめても、入れた学年から決まった入試日は3段の流れに残す（小4の推測に戻さない）
   if (st().goal && st().goal.exam) { st().examGuess = st().goal.exam; st().examGuessAt = st().goal.setAt || Store.today(); }
   st().goal = null;
-  _need = null; _needFor = null;
+  _need = null; _needFor = null; _rm = null;   // 3段の流れも入試日が変わるので作り直す
   // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
   if (Store.get('dailyGoal') === 'auto') Store.set('dailyGoal', 5);
   Store.save();
