@@ -21,13 +21,13 @@ const st = () => Store.state;
      大問3以降＝速さ・規則性・年齢算などの文章題と図形。
    ・図形（角度・平面・立体・水量変化）の比率が高い。
    ・合格ラインは得点率65〜75%前後（年により変動）。
-   ※ 小問数は公表されていないため 20問と仮定している（1問あたり150秒の根拠）。
+   ※ 小問数は公表されていないため 17問と仮定している（香里算数道場の模試と同じ・1問あたり約176秒の根拠）。
 ------------------------------------------------------------ */
 const SCHOOLS = {
   'chuken-standard': {
     id:'chuken-standard', name:'中学受験（中堅上位）', short:'中学受験',
     examMD: '01-16',                       // 関西の私立中入試は1月中旬
-    math: { minutes:50, points:120, items:20 },
+    math: { minutes:50, points:120, items:17 },  // 大問7題・小問17問（香里算数道場の模試と同じ組み立て）
     passRate: 0.70,                        // 合格ラインは得点率65〜75%のまん中
     hensachi: '53〜59',
     // 出題の重み。1.0を基準に、厚いところを上げる（出題分析より）
@@ -36,6 +36,21 @@ const SCHOOLS = {
     // 難関チャレンジはこの学校には過剰。必須から外す
     exclude: ['jk-hard'],
     note: '私立中入試は図形（角度・平面・立体・水量）の比重が高く、計算の速さと正確さが土台になります。',
+    // 得点の目安（同志社香里 前期・算数120点の5年平均。出典は香里算数道場の設計タブ）
+    bench: { examinee: 69, pass: 83 },
+    // 本番の組み立て。配点は非公開なので小問の点を仮置き（大問1・2=6点、3〜5=8点、6=7点、7=8点）。
+    // 単元は「その大問でよく出るもの」。1つの単元が2つの大問に出ることもある。
+    blueprint: [
+      { key:'calc',  name:'大問1 計算',        pts:12, units:['jk-gyakusan','jk-bunsu-keisan','jk-kufu'] },
+      { key:'one',   name:'大問1 一行題',      pts:6,  units:['jk-wariai','jk-wasa','jk-ueki','jk-heikin','jk-baisu','jk-hayasa','jk-tsurukame'] },
+      { key:'fig',   name:'大問2 図形の小問',  pts:24, units:['jk-kakudo','jk-menseki','jk-en','jk-taiseki','jk-souji'] },
+      { key:'speed', name:'大問3〜5 速さ',     pts:16, units:['jk-hayasa','jk-tabibito','jk-tsuuka','jk-ryuusui','jk-tokei','jk-diagram','jk-hayasa-hi'] },
+      { key:'rule',  name:'大問3〜5 規則性・場合の数', pts:16, units:['jk-suuretsu','jk-gunsuuretsu','jk-amari','jk-houjin','jk-ueki','jk-baai','jk-michi'] },
+      { key:'wari',  name:'大問3〜5 和と差・割合', pts:16, units:['jk-wasa','jk-bunpai','jk-tsurukame','jk-kabusoku','jk-sashuu','jk-shoukyo','jk-nenrei','jk-heikin',
+                                                          'jk-soutou','jk-baisuu-zan','jk-noudo','jk-songi','jk-shigoto','jk-newton','jk-hi','jk-wariai'] },
+      { key:'plane', name:'大問6 平面図形',    pts:14, units:['jk-fukugou','jk-souji','jk-idou','jk-menseki','jk-en'] },
+      { key:'solid', name:'大問7 立体図形',    pts:16, units:['jk-taiseki','jk-suisou','jk-setsudan','jk-kaiten','jk-tenkai'] },
+    ],
   },
 };
 
@@ -100,6 +115,95 @@ function get() {
   if (!g || !SCHOOLS[g.school]) return null;
   return Object.assign({}, g, { sch: SCHOOLS[g.school] });
 }
+// 出題の並べかえと予想点に使う学校。受験の予定を入れていなくても、このアプリの目標
+// （同志社香里）に合わせて並べる。1日の問題数（おまかせ）は予定を入れたときだけ変わる。
+const DEFAULT_SCHOOL = 'chuken-standard';
+function target() { const g = st().goal; return (g && SCHOOLS[g.school]) || SCHOOLS[DEFAULT_SCHOOL]; }
+
+/* ---------- 本番の形で「いま受けたら何点か」 ----------
+   単元ごとの「解ける見こみ」を出して、本番の大問ごとの配点にかける。
+     見こみ ＝ 届いている広さ（その単元の問題の何割を一度は正解したか。8割で満点あつかい）
+             × いまの当たり（解いた問題のうち、最後に答えたとき正解だった割合。少ないうちは5割に寄せる）
+             × 覚えている度合い（復習の箱。期日を1回ぶん以上すぎて放ってある問題は半分に数える）
+   仕上げた単元はおよそ 0.8〜0.95 になる（＝本番でも8〜9割取れる見こみ）。
+   はじめていない単元は 0。本番では解けないものとして数える。
+   ★ 目安であって、模試の点ではない。上がり下がりを見るための物差し。
+------------------------------------------------------------ */
+function unitAbility(id) {
+  const qs = DATA.byUnit(id).map(q => q.id); if (!qs.length) return 0;
+  const cards = st().cards, today = Store.today();
+  let seen = 0, last = 0, ever = 0, keep = 0;
+  qs.forEach(q => {
+    const c = cards[q]; if (!c || !c.seen) return;
+    seen++; if (c.run > 0) last++;
+    if (c.ok > 0) {
+      ever++;
+      let r = Math.min(1, (c.box || 0) / 4);
+      const over = c.due ? Store.daysBetween(c.due, today) : 0;
+      if (over > ((Store.BOX_DAYS || [])[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
+      keep += r;
+    }
+  });
+  if (!seen) return 0;
+  const reach = Math.min(1, ever / qs.length / 0.8);
+  const acc = (last + 1) / (seen + 2);
+  const ret = ever ? 0.6 + 0.4 * keep / ever : 0.6;
+  return Math.max(0, Math.min(1, reach * acc * ret));
+}
+// 大問ごとに、その大問の単元と1単元あたりの点（配点 ÷ 単元数）。予想点と並べかえの両方がこれを使う
+function split(sch) {
+  return sch.blueprint.map(b => {
+    const units = b.units.filter(id => DATA.unit(id));
+    return { b, units, per: units.length ? b.pts / units.length : 0 };
+  });
+}
+// 合計だけ（1問答えるたびに呼ぶので、伸ばしどころの一覧は作らない）
+function score(sch = target()) { const p = predict(sch, { gains:false }); return p ? p.total : null; }
+// 予想点の推移。きょうから7日ずつさかのぼった区切り（暦の週ではない）ごとに、その週の最後の値（きょうは いまの値）。
+// 保護者画面と週報で同じ取り方にする
+function scoreTrend(n = 8) {
+  const today = Store.today(), out = [];
+  const h = st().history.filter(x => x.score != null && x.d < today)
+    .concat([{ d: today, score: score() }]);
+  const seen = new Set();
+  for (let i = h.length - 1; i >= 0 && out.length < n; i--) {
+    const wk = Math.floor(Store.daysBetween(h[i].d, today) / 7);
+    if (!seen.has(wk)) { seen.add(wk); out.unshift(h[i]); }
+  }
+  return out;
+}
+function predict(sch = target(), opt = {}) {
+  if (!sch || !sch.blueprint) return null;
+  const ab = {}; const A = id => (id in ab ? ab[id] : (ab[id] = unitAbility(id)));
+  const gain = {};
+  const sections = split(sch).map(({ b, units, per }) => {
+    let got = 0;
+    units.forEach(id => { const a = A(id); got += per * a; gain[id] = (gain[id] || 0) + per * (1 - a); });
+    // 大問ごとは整数で見せ、合計はその足し算にする（足して合わない数字を出さない）
+    const g = Math.round(got);
+    return { key:b.key, name:b.name, pts:b.pts, got:g, rate: b.pts ? g / b.pts : 0, units };   // 棒も見せる数字と同じ値で
+  });
+  const total = sections.reduce((a, x) => a + x.got, 0);
+  if (opt.gains === false) return { total, max: sch.math.points, bench: sch.bench || null, sections };
+  // 伸ばしどころ: いま取り組める単元のうち、仕上げると上がる点の多い順
+  const gains = Object.entries(gain)
+    .map(([id, g]) => { const s = Mastery.unitState(id);
+      return { id, name: DATA.unit(id).name, gain: +g.toFixed(1), ability: A(id), open: s.open, done: s.done }; })
+    .filter(x => x.gain >= 0.5)
+    .sort((a, b) => (b.open - a.open) || (b.gain - a.gain));
+  return { total, max: sch.math.points, bench: sch.bench || null, sections, gains };
+}
+// 単元1つが本番で何点ぶんか（大問の配点 ÷ その大問の単元数 を足し合わせたもの）
+let _pts = null, _ptsFor = null;
+function unitPoints(id, sch = target()) {
+  if (!sch || !sch.blueprint) return 0;
+  if (_ptsFor !== sch.id) {
+    _ptsFor = sch.id; _pts = {};
+    split(sch).forEach(({ units, per }) => units.forEach(u => { _pts[u] = (_pts[u] || 0) + per; }));
+  }
+  return _pts[id] || 0;
+}
+
 
 /* ---------- 必要な単元 ----------
    中受エリア（jk-*、ただし除外分をのぞく）と、その前提になっている
@@ -212,16 +316,35 @@ function dailyCount() {
 ------------------------------------------------------------ */
 let _need = null, _needFor = null;
 function needSet() {
-  const g = get(); if (!g) return null;
-  if (_need && _needFor === g.school) return _need;
-  _needFor = g.school; _need = new Set(targetUnits(g.sch));
+  const sch = target(); if (!sch) return null;
+  if (_need && _needFor === sch.id) return _need;
+  _needFor = sch.id; _need = new Set(targetUnits(sch));
   return _need;
 }
+// 並べかえの重み。本番の配点が厚い単元ほど大きい（計算・図形が上に来る）。
+// 配点の表に無い単元（前提の学年の単元など）は分野の重み。
+// ★ 受験の予定が無くても、難関チャレンジは 0＝後回し。
+//   要る単元が全部終わるか開いていないときにだけ回ってくる（香里に合わせるための意図した動き）。
+// 学習の記録には左右されないので、学校ごとに1回だけ作って使い回す（並べかえで何千回も呼ばれる）。
+let _w = null, _wFor = null;
 function unitWeight(id) {
-  const g = get(); if (!g) return 1;
-  const u = DATA.unit(id); if (!u) return 0;
-  if (!needSet().has(id)) return 0;                         // この学校には要らない
-  return (g.sch.weights || {})[u.area] || 1;
+  const sch = target(); if (!sch) return 1;
+  const key = sch.id + (st().goal ? ':goal' : ':none');
+  if (_wFor !== key) { _wFor = key; _w = {}; }
+  if (id in _w) return _w[id];
+  const u = DATA.unit(id);
+  let w;
+  if (!u) w = 0;
+  else if (!needSet().has(id))
+    // この学校には要らない。ただし予定を入れていないときは、学校の単元（6年の比例など）は
+    // これまでどおり重み1で残し、後回しにするのは難関チャレンジだけにする
+    w = (st().goal || (sch.exclude || []).includes(u.area)) ? 0 : 1;
+  else {
+    // ★ 前提の単元にも点を渡す案は tools/sim.js で比べて差が誤差の内（±2点）だったので入れていない
+    const p = unitPoints(id, sch);
+    w = p > 0 ? 1 + p / 2 : ((sch.weights || {})[u.area] || 1);
+  }
+  return (_w[id] = w);
 }
 
 /* ---------- 学力の推移（週ごと） ---------- */
@@ -243,6 +366,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS };
+         dailyCount, unitWeight, needSet, STEPS, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;

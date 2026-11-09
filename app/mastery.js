@@ -123,13 +123,23 @@ function markDone(id) {
   if (dirty) Store.save();
 }
 
+/* ---------- 予想点の推移を残す ----------
+   その日の最後の値が履歴に残るよう、出題を作るときと1問答えるたびに取り直す */
+function noteScore() {
+  if (typeof Goal === 'undefined' || !Goal.score) return;
+  try { const v = Goal.score(); if (v != null) st().day.score = v; }
+  catch (e) { console.warn('[予想点] 計算できませんでした', e); }
+}
+// 1問記録するたび（grade・note）、保存の直前に取り直す＝閉じても最後の値が残る
+if (typeof Store !== 'undefined' && Store.onRecord) Store.onRecord(noteScore);
+
 /* ---------- いま取り組む単元（フロンティア） ---------- */
 function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area] || {}).order || 99; }
 
-// 受験の予定が入っていれば、到達の目安に要る単元・出題の多い分野を先に回す。
-// 入っていなければ全部おなじ重み（＝これまでどおり）。
+// 目標校（受験の予定が無ければ同志社香里）の配点が厚い単元を先に回す。
+// 目標校に要らない単元（難関チャレンジ）は重み0＝要る単元が尽きたときにだけ回る。
 function goalW(id) {
-  return (typeof Goal !== 'undefined' && Goal.get()) ? Goal.unitWeight(id) : 1;
+  return (typeof Goal !== 'undefined') ? Goal.unitWeight(id) : 1;   // 予定が無くても目標校の配点で並べる
 }
 
 function frontier(k = MAX_ACTIVE) {
@@ -187,6 +197,7 @@ function weakUnits(max = 5) {
 function plan(count) {
   Store.rollDay();
   st().day.units = doneUnits().length;   // 「済単元数の推移」を残すため、毎日ここで拾う
+  noteScore();
   const cards = st().cards, today = Store.today();
   const out = [], used = new Set();
   const push = (q, why, cap) => {
