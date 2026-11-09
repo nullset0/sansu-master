@@ -68,7 +68,7 @@ function rollDay() {
                        ms:S.day.ms || 0, units:S.day.units || 0, score:S.day.score });
       if (S.history.length > 400) S.history = S.history.slice(-400);
     }
-    S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0, score:S.day.score };
+    S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0 };   // 予想点は前日を持ちこさない
     save();
   }
 }

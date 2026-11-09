@@ -21,7 +21,7 @@ const st = () => Store.state;
      大問3以降＝速さ・規則性・年齢算などの文章題と図形。
    ・図形（角度・平面・立体・水量変化）の比率が高い。
    ・合格ラインは得点率65〜75%前後（年により変動）。
-   ※ 小問数は公表されていないため 20問と仮定している（1問あたり150秒の根拠）。
+   ※ 小問数は公表されていないため 17問と仮定している（香里算数道場の模試と同じ・1問あたり約176秒の根拠）。
 ------------------------------------------------------------ */
 const SCHOOLS = {
   'chuken-standard': {
@@ -118,7 +118,7 @@ function get() {
 // 出題の並べかえと予想点に使う学校。受験の予定を入れていなくても、このアプリの目標
 // （同志社香里）に合わせて並べる。1日の問題数（おまかせ）は予定を入れたときだけ変わる。
 const DEFAULT_SCHOOL = 'chuken-standard';
-function target() { const g = get(); return g ? g.sch : SCHOOLS[DEFAULT_SCHOOL]; }
+function target() { const g = st().goal; return (g && SCHOOLS[g.school]) || SCHOOLS[DEFAULT_SCHOOL]; }
 
 /* ---------- 本番の形で「いま受けたら何点か」 ----------
    単元ごとの「解ける見こみ」を出して、本番の大問ごとの配点にかける。
@@ -137,16 +137,22 @@ function unitAbility(id) {
   const reach = 0.4 * s.understand + 0.6 * s.apply;
   return Math.max(0, Math.min(1, reach * acc * (0.7 + 0.3 * s.retain)));
 }
+// 大問ごとに、その大問の単元と1単元あたりの点（配点 ÷ 単元数）。予想点と並べかえの両方がこれを使う
+function split(sch) {
+  return sch.blueprint.map(b => {
+    const units = b.units.filter(id => DATA.unit(id));
+    return { b, units, per: units.length ? b.pts / units.length : 0 };
+  });
+}
 function predict(sch = target()) {
   if (!sch || !sch.blueprint) return null;
   const ab = {}; const A = id => (id in ab ? ab[id] : (ab[id] = unitAbility(id)));
   const gain = {};
-  const sections = sch.blueprint.map(b => {
-    const units = b.units.filter(id => DATA.unit(id));
-    const per = units.length ? b.pts / units.length : 0;
+  const sections = split(sch).map(({ b, units, per }) => {
     let got = 0;
     units.forEach(id => { const a = A(id); got += per * a; gain[id] = (gain[id] || 0) + per * (1 - a); });
-    return { key:b.key, name:b.name, pts:b.pts, got:+got.toFixed(1),
+    // 大問ごとは整数で見せ、合計はその足し算にする（足して合わない数字を出さない）
+    return { key:b.key, name:b.name, pts:b.pts, got:Math.round(got),
              rate: b.pts ? got / b.pts : 0, units };
   });
   const total = sections.reduce((a, x) => a + x.got, 0);
@@ -156,7 +162,7 @@ function predict(sch = target()) {
                          open: Mastery.unitState(id).open, done: Mastery.unitState(id).done }))
     .filter(x => x.gain >= 0.5)
     .sort((a, b) => (b.open - a.open) || (b.gain - a.gain));
-  return { total: Math.round(total), max: sch.math.points, bench: sch.bench || null, sections, gains };
+  return { total, max: sch.math.points, bench: sch.bench || null, sections, gains };
 }
 // 単元1つが本番で何点ぶんか（大問の配点 ÷ その大問の単元数 を足し合わせたもの）
 let _pts = null, _ptsFor = null;
@@ -164,8 +170,7 @@ function unitPoints(id, sch = target()) {
   if (!sch || !sch.blueprint) return 0;
   if (_ptsFor !== sch.id) {
     _ptsFor = sch.id; _pts = {};
-    sch.blueprint.forEach(b => { const us = b.units.filter(u => DATA.unit(u));
-      us.forEach(u => { _pts[u] = (_pts[u] || 0) + b.pts / us.length; }); });
+    split(sch).forEach(({ units, per }) => units.forEach(u => { _pts[u] = (_pts[u] || 0) + per; }));
   }
   return _pts[id] || 0;
 }
@@ -289,13 +294,23 @@ function needSet() {
 }
 // 並べかえの重み。本番の配点が厚い単元ほど大きい（計算・図形が上に来る）。
 // 配点の表に無い単元（前提の学年の単元など）は分野の重み。
+// ★ 受験の予定が無くても、目標校に要らない単元（難関チャレンジ）は 0＝後回し。
+//   要る単元が全部終わるか開いていないときにだけ回ってくる（香里に合わせるための意図した動き）。
+// 学習の記録には左右されないので、学校ごとに1回だけ作って使い回す（並べかえで何千回も呼ばれる）。
+let _w = null, _wFor = null;
 function unitWeight(id) {
   const sch = target(); if (!sch) return 1;
-  const u = DATA.unit(id); if (!u) return 0;
-  if (!needSet().has(id)) return 0;                         // この学校には要らない
-  // ★ 前提の単元にも点を渡す案は tools/sim.js で比べて差が誤差の内（±2点）だったので入れていない
-  const p = unitPoints(id, sch);
-  return p > 0 ? 1 + p / 2 : ((sch.weights || {})[u.area] || 1);
+  if (_wFor !== sch.id) { _wFor = sch.id; _w = {}; }
+  if (id in _w) return _w[id];
+  const u = DATA.unit(id);
+  let w;
+  if (!u || !needSet().has(id)) w = 0;                      // この学校には要らない
+  else {
+    // ★ 前提の単元にも点を渡す案は tools/sim.js で比べて差が誤差の内（±2点）だったので入れていない
+    const p = unitPoints(id, sch);
+    w = p > 0 ? 1 + p / 2 : ((sch.weights || {})[u.area] || 1);
+  }
+  return (_w[id] = w);
 }
 
 /* ---------- 学力の推移（週ごと） ---------- */

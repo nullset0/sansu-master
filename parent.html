@@ -411,7 +411,7 @@
       <h3>大問ごと</h3>
       ${p.sections.map(x => `<div style="margin-bottom:7px">
         <div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800">
-          <span>${x.name}</span><span class="muted">${x.got.toFixed(0)}/${x.pts}点</span></div>
+          <span>${x.name}</span><span class="muted">${x.got}/${x.pts}点</span></div>
         <div class="bar"><i style="width:${Math.round(x.rate*100)}%;background:${tone(x.rate)}"></i></div></div>`).join('')}
       ${top.length ? `<h3 style="margin-top:12px">いま伸ばすと点が上がる単元</h3>
         <ul style="margin:4px 0 6px 1.2em;font-size:.88rem;font-weight:700">
