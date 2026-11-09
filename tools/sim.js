@@ -19,7 +19,7 @@ FakeDate.parse = RealDate.parse; FakeDate.UTC = RealDate.UTC;
 // ---- 最小のブラウザ環境
 const store = {};
 const sandbox = {
-  console, JSON, Math, Object, Array, Number, String, Boolean, Set, Map, Date: FakeDate,
+  console, JSON, Math: Object.create(Math), Object, Array, Number, String, Boolean, Set, Map, Date: FakeDate,
   structuredClone, parseFloat, parseInt, isNaN, setTimeout, clearTimeout,
   localStorage: {
     getItem: k => (k in store ? store[k] : null),
@@ -55,6 +55,7 @@ function pOf(q, p0) {
 function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
                 goal = null, auto = false } = {}) {
   const rnd = rng(seed);
+  sandbox.Math.random = rng(seed * 7919 + 1);   // 出題の並びも毎回おなじに（比較をぶれさせない）
   Object.keys(store).forEach(k => delete store[k]);
   DAY = 0;
   Store.importJSON('{}');
@@ -63,9 +64,9 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
   if (goal) {
     Goal.set(goal, null, 4);
     if (!auto) Store.set('dailyGoal', perDay);
-    // NOWEIGHT=1 … 到達は測るが、出題の並べかえは効かせない（比較用）
-    if (process.env.NOWEIGHT === '1') Goal.unitWeight = () => 1;
   }
+  // NOWEIGHT=1 … 到達は測るが、出題の並べかえは効かせない（比較用）
+  if (process.env.NOWEIGHT === '1') Goal.unitWeight = () => 1;
   Store.save();
 
   const daily = [], goalHist = [];   // 毎日の到達点
@@ -99,7 +100,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
     if (!plan.length) stall++;
     plan.forEach(q => Store.grade(q.id, rnd() < pOf(q, p0), q.unit, {}));
     const s = Mastery.summary();
-    daily.push({ done: s.done, jk: s.jkDone });
+    daily.push({ done: s.done, jk: s.jkDone, score: (Goal.predict() || {}).total });
     if (goal) {
       const need = Goal.needSet();
       let n = 0; need.forEach(id => { if (Mastery.unitState(id).done) n++; });
@@ -122,7 +123,9 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
     y1_done: (daily[364] || daily[daily.length-1]).done,
     y1_jk:   (daily[364] || daily[daily.length-1]).jk,
     mo_jk30: first(x => x.jk >= 30), mo_jk60: first(x => x.jk >= 60), mo_all: first(x => x.done >= s.total),
-    stall, checks, demotes, explains, explainPass, goalDone, goalTotal, moGoal };
+    stall, checks, demotes, explains, explainPass, goalDone, goalTotal, moGoal,
+    // 本番の形の予想点（6ヶ月・1年・1年半・2年・最終日）
+    score: [182, 365, 547, 730, days - 1].map(i => (daily[Math.min(i, daily.length - 1)] || {}).score) };
 }
 
 /* 使い方: node tools/sim.js <1日の問題数,…> <日数> <素の正答率> <開始学年>
@@ -132,7 +135,8 @@ const P0 = Number(process.argv[4] || 0.80);
 const PLACE = process.argv[5] || 'g3';
 for (const perDay of (process.argv[2] || '3,5,8,10,15').split(',').map(Number)) {
   const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE,
-                  goal: process.env.GOAL || null, auto: process.env.AUTO === '1' });
+                  goal: process.env.GOAL || null, auto: process.env.AUTO === '1',
+                  seed: Number(process.env.SEED || 7) });
   rows.push(r);
   console.log(JSON.stringify(r));
 }

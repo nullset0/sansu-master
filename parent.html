@@ -34,6 +34,7 @@
 
   <div class="card" id="today-card"></div>
 
+  <div class="card" id="score-card"></div>
   <div class="card" id="goal-card"></div>
 
   <div class="card">
@@ -386,6 +387,41 @@
     document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); renderGoal(); } };
   }
   renderGoal();
+
+  /* ================= 本番の形で いま何点か ================= */
+  (() => {
+    const host = document.getElementById('score-card');
+    const p = Goal.predict();
+    if (!p) { host.remove(); return; }
+    const b = p.bench || {};
+    const tone = r => r >= 0.69 ? 'var(--b)' : r >= 0.4 ? 'var(--c)' : 'var(--a)';
+    const hist = Store.state.history.filter(x => x.score != null).slice(-120);
+    const pts = hist.filter((_, i) => i % 7 === 0 || i === hist.length - 1).slice(-8);
+    const top = p.gains.filter(x => x.open && !x.done).slice(0, 3);
+    const later = p.gains.filter(x => !x.open).slice(0, 3);
+    host.innerHTML = `<h2>🎯 同志社香里の形で いま何点か</h2>
+      <p class="muted" style="margin-bottom:10px">本番と同じ 大問7題・120点 の配点に、単元ごとの「解ける見こみ」をかけた目安です。
+        はじめていない単元は0点で数えます。模試の点ではなく、伸びを見るための物差しです。</p>
+      <div class="stats" style="margin-bottom:10px">
+        <div class="stat crown"><div class="ico">🎯</div><div class="n">${p.total}</div><div class="l">予想点<br>/${p.max}点</div></div>
+        ${b.pass ? `<div class="stat"><div class="ico">🏫</div><div class="n">${b.pass}</div><div class="l">前期 合格者の<br>平均点</div></div>
+        <div class="stat ${p.total >= b.pass ? '' : 'hot'}"><div class="ico">📈</div><div class="n">${p.total >= b.pass ? '到達' : b.pass - p.total}</div><div class="l">${p.total >= b.pass ? '合格者平均を<br>こえた' : '合格者平均<br>まであと'}</div></div>` : ''}
+      </div>
+      ${pts.length >= 2 ? `<p class="muted" style="font-size:.8rem;margin-bottom:8px">推移: ${pts.map(x => `${x.d.slice(5)} ${x.score}点`).join(' → ')}</p>` : ''}
+      <h3>大問ごと</h3>
+      ${p.sections.map(x => `<div style="margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800">
+          <span>${x.name}</span><span class="muted">${x.got.toFixed(0)}/${x.pts}点</span></div>
+        <div class="bar"><i style="width:${Math.round(x.rate*100)}%;background:${tone(x.rate)}"></i></div></div>`).join('')}
+      ${top.length ? `<h3 style="margin-top:12px">いま伸ばすと点が上がる単元</h3>
+        <ul style="margin:4px 0 6px 1.2em;font-size:.88rem;font-weight:700">
+        ${top.map(x => `<li>${x.name} <span style="color:var(--a)">＋${x.gain.toFixed(1)}点</span></li>`).join('')}</ul>
+        <p class="muted" style="font-size:.78rem">点は、その単元を仕上げたときの上がり幅。</p>
+        <p class="muted" style="font-size:.78rem">毎日の出題は、この配点の厚い単元から先に回します（前提の単元が先）。</p>` : ''}
+      ${later.length ? `<p class="muted" style="font-size:.78rem;margin-top:6px">前提が終わると開く単元: ${later.map(x => `${x.name}（＋${x.gain.toFixed(1)}点）`).join('・')}</p>` : ''}
+      <p class="muted" style="font-size:.74rem;margin-top:8px">配点は非公開のため、大問1・2を1問6点、3〜5を8点、6を7点、7を8点と仮置き。
+        合格者平均${b.pass || '—'}点・受験者平均${b.examinee || '—'}点は前期5年平均。図をかいて考える立体（切断・回転）や点の移動は、この画面の問題だけでは足りないので過去問で補ってください。</p>`;
+  })();
 
   /* ================= 学力の推移（週ごと） ================= */
   (() => {

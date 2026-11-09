@@ -6,7 +6,7 @@
      events/<dev>/<日>.jsonl  1問ごと
      state/<dev>.json         端末の全体状態（最新）
    出すもの（改善の手がかりになる順）:
-     ① ペース: 何日やったか・何問・正答率・時間 / 志望校の目安までの見立て
+     ① ペース: 何日やったか・何問・正答率・時間 / 志望校の目安までの見立て / 香里の形の予想点と伸ばしどころ
      ② 苦手な単元（正答率が低い）
      ③ 遅い単元（1問の時間が長い）
      ④ 同じ問題を2回以上まちがえたもの＋答えた値（考え違いの手がかり）
@@ -103,6 +103,14 @@ if (devs.length) {
     const v = { ok: '間に合う', tight: 'ぎりぎり', behind: '遅れる' }[gs.verdict] || gs.verdict;
     P(`- 目安までの見立て: 残り${gs.left}単元・入試まで${gs.daysLeft}日・いまのペース ${gs.perDayNow}問/日・必要 ${gs.perDayNeeded}問/日 → **${v}**`);
     P(`- 分野べつ: ${gs.areaRows.map(a => `${a.name} ${a.done}/${a.total}`).join('・')}`);
+  }
+  const pr = Goal.predict && Goal.predict();
+  if (pr) {
+    const sh = Store.state.history.filter(x => x.score != null).slice(-28);
+    P(`- 香里の形の予想点: **${pr.total}/${pr.max}点**（前期合格者平均 ${pr.bench.pass}点・受験者平均 ${pr.bench.examinee}点）${sh.length ? `・推移 ${sh.filter((_, i) => i % 7 === 0 || i === sh.length - 1).map(x => `${x.d.slice(5)} ${x.score}`).join(' → ')}` : ''}`);
+    P(`- 大問ごと: ${pr.sections.map(x => `${x.name.replace(/^大問/, '')} ${x.got.toFixed(0)}/${x.pts}`).join('・')}`);
+    const gOpen = pr.gains.filter(x => x.open && !x.done).slice(0, 5), gLater = pr.gains.filter(x => !x.open).slice(0, 3);
+    P(`- 伸ばしどころ（仕上げたときの上がり幅）: ${gOpen.map(x => `${x.name} +${x.gain.toFixed(1)}`).join('・') || 'いま取り組める単元なし'}${gLater.length ? `／前提待ち: ${gLater.map(x => `${x.name} +${x.gain.toFixed(1)}`).join('・')}` : ''}`);
   }
   const h = Store.state.history.slice(-28);
   if (h.length) P(`- 直近の済単元数の推移: ${h.filter((_, i) => i % 7 === 6 || i === h.length - 1).map(x => `${x.d.slice(5)} ${x.units}`).join(' → ')}`);

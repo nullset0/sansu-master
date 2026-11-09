@@ -65,10 +65,10 @@ function rollDay() {
   if (S.day.date !== t) {
     if (S.day.done > 0) {
       S.history.push({ d:S.day.date, done:S.day.done, correct:S.day.correct,
-                       ms:S.day.ms || 0, units:S.day.units || 0 });
+                       ms:S.day.ms || 0, units:S.day.units || 0, score:S.day.score });
       if (S.history.length > 400) S.history = S.history.slice(-400);
     }
-    S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0 };
+    S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0, score:S.day.score };
     save();
   }
 }

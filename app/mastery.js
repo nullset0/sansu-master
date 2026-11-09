@@ -129,7 +129,7 @@ function areaOrder(id) { const u = DATA.unit(id); return (DATA.AREAS[u && u.area
 // 受験の予定が入っていれば、到達の目安に要る単元・出題の多い分野を先に回す。
 // 入っていなければ全部おなじ重み（＝これまでどおり）。
 function goalW(id) {
-  return (typeof Goal !== 'undefined' && Goal.get()) ? Goal.unitWeight(id) : 1;
+  return (typeof Goal !== 'undefined') ? Goal.unitWeight(id) : 1;   // 予定が無くても目標校の配点で並べる
 }
 
 function frontier(k = MAX_ACTIVE) {
@@ -187,6 +187,7 @@ function weakUnits(max = 5) {
 function plan(count) {
   Store.rollDay();
   st().day.units = doneUnits().length;   // 「済単元数の推移」を残すため、毎日ここで拾う
+  try { const pr = typeof Goal !== 'undefined' && Goal.predict(); if (pr) st().day.score = pr.total; } catch (e) {}   // 予想点の推移
   const cards = st().cards, today = Store.today();
   const out = [], used = new Set();
   const push = (q, why, cap) => {
