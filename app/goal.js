@@ -104,6 +104,8 @@ function set(schoolId, examDate, gradeNow) {
   return st().goal;
 }
 function clear() {
+  // 見立てをやめても、入れた学年から決まった入試日は3段の流れに残す（小4の推測に戻さない）
+  if (st().goal && st().goal.exam) st().examGuess = st().goal.exam;
   st().goal = null;
   _need = null; _needFor = null;
   // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
@@ -308,7 +310,7 @@ function dailyCount() {
   if (left <= 0) left = DATA.units.filter(u => !Mastery.unitState(u.id).done).length;
   if (left <= 0) return 5;                                   // 全単元おわり＝維持
   let raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
-  if (s.left > 0) raw = Math.max(raw, roadmapPace(s.rate).need);   // 3段の区切りにも間に合わせる
+  raw = Math.max(raw, roadmapPace(s.rate).need);   // 3段の区切りにも間に合わせる（段が全部おわれば0）
   return STEPS.find(x => x >= raw) || 25;
 }
 
@@ -362,26 +364,35 @@ function unitWeight(id) {
 function examDate() {
   const g = st().goal;
   if (g && g.exam) return g.exam;
-  if (!st().examGuess) { st().examGuess = defaultExamDate(target(), 4); Store.save(); }
+  // 読むだけの関数なので保存はしない（次に1問記録したときの保存で一緒に残る）
+  if (!st().examGuess) { st().examGuess = defaultExamDate(target(), 4); st().examGuessAt = Store.today(); }
   return st().examGuess;
 }
 // ①は「理解」まで（基本・応用を「済」と同じ割合まで一度は正解）。覚えている度合いは②の間の復習で上げる。
 // ②は「済」（理解・応用・定着・なぜ？チェックがそろう）。
 // ★ ①は香里に要る単元（中受の単元の前提になっている学校の単元）だけ。要らない小6の単元
 //   （比例・データなど）は効率のため段に入れない＝手が空いたときに出る。
-function understood(s) { return s.done || s.waitingExplain || (s.understand >= Mastery.DONE_U && s.apply >= Mastery.DONE_A); }
+const understood = s => Mastery.understood(s);
 const febEnd = y => { const d = new Date(Date.UTC(y, 2, 0)); return d.toISOString().slice(0, 10); };   // うるう年も2月末
 let _rm = null, _rmRev = -1, _rmDay = null;
 function roadmap() {
   if (_rm && _rmRev === Store.rev && _rmDay === Store.today()) return _rm;
   const sch = target(), need = needSet(), exam = examDate(), y = Number(exam.slice(0, 4));
-  const ids = [...need];
+  const ids = [...need].filter(id => DATA.byUnit(id).length);   // 問題の無い単元は数えない（永久に終わらなくなる）
   const school = ids.filter(id => /^g\d$/.test(DATA.unit(id).area));
   const jk = ids.filter(id => DATA.unit(id).area.indexOf('jk') === 0);
   const today = Store.today();
+  // 小5・小6から始めたときは、区切りを始めた日から入試までの間に割りふり直す。
+  // ①は過ぎていれば はじめの25%まで、②は残りが入試までの半分より短ければ半分まで延ばす。
+  // 過ぎた・近すぎる期限のまま数えると、初日から「期限すぎ」で25問に張り付く。
+  const g0 = st().goal, start = (g0 && g0.setAt) || st().examGuessAt || today;
+  const span = Math.max(0, Store.daysBetween(start, exam));
+  const at = share => Store.addDays(start, Math.round(span * share));
+  const tokuEnd = [`${y-1}-01-31`, at(0.5)].sort()[1];                       // 遅いほう
+  const baseEnd = [febEnd(y - 2) < start ? at(0.25) : febEnd(y - 2), tokuEnd].sort()[0];   // ②より前
   const stages = [
-    { key:'base', name:'小6までの内容を理解する', when:'小4', end:febEnd(y - 2), units:school, ok:understood },
-    { key:'toku', name:'特殊算・図形を仕上げる',   when:'小5', end:`${y-1}-01-31`, units:jk,     ok:s => s.done },
+    { key:'base', name:'小6までの内容を理解する', when:'小4', end:baseEnd, units:school, ok:understood },
+    { key:'toku', name:'特殊算・図形を仕上げる',   when:'小5', end:tokuEnd, units:jk,     ok:s => s.done },
     { key:'kako', name:'過去問を回す',             when:'小6', end:exam,          units:[],     ok:() => true },
   ].map(x => {
     const done = x.units.filter(id => x.ok(Mastery.unitState(id))).length;

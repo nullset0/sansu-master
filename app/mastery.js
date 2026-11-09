@@ -150,10 +150,10 @@ function stageW(id) {
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
-    .map(x => Object.assign(x, { r: stageW(x.u.id) }))   // 段は並べかえの前に1回だけ引く
     // チェック待ちは「練習が足りない」わけではないので、いま取り組む枠からは外す。
     // 外さないと3枠を占領して前進が止まる。
     .filter(x => x.s.open && !x.s.done && !x.s.waitingExplain)
+    .map(x => Object.assign(x, { r: stageW(x.u.id) }))   // 段は並べかえの前に1回だけ引く
     // ① やりかけを優先 ② 前提の浅い（＝準備ができている）順
     // ③ 同じ深さなら 学年・分野の順 ④ やさしいレベルから
     // 学年ではなく「前提が満たされたか」で並ぶので、自然に上の学年へ入っていく
@@ -265,6 +265,11 @@ function plan(count) {
        .forEach(q => push(q, 'ふくしゅう'));
   }
   return interleave(out);
+}
+
+// 「理解」まで来ているか（3段の流れの①で使う）。基本・応用を「済」と同じ割合まで一度は正解
+function understood(s) {
+  return s.done || s.waitingExplain || (s.understand >= DONE_U && s.apply >= DONE_A);
 }
 
 function phaseOf(s) {
@@ -473,6 +478,6 @@ return { unitState, isOpen, frontier, weakSpots, weakUnits, plan, phaseOf,
          checkDue, buildCheck, finishCheck, demote, doneUnits,
          GRADES, ladderFor, assumeGrade, placementDone, summary, markDone, trainingDue, TRAINING,
          needsExplain, explainOK, explainOf, recordExplain, explainDue, EXPLAIN_MIN,
-         BASIC, APPLY, DONE_U, DONE_A };
+         BASIC, APPLY, understood };
 })();
 if (typeof window !== 'undefined') window.Mastery = Mastery;

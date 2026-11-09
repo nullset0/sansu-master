@@ -349,7 +349,7 @@
           目安ぶんが終わったら、そこで止めずに先へ進みます。</p>`;
       host.querySelectorAll('.gl-set').forEach(b => b.onclick = () => {
         const grade = Number(document.getElementById('gl-grade').value) || 4;
-        Goal.set(b.dataset.id, null, grade); renderGoal(); renderRoad();
+        Goal.set(b.dataset.id, null, grade); location.reload();   // 1日の数の案内・3段の流れもまとめて描き直す
       });
       return;
     }
@@ -385,7 +385,7 @@
         <div class="bar"><i style="width:${Math.round(a.done/a.total*100)}%;background:${a.w>=1.4?'var(--a)':'var(--b)'}"></i></div>
       </div>`).join('')}
       <button class="btn ghost sm" id="gl-clear" style="margin-top:10px">見立てをやめる</button>`;
-    document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); renderGoal(); renderRoad(); } };
+    document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); location.reload(); } };
   }
   renderGoal();
 
