@@ -104,6 +104,10 @@ if (devs.length) {
     P(`- 目安までの見立て: 残り${gs.left}単元・入試まで${gs.daysLeft}日・いまのペース ${gs.perDayNow}問/日・必要 ${gs.perDayNeeded}問/日 → **${v}**`);
     P(`- 分野べつ: ${gs.areaRows.map(a => `${a.name} ${a.done}/${a.total}`).join('・')}`);
   }
+  if (Goal.roadmap) {
+    const r = Goal.roadmap(), pace = Goal.roadmapPace(Goal.recentRate()).perDay;
+    P(`- 3段の流れ: ${r.stages.map((x, i) => x.units.length ? `${x.when} ${x.name} ${x.done}/${x.total}（${x.end}まで${x.left === 0 ? '・おわり' : x.late ? '・**期限すぎ**' : pace[i] ? `・1日${pace[i]}問ペース` : ''}${x.current ? '・いまここ' : ''}）` : `${x.when} ${x.name}${x.current ? '（いまここ）' : ''}`).join('／')}`);
+  }
   const pr = Goal.predict && Goal.predict();
   if (pr) {
     const sh = Goal.scoreTrend(5);

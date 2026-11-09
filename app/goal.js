@@ -307,7 +307,8 @@ function dailyCount() {
   let left = s.left, per = perUnit(s.rate == null ? 0.6 : s.rate);
   if (left <= 0) left = DATA.units.filter(u => !Mastery.unitState(u.id).done).length;
   if (left <= 0) return 5;                                   // 全単元おわり＝維持
-  const raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
+  let raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
+  if (s.left > 0) raw = Math.max(raw, roadmapPace(s.rate).need);   // 3段の区切りにも間に合わせる
   return STEPS.find(x => x >= raw) || 25;
 }
 
@@ -347,6 +348,77 @@ function unitWeight(id) {
   return (_w[id] = w);
 }
 
+/* ---------- 3段の流れ（家の方針 2026-11-09） ----------
+   ① 小4のうちに小6までの内容を「理解」する   … 小4の2月末まで
+   ② 小5で特殊算・中受の図形を「仕上げる」     … 小5の1月末まで
+   ③ 小6は過去問を回す（このアプリは 忘れ止めと、予想点の低い大問の補強）… 入試まで
+   段の区切りは入試日から決める（入試の年の2年前の2月末・1年前の1月末）。
+   予定を入れていなければ、いま小4として数える。
+   いまの段＝まだ終わっていない最初の段。期限をすぎても終わるまではその段にいる（遅れとして出す）。
+   出題はいまの段の単元を先に回す（mastery.js の frontier）。先の段の単元も、手が空けば出る。
+------------------------------------------------------------ */
+// 予定を入れていなければ、はじめて数えた日に「いま小4」として決めた入試日を覚えておく
+// （毎回きょうから数えると、4月に学年が上がったとき入試日が1年ずれる）
+function examDate() {
+  const g = st().goal;
+  if (g && g.exam) return g.exam;
+  if (!st().examGuess) st().examGuess = defaultExamDate(target(), 4);   // 次の記録の保存で一緒に残る
+  return st().examGuess;
+}
+// ①は「理解」まで（基本9割・応用7割を一度は正解）。覚えている度合いは②の間の復習で上げる。
+// ②は「済」（理解・応用・定着・なぜ？チェックがそろう）。
+function understood(s) { return s.done || s.waitingExplain || (s.understand >= 0.9 && s.apply >= 0.7); }
+let _rm = null, _rmRev = -1, _rmDay = null;
+function roadmap() {
+  if (_rm && _rmRev === Store.rev && _rmDay === Store.today()) return _rm;
+  const sch = target(), need = needSet(), exam = examDate(), y = Number(exam.slice(0, 4));
+  const ids = [...need];
+  const school = ids.filter(id => /^g\d$/.test(DATA.unit(id).area));
+  const jk = ids.filter(id => DATA.unit(id).area.indexOf('jk') === 0);
+  const today = Store.today();
+  const stages = [
+    { key:'base', name:'小6までの内容を理解する', when:'小4', end:`${y-2}-02-28`, units:school, ok:understood },
+    { key:'toku', name:'特殊算・図形を仕上げる',   when:'小5', end:`${y-1}-01-31`, units:jk,     ok:s => s.done },
+    { key:'kako', name:'過去問を回す',             when:'小6', end:exam,          units:[],     ok:() => true },
+  ].map(x => {
+    const done = x.units.filter(id => x.ok(Mastery.unitState(id))).length;
+    return Object.assign(x, { total:x.units.length, done, left:x.units.length - done,
+                              daysLeft: Store.daysBetween(today, x.end) });
+  });
+  let cur = stages.findIndex(x => x.left > 0);
+  if (cur < 0) cur = stages.length - 1;
+  stages.forEach((x, i) => { x.current = i === cur; x.late = x.left > 0 && x.daysLeft < 0; });
+  const stageOf = {};
+  stages.forEach((x, i) => x.units.forEach(id => { if (!(id in stageOf)) stageOf[id] = i; }));
+  _rm = { exam, stages, cur, stageOf, assumed: !st().goal };
+  _rmRev = Store.rev; _rmDay = today;
+  return _rm;
+}
+// 並べかえ用: いまの段（とそれより前）の単元は0、先の段・どの段にも無い単元は1
+function stageRank(id) {
+  const r = roadmap(), i = r.stageOf[id];
+  return i != null && i <= r.cur ? 0 : 1;
+}
+// 段の期限に間に合う1日の問題数。期限の近い段ほど先に効く。前の段の残りも後ろの段の期限までに
+// 要るので、足しあわせて比べる。
+// ①の1単元あたりの量は perUnit の1.6倍（tools/sim 相当の実測: 2026-11 に小3まで済みから始めて、
+// 正答率0.7で残り25単元に2,251問＝90問/単元・0.8で1,811問＝72問/単元）。前提の定着を待つ間も
+// 復習が積まれるので「理解まで」でも全単元平均より多い。
+// ②は1.0倍だと最後の数単元が長びいて期限を3か月すぎた（1日の量を下げすぎる）ので、1.4倍で見る。
+const STAGE_PER = { base:1.6, toku:1.4 };
+// 戻り値: { need: いちばんきつい段に合わせた1日の数, perDay: 段ごとの1日の数（終わった段・期限すぎ・単元なしは null） }
+function roadmapPace(rate) {
+  const r = roadmap(), per = perUnit(rate == null ? 0.6 : rate);
+  let acc = 0, need = 0;
+  const perDay = r.stages.map(x => {
+    acc += x.left * per * (STAGE_PER[x.key] || 1);
+    if (!x.units.length || x.left <= 0 || x.daysLeft <= 0) return null;
+    need = Math.max(need, acc / x.daysLeft);
+    return Math.ceil(acc / x.daysLeft);
+  });
+  return { need, perDay };
+}
+
 /* ---------- 学力の推移（週ごと） ---------- */
 function weekly(weeks = 12) {
   const days = Store.lastDays(weeks * 7);
@@ -366,6 +438,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS, target, predict, score, scoreTrend, unitAbility, unitPoints };
+         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, examDate, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;

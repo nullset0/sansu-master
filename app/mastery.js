@@ -142,6 +142,11 @@ function goalW(id) {
   return (typeof Goal !== 'undefined') ? Goal.unitWeight(id) : 1;   // 予定が無くても目標校の配点で並べる
 }
 
+// 3段の流れ（小4=小6まで理解／小5=特殊算／小6=過去問）で、いまの段の単元を先に。0が先
+function stageW(id) {
+  return (typeof Goal !== 'undefined' && Goal.stageRank) ? Goal.stageRank(id) : 0;
+}
+
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
@@ -151,10 +156,11 @@ function frontier(k = MAX_ACTIVE) {
     // ① やりかけを優先 ② 前提の浅い（＝準備ができている）順
     // ③ 同じ深さなら 学年・分野の順 ④ やさしいレベルから
     // 学年ではなく「前提が満たされたか」で並ぶので、自然に上の学年へ入っていく
-    // ①やりかけ ②志望校に要るもの ③前提の浅い順 ④出題の多い分野
-    // ⑤学年・分野の順 ⑥やさしいレベルから
+    // ①やりかけ ②志望校に要るもの ③いまの段（3段の流れ）の単元 ④前提の浅い順
+    // ⑤配点の厚い単元 ⑥学年・分野の順 ⑦やさしいレベルから
     .sort((a,b) => (b.s.started - a.s.started)
                 || ((goalW(b.u.id) > 0) - (goalW(a.u.id) > 0))
+                || (stageW(a.u.id) - stageW(b.u.id))
                 || (a.d - b.d)
                 || (goalW(b.u.id) - goalW(a.u.id))
                 || (areaOrder(a.u.id) - areaOrder(b.u.id)) || (a.u.lv - b.u.lv));
