@@ -37,7 +37,7 @@ const SCHOOLS = {
     exclude: ['jk-hard'],
     note: '私立中入試は図形（角度・平面・立体・水量）の比重が高く、計算の速さと正確さが土台になります。',
     // 得点の目安（同志社香里 前期・算数120点の5年平均。出典は香里算数道場の設計タブ）
-    bench: { examinee: 69, pass: 83, passLate: 89 },
+    bench: { examinee: 69, pass: 83 },
     // 本番の組み立て。配点は非公開なので小問の点を仮置き（大問1・2=6点、3〜5=8点、6=7点、7=8点）。
     // 単元は「その大問でよく出るもの」。1つの単元が2つの大問に出ることもある。
     blueprint: [
@@ -129,13 +129,8 @@ function target() { const g = st().goal; return (g && SCHOOLS[g.school]) || SCHO
    はじめていない単元は 0。本番では解けないものとして数える。
    ★ 目安であって、模試の点ではない。上がり下がりを見るための物差し。
 ------------------------------------------------------------ */
-let _qs = null;
-function qsOfUnit(id) {
-  if (!_qs) { _qs = {}; DATA.all().forEach(q => (_qs[q.unit] = _qs[q.unit] || []).push(q.id)); }
-  return _qs[id] || [];
-}
 function unitAbility(id) {
-  const qs = qsOfUnit(id); if (!qs.length) return 0;
+  const qs = DATA.byUnit(id).map(q => q.id); if (!qs.length) return 0;
   const cards = st().cards, today = Store.today();
   let seen = 0, last = 0, ever = 0, keep = 0;
   qs.forEach(q => {
@@ -145,7 +140,7 @@ function unitAbility(id) {
       ever++;
       let r = Math.min(1, (c.box || 0) / 4);
       const over = c.due ? Store.daysBetween(c.due, today) : 0;
-      if (over > (Store.BOX_DAYS[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
+      if (over > ((Store.BOX_DAYS || [])[c.box] || 1)) r *= 0.5;          // 長く放ってある＝忘れかけ
       keep += r;
     }
   });
@@ -164,7 +159,7 @@ function split(sch) {
 }
 // 合計だけ（1問答えるたびに呼ぶので、伸ばしどころの一覧は作らない）
 function score(sch = target()) { const p = predict(sch, { gains:false }); return p ? p.total : null; }
-// 予想点の推移。きょうから7日ずつさかのぼった週ごとに、その週の最後の値（きょうは いまの値）。
+// 予想点の推移。きょうから7日ずつさかのぼった区切り（暦の週ではない）ごとに、その週の最後の値（きょうは いまの値）。
 // 保護者画面と週報で同じ取り方にする
 function scoreTrend(n = 8) {
   const today = Store.today(), out = [];

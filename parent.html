@@ -391,7 +391,8 @@
   /* ================= 本番の形で いま何点か ================= */
   (() => {
     const host = document.getElementById('score-card');
-    const p = Goal.predict();
+    let p = null;
+    try { p = Goal.predict(); } catch (e) { console.warn('[予想点]', e); }   // ここで落ちても下のカードは出す
     if (!p) { host.remove(); return; }
     const b = p.bench || {};
     const tone = r => r >= 0.69 ? 'var(--b)' : r >= 0.4 ? 'var(--c)' : 'var(--a)';
