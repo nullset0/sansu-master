@@ -390,7 +390,7 @@
   renderGoal();
 
   /* ================= 3段の流れ ================= */
-  // 受験の予定を入れ直したとき（renderGoal）にも描き直す
+  // 受験の予定を入れ直したときは、ページごと読み直して描き直す（1日の数の案内とそろえるため）
   function renderRoad() {
     const host = document.getElementById('road-card');
     if (!host) return;
