@@ -349,7 +349,7 @@
           目安ぶんが終わったら、そこで止めずに先へ進みます。</p>`;
       host.querySelectorAll('.gl-set').forEach(b => b.onclick = () => {
         const grade = Number(document.getElementById('gl-grade').value) || 4;
-        Goal.set(b.dataset.id, null, grade); renderGoal();
+        Goal.set(b.dataset.id, null, grade); renderGoal(); renderRoad();
       });
       return;
     }
@@ -385,27 +385,28 @@
         <div class="bar"><i style="width:${Math.round(a.done/a.total*100)}%;background:${a.w>=1.4?'var(--a)':'var(--b)'}"></i></div>
       </div>`).join('')}
       <button class="btn ghost sm" id="gl-clear" style="margin-top:10px">見立てをやめる</button>`;
-    document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); renderGoal(); } };
+    document.getElementById('gl-clear').onclick = () => { if (confirm('ペースの見立てを消しますか？')) { Goal.clear(); renderGoal(); renderRoad(); } };
   }
   renderGoal();
 
   /* ================= 3段の流れ ================= */
-  (() => {
+  // 受験の予定を入れ直したとき（renderGoal）にも描き直す
+  function renderRoad() {
     const host = document.getElementById('road-card');
+    if (!host) return;
     try {
     const r = Goal.roadmap();
     const pace = Goal.roadmapPace(Goal.recentRate()).perDay;
-    const auto = Goal.get() && Store.get('dailyGoal') === 'auto';
-    const nowN = auto ? Goal.dailyCount() : Store.get('dailyGoal');
+    const auto = Store.get('dailyGoal') === 'auto';
+    const nowN = auto ? Goal.dailyCount() : Store.get('dailyGoal');   // 予定なしの「おまかせ」は null
     const md = d => `${Number(d.slice(0,4))}年${Number(d.slice(5,7))}月`;
     const row = (x, i) => {
       const pct = x.total ? Math.round(x.done / x.total * 100) : 0;
-      const state = x.units.length && x.left === 0 ? '<span class="gl-v gl-ok">おわり</span>'
-        : x.late ? '<span class="gl-v gl-behind">期限すぎ</span>'
-        : x.current ? '<span class="gl-v" style="color:var(--a)">いまここ</span>' : '';
+      const lb = Goal.stageLabel(x);
+      const state = !lb ? '' : `<span class="gl-v ${lb === 'おわり' ? 'gl-ok' : lb === '期限すぎ' ? 'gl-behind' : ''}"${lb === 'いまここ' ? ' style="color:var(--a)"' : ''}>${lb}</span>`;
       const sub = x.key === 'kako'
         ? '赤本（英俊社・小6の春に出る最新版）を回す時期。アプリは忘れ止めと、予想点の低い大問の補強に回ります。'
-        : `${x.key === 'base' ? '理解（基本9割・応用7割を一度は正解）' : '仕上げ（理解・応用・定着・なぜ？チェック）'} ${x.done}/${x.total}単元`
+        : `${x.key === 'base' ? '香里に要る単元を理解（基本・応用をひととおり正解）' : '仕上げ（理解・応用・定着・なぜ？チェック）'} ${x.done}/${x.total}単元`
           + (pace[i] ? `・期限までに 1日${pace[i]}問ペース` : '');
       return `<div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:800">
@@ -418,12 +419,15 @@
       <p class="muted" style="margin-bottom:10px">小4で小6までを理解 → 小5で特殊算・図形を仕上げる → 小6は過去問。
         毎日の出題は、いまの段の単元から先に回します（前提の単元が先・先の段も手が空けば出ます）。</p>
       ${r.stages.map(row).join('')}
-      <p class="muted" style="font-size:.78rem">${auto
-        ? `1日の問題数は<b>おまかせ</b>＝いま<b>${nowN}問</b>。段の期限から毎日はじき直します（上限25問）。`
+      <p class="muted" style="font-size:.78rem">${auto && nowN
+        ? `1日の問題数は<b>おまかせ</b>＝いま<b>${nowN}問</b>。段の期限から毎日はじき直します（遅れた段は1か月で取りもどす量・上限25問）。`
+        : auto
+        ? `1日の問題数は<b>おまかせ</b>ですが、受験の予定が入っていないので5問のままです。下の「ペースの見立て」で予定を入れると、段の期限から毎日決まります（上限25問）。`
         : `1日の問題数はいま<b>${nowN}問</b>（手で決めた数）。${Goal.get() ? '' : '下の「ペースの見立て」で受験の予定を入れて'}「おまかせ」にすると、段の期限から毎日決まります（上限25問）。`}
         ${r.assumed ? `入試は ${md(r.exam)}（いま小4として数えています）。` : ''}</p>`;
     } catch (e) { console.warn('[3段の流れ]', e); host.remove(); }
-  })();
+  }
+  renderRoad();
 
   /* ================= 本番の形で いま何点か ================= */
   (() => {

@@ -150,6 +150,7 @@ function stageW(id) {
 function frontier(k = MAX_ACTIVE) {
   const cand = DATA.units
     .map(u => ({ u, s: unitState(u.id), d: Graph.depthOf(u.id) }))
+    .map(x => Object.assign(x, { r: stageW(x.u.id) }))   // 段は並べかえの前に1回だけ引く
     // チェック待ちは「練習が足りない」わけではないので、いま取り組む枠からは外す。
     // 外さないと3枠を占領して前進が止まる。
     .filter(x => x.s.open && !x.s.done && !x.s.waitingExplain)
@@ -160,7 +161,7 @@ function frontier(k = MAX_ACTIVE) {
     // ⑤配点の厚い単元 ⑥学年・分野の順 ⑦やさしいレベルから
     .sort((a,b) => (b.s.started - a.s.started)
                 || ((goalW(b.u.id) > 0) - (goalW(a.u.id) > 0))
-                || (stageW(a.u.id) - stageW(b.u.id))
+                || (a.r - b.r)
                 || (a.d - b.d)
                 || (goalW(b.u.id) - goalW(a.u.id))
                 || (areaOrder(a.u.id) - areaOrder(b.u.id)) || (a.u.lv - b.u.lv));
@@ -472,6 +473,6 @@ return { unitState, isOpen, frontier, weakSpots, weakUnits, plan, phaseOf,
          checkDue, buildCheck, finishCheck, demote, doneUnits,
          GRADES, ladderFor, assumeGrade, placementDone, summary, markDone, trainingDue, TRAINING,
          needsExplain, explainOK, explainOf, recordExplain, explainDue, EXPLAIN_MIN,
-         BASIC, APPLY };
+         BASIC, APPLY, DONE_U, DONE_A };
 })();
 if (typeof window !== 'undefined') window.Mastery = Mastery;

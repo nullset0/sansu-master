@@ -362,12 +362,15 @@ function unitWeight(id) {
 function examDate() {
   const g = st().goal;
   if (g && g.exam) return g.exam;
-  if (!st().examGuess) st().examGuess = defaultExamDate(target(), 4);   // 次の記録の保存で一緒に残る
+  if (!st().examGuess) { st().examGuess = defaultExamDate(target(), 4); Store.save(); }
   return st().examGuess;
 }
-// ①は「理解」まで（基本9割・応用7割を一度は正解）。覚えている度合いは②の間の復習で上げる。
+// ①は「理解」まで（基本・応用を「済」と同じ割合まで一度は正解）。覚えている度合いは②の間の復習で上げる。
 // ②は「済」（理解・応用・定着・なぜ？チェックがそろう）。
-function understood(s) { return s.done || s.waitingExplain || (s.understand >= 0.9 && s.apply >= 0.7); }
+// ★ ①は香里に要る単元（中受の単元の前提になっている学校の単元）だけ。要らない小6の単元
+//   （比例・データなど）は効率のため段に入れない＝手が空いたときに出る。
+function understood(s) { return s.done || s.waitingExplain || (s.understand >= Mastery.DONE_U && s.apply >= Mastery.DONE_A); }
+const febEnd = y => { const d = new Date(Date.UTC(y, 2, 0)); return d.toISOString().slice(0, 10); };   // うるう年も2月末
 let _rm = null, _rmRev = -1, _rmDay = null;
 function roadmap() {
   if (_rm && _rmRev === Store.rev && _rmDay === Store.today()) return _rm;
@@ -377,7 +380,7 @@ function roadmap() {
   const jk = ids.filter(id => DATA.unit(id).area.indexOf('jk') === 0);
   const today = Store.today();
   const stages = [
-    { key:'base', name:'小6までの内容を理解する', when:'小4', end:`${y-2}-02-28`, units:school, ok:understood },
+    { key:'base', name:'小6までの内容を理解する', when:'小4', end:febEnd(y - 2), units:school, ok:understood },
     { key:'toku', name:'特殊算・図形を仕上げる',   when:'小5', end:`${y-1}-01-31`, units:jk,     ok:s => s.done },
     { key:'kako', name:'過去問を回す',             when:'小6', end:exam,          units:[],     ok:() => true },
   ].map(x => {
@@ -406,17 +409,29 @@ function stageRank(id) {
 // 復習が積まれるので「理解まで」でも全単元平均より多い。
 // ②は1.0倍だと最後の数単元が長びいて期限を3か月すぎた（1日の量を下げすぎる）ので、1.4倍で見る。
 const STAGE_PER = { base:1.6, toku:1.4 };
-// 戻り値: { need: いちばんきつい段に合わせた1日の数, perDay: 段ごとの1日の数（終わった段・期限すぎ・単元なしは null） }
+// 戻り値: { need: いちばんきつい段に合わせた1日の数, perDay: 段ごとの1日の数（終わった段・単元なしは null） }
+// 残り日数は30日を下限にする。期限の直前に跳ね上がって、すぎた途端に下がる（遅れているのに
+// ゆるめる）のを防ぐ。期限をすぎた段は「1か月で取りもどす」量として数えつづける。
+// また、各段は期限の BUFFER_DAYS 日前に終える量で見る。最後の数単元は前提の定着待ち（日数）で
+// 縮まらないので、期限ぴったりに合わせると間に合わない（シミュレーションで②が2か月遅れた）。
+const CATCHUP_DAYS = 30, BUFFER_DAYS = 60;
 function roadmapPace(rate) {
   const r = roadmap(), per = perUnit(rate == null ? 0.6 : rate);
   let acc = 0, need = 0;
   const perDay = r.stages.map(x => {
     acc += x.left * per * (STAGE_PER[x.key] || 1);
-    if (!x.units.length || x.left <= 0 || x.daysLeft <= 0) return null;
-    need = Math.max(need, acc / x.daysLeft);
-    return Math.ceil(acc / x.daysLeft);
+    if (!x.units.length || x.left <= 0) return null;
+    const v = acc / Math.max(CATCHUP_DAYS, x.daysLeft - BUFFER_DAYS);
+    need = Math.max(need, v);
+    return Math.ceil(v);
   });
   return { need, perDay };
+}
+// 段の状態のことば（保護者画面と週報で同じものを使う）
+function stageLabel(x) {
+  if (x.units.length && x.left === 0) return 'おわり';
+  if (x.late) return '期限すぎ';
+  return x.current ? 'いまここ' : '';
 }
 
 /* ---------- 学力の推移（週ごと） ---------- */
@@ -438,6 +453,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, examDate, target, predict, score, scoreTrend, unitAbility, unitPoints };
+         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, stageLabel, examDate, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;
