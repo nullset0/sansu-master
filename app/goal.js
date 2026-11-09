@@ -180,8 +180,8 @@ function predict(sch = target(), opt = {}) {
     let got = 0;
     units.forEach(id => { const a = A(id); got += per * a; gain[id] = (gain[id] || 0) + per * (1 - a); });
     // 大問ごとは整数で見せ、合計はその足し算にする（足して合わない数字を出さない）
-    return { key:b.key, name:b.name, pts:b.pts, got:Math.round(got),
-             rate: b.pts ? got / b.pts : 0, units };
+    const g = Math.round(got);
+    return { key:b.key, name:b.name, pts:b.pts, got:g, rate: b.pts ? g / b.pts : 0, units };   // 棒も見せる数字と同じ値で
   });
   const total = sections.reduce((a, x) => a + x.got, 0);
   if (opt.gains === false) return { total, max: sch.math.points, bench: sch.bench || null, sections };
@@ -338,7 +338,7 @@ function unitWeight(id) {
   else if (!needSet().has(id))
     // この学校には要らない。ただし予定を入れていないときは、学校の単元（6年の比例など）は
     // これまでどおり重み1で残し、後回しにするのは難関チャレンジだけにする
-    w = (st().goal || u.area === 'jk-hard') ? 0 : 1;
+    w = (st().goal || (sch.exclude || []).includes(u.area)) ? 0 : 1;
   else {
     // ★ 前提の単元にも点を渡す案は tools/sim.js で比べて差が誤差の内（±2点）だったので入れていない
     const p = unitPoints(id, sch);

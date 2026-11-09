@@ -391,8 +391,8 @@
   /* ================= 本番の形で いま何点か ================= */
   (() => {
     const host = document.getElementById('score-card');
-    let p = null;
-    try { p = Goal.predict(); } catch (e) { console.warn('[予想点]', e); }   // ここで落ちても下のカードは出す
+    try {
+    const p = Goal.predict();
     if (!p) { host.remove(); return; }
     const b = p.bench || {};
     const tone = r => r >= 0.69 ? 'var(--b)' : r >= 0.4 ? 'var(--c)' : 'var(--a)';
@@ -421,6 +421,7 @@
       ${later.length ? `<p class="muted" style="font-size:.78rem;margin-top:6px">前提が終わると開く単元: ${later.map(x => `${x.name}（＋${x.gain.toFixed(1)}点）`).join('・')}</p>` : ''}
       <p class="muted" style="font-size:.74rem;margin-top:8px">配点は非公開のため、大問1・2を1問6点、3〜5を8点、6を7点、7を8点と仮置き。
         合格者平均${b.pass || '—'}点・受験者平均${b.examinee || '—'}点は前期5年平均。図をかいて考える立体（切断・回転）や点の移動は、この画面の問題だけでは足りないので過去問で補ってください。</p>`;
+    } catch (e) { console.warn('[予想点]', e); host.remove(); }   // ここで落ちても下のカードは出す
   })();
 
   /* ================= 学力の推移（週ごと） ================= */

@@ -107,7 +107,7 @@ if (devs.length) {
   const pr = Goal.predict && Goal.predict();
   if (pr) {
     const sh = Goal.scoreTrend(5);
-    P(`- 香里の形の予想点: **${pr.total}/${pr.max}点**${pr.bench ? `（前期合格者平均 ${pr.bench.pass}点・受験者平均 ${pr.bench.examinee}点）` : ''}${sh.length ? `・推移 ${sh.map(x => `${x.d.slice(5)} ${x.score}`).join(' → ')}` : ''}`);
+    P(`- 香里の形の予想点: **${pr.total}/${pr.max}点**${pr.bench ? `（前期合格者平均 ${pr.bench.pass}点・受験者平均 ${pr.bench.examinee}点）` : ''}${sh.length >= 2 ? `・推移 ${sh.map(x => `${x.d.slice(5)} ${x.score}`).join(' → ')}` : ''}`);
     P(`- 大問ごと: ${pr.sections.map(x => `${x.name.replace(/^大問/, '')} ${x.got}/${x.pts}`).join('・')}`);
     const gOpen = pr.gains.filter(x => x.open && !x.done).slice(0, 5), gLater = pr.gains.filter(x => !x.open).slice(0, 3);
     P(`- 伸ばしどころ（仕上げたときの上がり幅）: ${gOpen.map(x => `${x.name} +${x.gain.toFixed(1)}`).join('・') || 'いま取り組める単元なし'}${gLater.length ? `／前提待ち: ${gLater.map(x => `${x.name} +${x.gain.toFixed(1)}`).join('・')}` : ''}`);
