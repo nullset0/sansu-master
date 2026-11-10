@@ -109,6 +109,7 @@ function clear() {
   // 見立てをやめても、入れた学年から決まった入試日は3段の流れに残す（小4の推測に戻さない）
   if (st().goal && st().goal.exam) { st().examGuess = st().goal.exam; st().examGuessAt = st().goal.setAt || Store.today(); }
   st().goal = null;
+  st().goalCleared = true;   // 自分で外したので、次に開いたとき自動では入れ直さない
   _need = null; _needFor = null; _rm = null;   // 3段の流れも入試日が変わるので作り直す
   // 「おまかせ」は志望校があってこそ。残すと問題数に 'auto' という文字列が流れる
   if (Store.get('dailyGoal') === 'auto') Store.set('dailyGoal', 5);
@@ -466,6 +467,13 @@ function weekly(weeks = 12) {
   }
   return out;
 }
+
+// このアプリは2029年1月に同志社香里を受ける1人のためのもの。受験の予定がまだ入っていない端末は、
+// 開いた時点で「香里・2029年1月16日・おまかせ」を入れる（iPhone の設定はサーバーから書き換えられないため）。
+// 保護者画面で予定を外したとき（goalCleared）と、1日の数を手で決めたとき（dailyGoalPinned）はそれに従う。
+const DEFAULT_EXAM = '2029-01-16';
+try { if (!st().goal && !st().goalCleared) set(DEFAULT_SCHOOL, DEFAULT_EXAM); }
+catch (e) { if (typeof console !== 'undefined') console.warn('[受験の予定の既定]', e); }
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
