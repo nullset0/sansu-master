@@ -106,7 +106,7 @@ if (devs.length) {
   }
   if (Goal.roadmap) {
     const r = Goal.roadmap(), pace = Goal.roadmapPace(Goal.recentRate()).perDay;
-    P(`- 3段の流れ: ${r.stages.map((x, i) => x.units.length ? `${x.when} ${x.name} ${x.done}/${x.total}（${x.end}まで${pace[i] ? `・1日${pace[i]}問ペース` : ''}${Goal.stageLabel(x) ? `・**${Goal.stageLabel(x)}**` : ''}）` : `${x.when} ${x.name}${x.current ? '（いまここ）' : ''}`).join('／')}`);
+    P(`- 3段の流れ: ${r.stages.map((x, i) => x.units.length ? `${x.when} ${x.name} ${x.done}/${x.total}（${x.end}まで${!pace[i] ? '' : pace[i] > Goal.DAILY_MAX ? `・**1日${Goal.DAILY_MAX}問でも間に合わない見込み**` : `・1日${pace[i]}問ペース`}${Goal.stageLabel(x) ? `・**${Goal.stageLabel(x)}**` : ''}）` : `${x.when} ${x.name}${x.current ? '（いまここ）' : ''}`).join('／')}`);
   }
   const pr = Goal.predict && Goal.predict();
   if (pr) {

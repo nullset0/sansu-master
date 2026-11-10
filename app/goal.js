@@ -300,6 +300,7 @@ function state() {
    数を吊り上げずに 間に合わない と伝えるほうが正直。
 ------------------------------------------------------------ */
 const STEPS = [5, 6, 8, 10, 12, 15, 20, 25];
+const DAILY_MAX = STEPS[STEPS.length - 1];   // 1日の上限（3段の流れの表示もこれで頭打ちを出す）
 function dailyCount() {
   const g = get();
   if (!g) return null;
@@ -313,7 +314,7 @@ function dailyCount() {
   if (left <= 0) return 5;                                   // 全単元おわり＝維持
   let raw = s.daysLeft > 0 ? (left * per) / s.daysLeft : 25;
   raw = Math.max(raw, roadmapPace(s.rate).need);   // 3段の区切りにも間に合わせる（段が全部おわれば0）
-  return STEPS.find(x => x >= raw) || 25;
+  return STEPS.find(x => x >= raw) || DAILY_MAX;
 }
 
 /* ---------- その単元は志望校に要るか・どれくらい出るか ----------
@@ -468,6 +469,6 @@ function weekly(weeks = 12) {
 
 return { SCHOOLS, schools, school, set, clear, get, defaultExamDate,
          targetUnits, recentRate, perUnit, speed, state, weekly,
-         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, stageLabel, examDate, target, predict, score, scoreTrend, unitAbility, unitPoints };
+         dailyCount, unitWeight, needSet, STEPS, roadmap, roadmapPace, stageRank, stageLabel, examDate, DAILY_MAX, target, predict, score, scoreTrend, unitAbility, unitPoints };
 })();
 if (typeof window !== 'undefined') window.Goal = Goal;
