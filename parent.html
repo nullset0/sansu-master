@@ -407,7 +407,9 @@
       const sub = x.key === 'kako'
         ? '赤本（英俊社・小6の春に出る最新版）を回す時期。アプリは忘れ止めと、予想点の低い大問の補強に回ります。'
         : `${x.key === 'base' ? '香里に要る単元を理解（基本・応用をひととおり正解）' : '仕上げ（理解・応用・定着・なぜ？チェック）'} ${x.done}/${x.total}単元`
-          + (pace[i] ? `・期限までに 1日${pace[i]}問ペース` : '');
+          + (!pace[i] ? '' : pace[i] > Goal.DAILY_MAX
+            ? `・<b>1日${Goal.DAILY_MAX}問（上限）でも期限に間に合わない見込み</b>`
+            : `・期限までに 1日${pace[i]}問ペース`);
       return `<div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:800">
           <span>${i + 1}. ${x.when}　${x.name}</span>${state}</div>
