@@ -20,8 +20,10 @@ const K = () => {
   return k;
 };
 const DATA_ = () => window.KOKUGO || { kanji: [], goku: [] };
-const kanjiOf = ch => DATA_().kanji.find(x => x.k === ch);
-const gokuOf = w => DATA_().goku.find(x => x.w === w);
+let _ix = null;
+const ix = () => _ix || (_ix = { k: new Map(DATA_().kanji.map(x => [x.k, x])), g: new Map(DATA_().goku.map(x => [x.w, x])) });
+const kanjiOf = ch => ix().k.get(ch);
+const gokuOf = w => ix().g.get(w);
 
 // 出題の順番: 小4 → 小5 → 小6 の配当表の順。語句は漢字3つに1つの割合で混ぜる
 function items() {
@@ -43,10 +45,12 @@ function plan(n) {
   // ① 期限のきた復習（いちばん忘れかけている順）。全体の6割まで
   const due = Object.keys(cards).filter(id => cards[id].box > 0 && cards[id].due <= today)
     .sort((a, b) => (cards[a].due < cards[b].due ? -1 : 1));
-  const nDue = Math.ceil(n * 0.6);
+  // 期日のきた復習は ふだん6割まで。たまっているときは新しい問題を2問まで減らして復習を先に消す
+  //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）
+  const nDue = Math.max(Math.ceil(n * 0.6), n - 2);
   due.slice(0, nDue).forEach(id => push(itemById(id)));
   // ② 書き: 読みができた字のうち、まだ書きをやっていない字
-  const newW = writeIds().filter(it => !cards[it.id] && (cards['ky:' + it.x.k] || {}).box >= 2);
+  const newW = writeIds().filter(it => !cards[it.id] && (cards['ky:' + it.x.k] || {}).box >= 2 && !used.has('ky:' + it.x.k));
   // ③ 新しい読み・語句
   const newR = items().filter(it => !cards[it.id]);
   const newG = gokuIds().filter(it => !cards[it.id]);
@@ -72,16 +76,24 @@ function plan(n) {
 }
 
 // 記録（算数の Store.grade と同じ箱の動き。箱1＝まちがえて今日もう一度）
-function grade(id, ok) {
+function grade(id, ok, retry) {
   const k = K();
+  if (retry) {   // その回の最後のもう1回: 箱はもう1（今日もう一度）なので動かさず、きょうの数にも入れない
+    const g = ok ? 2 : 0;
+    Store.state.coins += g; Store.save();
+    try { window.Sync && Sync.push && Sync.push({ k: 'k', q: id, ok: !!ok, r: 1 }); } catch (e) {}
+    return g;
+  }
   const c = k.cards[id] || (k.cards[id] = { box: 0, due: null, seen: 0, ok: 0, ng: 0 });
   c.seen++; c.last = Store.today();
   if (ok) { c.ok++; c.box = Math.min(6, Math.max(2, c.box + 1)); c.due = Store.addDays(Store.today(), Store.BOX_DAYS[c.box] || 1); }
   else { c.ng++; c.box = 1; c.due = Store.today(); }
   k.day.done++; if (ok) k.day.correct++;
   const gain = ok ? 6 : 1;
-  Store.state.coins += gain;
+  Store.rollDay(); Store.state.coins += gain; Store.state.day.coins += gain;
   Store.save();
+  // 1問ごとにVPSへ（算数の Store.grade と同じ待ち行列。週報で国語も見られるように）
+  try { window.Sync && Sync.push && Sync.push({ k: 'k', q: id, ok: !!ok, box: c.box }); } catch (e) {}
   return gain;
 }
 
@@ -128,7 +140,7 @@ function render(S) {
         ${given != null && !ok ? `<div class="muted">あなたの答え: ${esc(given) || '（なし）'}</div>` : ''}`);
     };
     h.querySelector('#kgo').onclick = () => done(inp.value);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) done(inp.value); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) done(inp.value); });
     h.querySelector('#kno').onclick = () => done(null);
   } else if (it.kind === 'kw') {
     const sent = esc(x.s).replace('＿＿', `<b style="font-size:1.3em;border-bottom:3px solid var(--a)">${esc(kata(x.y))}</b>`);
@@ -170,7 +182,7 @@ function render(S) {
 function verdict(S, it, ok, body) {
   const h = S.host;
   h.querySelectorAll('#kgo,#kno,#kin,#kok,#kng').forEach(e => { e.disabled = true; });
-  const gain = grade(it.id, ok);
+  const gain = grade(it.id, ok, !!it._again);
   if (ok) { S.ok++; SFX.correct(); } else {
     SFX.wrong();
     // その日のうちに1回は正しく思い出す（同じセッションの最後にもう1回。2回目はくり返さない）

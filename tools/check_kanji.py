@@ -38,7 +38,7 @@ for f, n, g, p in rows:
     if k not in w: ng(f, n, f'{w} に {k} が無い')
     if s.count('＿＿') != 1: ng(f, n, '例文の＿＿が1つでない')
     if k in s: ng(f, n, f'例文に答えの {k} が出ている: {s}')
-    if not re.fullmatch(r'[ぁ-んー]+', y.replace('メダル', '')): ng(f, n, f'よみ {y} がひらがなでない')
+    if not re.fullmatch(r'[ぁ-んー]+', y): ng(f, n, f'よみ {y} がひらがなでない')
     vs = set().union(*[variants(r) for r in b['on'] + b['kun']])
     if not any(v in y for v in vs): print(f'  [要目視] {k} {w}={y}（辞書: {"・".join(b["on"]+b["kun"])}）')
     for c in w:

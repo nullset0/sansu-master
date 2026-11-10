@@ -112,5 +112,5 @@ window.addEventListener('pagehide', beacon);
 window.addEventListener('online', () => schedule(500));
 schedule(1500);   // 開いたときに、前回送れなかった分と全体を送る
 
-window.Sync = { flush, dev: () => dev, pending: () => ls.get(QKEY, []).length };
+window.Sync = { flush, push, dev: () => dev, pending: () => ls.get(QKEY, []).length };   // push: 国語の1問ごとの記録
 })();
