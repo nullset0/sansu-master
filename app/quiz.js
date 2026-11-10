@@ -214,7 +214,7 @@ function render() {
   const pat = q.pattern ? `<span class="chip">${esc(q.pattern)}</span>` : '';
   const vchip = q._variant ? `<span class="chip lv">🎲 数字がかわったよ</span>` : '';
   const check = S.mode === 'check';
-  const WHY = {'なおし':['🔁','d'],'ふくしゅう':['♻️','rev'],'よわいところ':['🧱','new'],
+  const WHY = {'さきどり':['👀','lv'],'なおし':['🔁','d'],'ふくしゅう':['♻️','rev'],'よわいところ':['🧱','new'],
                'あたらしい':['✨','new'],'おうよう':['🔥','lv'],'しあげ':['🏁','']};
   const w = q._why && WHY[q._why];
   const why = w ? `<span class="chip ${w[1]}">${w[0]} ${q._why}</span>` : '';
@@ -339,7 +339,8 @@ function judge(q, given, ok, btn) {
     $('#disp').classList.add(ok ? 'ok' : 'ng');
   }
 
-  const res = Store.grade(q.id, ok, q.unit,
+  const peek = q._why === 'さきどり';
+  const res = peek ? Store.peek(q.unit, ok) : Store.grade(q.id, ok, q.unit,
     { usedHint: S.hintUsed, ms: S.shownAt ? Date.now() - S.shownAt : 0,
       given: q._variant && q.kind === 'mc' && given != null ? q.opts[given] : given,   // 差しかえの4択は文字で残す
       gen: q._variant ? { k: q._gen, q: q.q, ans: q.kind === 'mc' ? q.opts[q.a] : q.ans } : null });
@@ -353,7 +354,7 @@ function judge(q, given, ok, btn) {
     if (S.combo >= 5) confetti(.6);
     if (S.retry) Store.markFixed();
   } else {
-    S.combo = 0; S.wrongIds.push(q.id);
+    S.combo = 0; if (!peek) S.wrongIds.push(q.id);   // さきどりは「もう1回」に入れない
     SFX.wrong();
   }
 
@@ -361,7 +362,8 @@ function judge(q, given, ok, btn) {
   const words = ok
     ? ['やった！','その調子！','ばっちり！','つよい！','いいね！','さすが！']
     : ['おしい！ここが分かれ道。','大丈夫、いま覚えれば勝ち。','1回まちがえた問題は 強くなるチャンス。'];
-  const word = gave ? words[Math.floor(Math.random()*words.length)] : 'いっしょに 見てみよう。';
+  const word = peek ? (ok ? 'まだ習っていないのに、すごい！' : 'まだ習っていないところ。答えを見ておくと、習うときに すっと入るよ。')
+    : gave ? words[Math.floor(Math.random()*words.length)] : 'いっしょに 見てみよう。';
 
   const ansText = q.kind === 'mc' ? q.opts[q.a] : `${q.ans}${q.unitLabel||''}`;
 
@@ -372,7 +374,7 @@ function judge(q, given, ok, btn) {
     setTimeout(() => { S.i++; S.i < S.list.length ? render() : finish(); }, 620);
     return;
   }
-  const nextIn = res.next === Store.today() ? 'きょう もう1回' : `つぎは ${Store.daysBetween(Store.today(), res.next)}日後`;
+  const nextIn = peek ? 'さきどり（記録はつかない）' : res.next === Store.today() ? 'きょう もう1回' : `つぎは ${Store.daysBetween(Store.today(), res.next)}日後`;
 
   $('#verdict').innerHTML = `
   <div class="verdict ${ok?'ok':'ng'}">
