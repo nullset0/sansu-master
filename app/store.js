@@ -150,6 +150,21 @@ function note(unitId, correct) {
   save();
 }
 
+// さきどり（まだ習っていない単元の事前質問）の記録。間隔反復のカード・まちがいノート・
+// 単元の正答率は動かさない（予想で答えるので、まちがえても「弱い」ことにはならない）。
+// きょうの数には入れる（やった1問）。正答率をゆがめないよう、正解あつかいで数える。
+function peek(unitId, correct) {
+  rollDay();
+  const p = S.peek = S.peek || {};
+  const e = p[unitId] = p[unitId] || { n:0, ok:0 };
+  e.n++; if (correct) e.ok++; e.last = today();
+  S.day.done++; S.day.correct++;
+  S.coins += 3; S.day.coins += 3; S.xp += 5;
+  runRecordHooks();
+  save();
+  return { box:0, next:null, gain:3 };
+}
+
 /* ---------- 単元の習熟度（0〜1） ---------- */
 function unitMastery(unitId, qids) {
   if (!qids || !qids.length) return 0;
@@ -348,7 +363,7 @@ return {
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
   addMock, removeMock,
-  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note, markTraining,
+  reset, exportJSON, importJSON, today, addDays, daysBetween, shuffle, note, peek, markTraining,
   get rev(){ return REV; },
   markFixed(){ S.fixed = (S.fixed||0)+1; save(); },
 };

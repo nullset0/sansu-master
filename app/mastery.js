@@ -242,6 +242,28 @@ function plan(count) {
     push(target, 'よわいところ', cap);
   });
 
+  // ③' さきどり（事前質問）: まだ開いていない3段の単元から、1日1〜2問だけ先に「予想で」解かせて
+  //     すぐ答えと解き方を見せる。習う前に問われると、あとで習ったときの定着が上がる
+  //     （prequestion / pretesting 効果: Richland, Kornell & Kao 2009・Pan & Carpenter 2023 の総説）。
+  //     ただ読み流すより、答えを出そうとしてから見るほうが効く。のぞいた回数の少ない単元から
+  //     順に回すので、1日2問なら約7週で小6・特殊算までをひととおり見る。
+  const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
+  if (nPeek && typeof Goal !== 'undefined' && Goal.roadmap) {
+    const pk = st().peek || {};
+    const ids = [...new Set(Goal.roadmap().stages.flatMap(x => x.units))]
+      // 小1〜小3は前提として先に開いていくので、さきどりは小4より先（小4〜小6・中受）だけ
+      .filter(id => { const u = DATA.unit(id); return u && !/^g[1-3]$/.test(u.area); })
+      .filter(id => { const s = unitState(id); return !s.open && !s.started; })
+      .map(id => ({ id, n: (pk[id] || {}).n || 0, d: Graph.depthOf(id) }))
+      .sort((a, b) => a.n - b.n || a.d - b.d);
+    cap = out.length + nPeek;
+    for (const x of ids) {
+      if (out.length >= cap) break;
+      const qs = qsOf(x.id).filter(q => !used.has(q.id) && !q.parts);
+      push(qs.find(BASIC) || qs[0], 'さきどり', cap);
+    }
+  }
+
   // ④ フロンティア：残りは全部「先へ進むため」に使う（ここが痩せると前進が止まる）
   let guard = 0;
   while (out.length < count && guard++ < 60) {
