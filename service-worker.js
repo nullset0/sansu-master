@@ -6,6 +6,7 @@ const ASSETS = [
   './app/style.css', './app/fig.js', './app/chara.js', './app/store.js', './app/sync.js', './app/quiz.js', './app/notice.js', './app/home.js',
   './data/core.js', './data/elem.js',
   './data/jk-num.js', './data/jk-ratio.js', './data/jk-toku.js', './data/jk-speed.js', './data/jk-geo.js', './data/jk-calc.js', './data/jk-speed2.js', './data/jk-geo2.js', './data/jk-num2.js', './data/jk-drill.js', './data/hard.js', './data/gen.js', './data/graph.js', './app/mastery.js', './app/goal.js', './app/modes.js',
+  './kokugo.html', './app/kokugo.js', './data/kj-g4.js', './data/kj-g5.js', './data/kj-g6.js', './data/goku.js',
   './questions/g1.js', './questions/g2.js', './questions/g3.js',
   './questions/g4.js', './questions/g5.js', './questions/g6.js',
   // 旧バージョン（残してある）

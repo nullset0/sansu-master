@@ -34,6 +34,7 @@
 
   <div class="card" id="today-card"></div>
 
+  <div class="card" id="kokugo-card"></div>
   <div class="card" id="road-card"></div>
   <div class="card" id="score-card"></div>
   <div class="card" id="goal-card"></div>
@@ -176,6 +177,29 @@
 <script src="app/modes.js"></script>
 <script src="app/mastery.js"></script>
 <script src="app/goal.js"></script>
+<script src="data/kj-g4.js"></script>
+<script src="data/kj-g5.js"></script>
+<script src="data/kj-g6.js"></script>
+<script src="data/goku.js"></script>
+<script src="app/kokugo.js"></script>
+<script>
+// 国語（漢字・語句）。算数の数字とは別に数える
+document.addEventListener('DOMContentLoaded', () => {
+  const host = document.getElementById('kokugo-card');
+  if (!host) return;
+  try {
+    const k = Kokugo.stats();
+    const opts = [5, 10, 15, 20].map(n => `<option value="${n}"${n === k.daily ? ' selected' : ''}>${n}問</option>`).join('');
+    host.innerHTML = `<h2>📚 国語（漢字・ことば）</h2>
+      <p class="muted" style="margin-bottom:8px">小4〜小6の漢字586字（読み→書き）と、慣用句・ことわざ・四字熟語・反対の言葉を、算数と同じ「思い出す×間隔をあける」で回します。
+        まちがえた問題はその回の最後にもう1回出ます。書きは自分で○×をつけます。</p>
+      <div class="muted" style="font-size:.85rem;line-height:1.8">きょう <b>${k.day.done}問</b>（正解 ${k.day.correct}）・ふくしゅう待ち ${k.due}問<br>
+        おぼえた（3日あけても正解）: 読み <b>${k.read}</b>・書き <b>${k.write}</b> / ${k.kanji}字、ことば <b>${k.goku}</b> / ${k.gokuAll}</div>
+      <label class="muted" style="display:flex;gap:8px;align-items:center;margin-top:8px">1日の問題数 <select id="k-daily">${opts}</select></label>`;
+    host.querySelector('#k-daily').onchange = e => Kokugo.setDaily(Number(e.target.value));
+  } catch (e) { console.warn('[国語]', e); host.remove(); }
+});
+</script>
 <script src="app/notice.js"></script>
 <script>
 (() => {

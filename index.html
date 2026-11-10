@@ -40,6 +40,13 @@
     </div>
   </div>
 
+  <div class="card" id="kokugo-card">
+    <h2>📚 国語（漢字・ことば）</h2>
+    <div class="q-progress" style="margin-bottom:10px"><i id="k-bar" style="width:0"></i></div>
+    <p class="muted" id="k-txt" style="margin-bottom:10px"></p>
+    <a class="btn wide blue" href="kokugo.html">▶︎ 国語をはじめる</a>
+  </div>
+
   <div class="card">
     <h2>🏋️ とくべつ練習</h2>
     <p class="muted" style="margin-bottom:10px">ふつうの5問とは別に、力の種類ごとにきたえる。1つ3〜5分。<br>
@@ -119,6 +126,19 @@
 <script src="app/mastery.js"></script>
 <script src="app/goal.js"></script>
 <script src="app/home.js"></script>
+<script src="data/kj-g4.js"></script>
+<script src="data/kj-g5.js"></script>
+<script src="data/kj-g6.js"></script>
+<script src="data/goku.js"></script>
+<script src="app/kokugo.js"></script>
+<script>
+try {
+  const k = Kokugo.stats(), left = Math.max(0, k.daily - k.day.done);
+  document.getElementById('k-bar').style.width = Math.min(100, k.day.done / k.daily * 100) + '%';
+  document.getElementById('k-txt').innerHTML = (left ? `きょうは あと <b>${left}問</b>（漢字の読み・書き、ことば）。` : 'きょうのぶんは 終わり！ 🎉')
+    + `<br>おぼえた漢字: 読み ${k.read}・書き ${k.write} / ${k.kanji}字　ことば ${k.goku} / ${k.gokuAll}`;
+} catch (e) { console.warn('[国語]', e); const c = document.getElementById('kokugo-card'); if (c) c.remove(); }
+</script>
 <script src="app/notice.js"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(()=>{});
