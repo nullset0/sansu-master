@@ -1,7 +1,9 @@
 /* =========================================================
    算数マスター v2 — 記憶と進捗 (store.js)
    定着のしくみ:
-     ① 間隔反復（Leitner 6箱：当日 / 1 / 3 / 7 / 16 / 35日）
+     ① 間隔反復（Leitner 9箱：当日 / 1 / 3 / 7 / 16 / 35 / 70 / 150 / 300日）
+        入試は2年あと。35日で打ち止めだと、覚えた1,000問の維持だけで1日30問の復習になり
+        1日の上限(25問)を超えて、新しい単元に進めなくなる。間隔を倍々でのばして維持の量を減らす
      ② 想起テスト（4択だけでなく数値入力を混ぜる）
      ③ 失敗は必ず翌日に戻す（まちがいノート）
      ④ インターリービング（同じ単元を続けて出さない）
@@ -9,14 +11,17 @@
 const Store = (() => {
 'use strict';
 const KEY = 'sansu-v2';
-const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35];   // index = box(1..6)
-const MAX_BOX = 6;
+const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35, 70, 150, 300];   // index = box(1..9)
+const MAX_BOX = BOX_DAYS.length - 1;
 
 const clone = o => (typeof structuredClone === 'function'
   ? structuredClone(o) : JSON.parse(JSON.stringify(o)));   // 古いiOS Safari対策
 const today = () => new Date().toISOString().slice(0,10);
-const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+d); return t.toISOString().slice(0,10); };
-const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000);
+// 日付の足し引きは UTC でそろえる。today() が UTC の日付なのに、ここだけ端末の時刻（日本時間）で
+// 足していたので、toISOString に戻すと1日前にずれていた＝「1日後」の復習がその日のうちに出て、
+// どの箱も1日ずつ短くなっていた。
+const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+d); return t.toISOString().slice(0,10); };
+const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000);
 
 const DEFAULTS = {
   v: 2,
@@ -250,9 +255,10 @@ function interleave(list) {
 
 /* ---------- 箱の分布（おぼえ箱の表示用） ---------- */
 function boxCounts(pool) {
-  const c = [0,0,0,0,0,0,0];
+  const c = new Array(MAX_BOX + 1).fill(0);
   (pool||[]).forEach(q => { const k = S.cards[q.id]; if (k && k.box) c[k.box]++; });
-  return { b1:c[1], b2:c[2], b3:c[3], b4:c[4], b5:c[5]+c[6], mastered:c[5]+c[6] };
+  const top = c.slice(5).reduce((a, x) => a + x, 0);   // 箱5以上＝おぼえた（箱は9まである）
+  return { b1:c[1], b2:c[2], b3:c[3], b4:c[4], b5:top, mastered:top };
 }
 function masteredCount() { return Object.values(S.cards).filter(c => c.box >= 5).length; }
 function totalCorrect() { return Object.values(S.cards).reduce((a,c)=>a+c.ok,0); }
@@ -359,7 +365,7 @@ function importJSON(t) { try { S = Object.assign(clone(DEFAULTS), JSON.parse(t))
 
 return {
   get state(){ return S; },
-  save, rollDay, card, isDue, onRecord, BOX_DAYS, isNew, grade, buildSession, boxCounts,
+  save, rollDay, card, isDue, onRecord, BOX_DAYS, MAX_BOX, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
   addMock, removeMock,

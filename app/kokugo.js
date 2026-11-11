@@ -8,10 +8,15 @@
    ・記録は Store.state.kokugo に置く。算数の きょうの数・正答率・3段の流れ には入れない
    ========================================================= */
 const Kokugo = (() => {
+const DAILY_DEFAULT = 15;
 const K = () => {
   const s = Store.state;
-  if (!s.kokugo) s.kokugo = { cards: {}, day: { date: null, done: 0, correct: 0 }, hist: [], daily: 10 };
+  if (!s.kokugo) s.kokugo = { cards: {}, day: { date: null, done: 0, correct: 0 }, hist: [], daily: DAILY_DEFAULT };
   const k = s.kokugo, t = Store.today();
+  // 既定は15問。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
+  // 入れ切るのが入試の4か月前（2028年夏）になる。15問なら1年近く前倒しできる。
+  // 保護者が自分で決めた数（dailySet）はそのまま
+  if (!k.dailySet && k.daily === 10) k.daily = DAILY_DEFAULT;
   if (k.day.date !== t) {
     if (k.day.date && k.day.done) k.hist.push({ d: k.day.date, done: k.day.done, correct: k.day.correct });
     if (k.hist.length > 400) k.hist = k.hist.slice(-400);
@@ -86,7 +91,7 @@ function grade(id, ok, retry) {
   }
   const c = k.cards[id] || (k.cards[id] = { box: 0, due: null, seen: 0, ok: 0, ng: 0 });
   c.seen++; c.last = Store.today();
-  if (ok) { c.ok++; c.box = Math.min(6, Math.max(2, c.box + 1)); c.due = Store.addDays(Store.today(), Store.BOX_DAYS[c.box] || 1); }
+  if (ok) { c.ok++; c.box = Math.min(Store.MAX_BOX || 6, Math.max(2, c.box + 1)); c.due = Store.addDays(Store.today(), Store.BOX_DAYS[c.box] || 1); }
   else { c.ng++; c.box = 1; c.due = Store.today(); }
   k.day.done++; if (ok) k.day.correct++;
   const gain = ok ? 6 : 1;
@@ -105,7 +110,7 @@ const LABEL = { ky: ['📗', 'よみ'], kw: ['✍️', 'かき'], go: ['💬', '
 const TYPE = { 慣: '慣用句', こ: 'ことわざ', 四: '四字熟語', 対: '反対の言葉' };
 
 function start(host, opts = {}) {
-  const n = opts.n || K().daily || 10;
+  const n = opts.n || K().daily || DAILY_DEFAULT;
   const S = { list: plan(n), i: 0, ok: 0, again: new Set(), host };
   if (!S.list.length) { host.innerHTML = `<div class="card"><h2>きょうの国語は おわり</h2><p class="muted">出す問題がありません。</p></div>`; return; }
   render(S);
@@ -198,7 +203,7 @@ function verdict(S, it, ok, body) {
 
 function finish(S) {
   const k = K();
-  if (k.day.done >= (k.daily || 10)) Quiz.confetti(.8);
+  if (k.day.done >= (k.daily || DAILY_DEFAULT)) Quiz.confetti(.8);
   S.host.innerHTML = `<div class="card" style="text-align:center"><h2>📚 国語 おわり</h2>
     <p style="font-size:1.2rem;font-weight:900">${S.ok} / ${S.list.length} 問 せいかい</p>
     <p class="muted">まちがえた問題は、明日またでてきます。</p>
@@ -211,11 +216,11 @@ function finish(S) {
 function stats() {
   const k = K(), c = k.cards, d = DATA_();
   const learned = pre => d.kanji.filter(x => (c[pre + x.k] || {}).box >= 4).length;
-  return { day: k.day, daily: k.daily || 10, read: learned('ky:'), write: learned('kw:'), kanji: d.kanji.length,
+  return { day: k.day, daily: k.daily || DAILY_DEFAULT, read: learned('ky:'), write: learned('kw:'), kanji: d.kanji.length,
            goku: d.goku.filter(x => (c['go:' + x.w] || {}).box >= 4).length, gokuAll: d.goku.length,
            due: Object.values(c).filter(x => x.box > 0 && x.due <= Store.today()).length };
 }
-function setDaily(n) { K().daily = n; Store.save(); }
+function setDaily(n) { const k = K(); k.daily = n; k.dailySet = true; Store.save(); }
 
 return { start, plan, grade, stats, setDaily, kana };
 })();

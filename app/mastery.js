@@ -218,13 +218,18 @@ function plan(count) {
   const nFix  = Math.min(st().wrong.length, Math.ceil(count * 0.2));
   const nDue  = Math.floor(count * 0.3);
   const nWeak = Math.max(1, Math.floor(count * 0.15));
+  const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
+  const NEW_MIN = Math.max(3, Math.round(count * 0.25));   // 復習がたまっていても、新しい問題はこれだけ入れる（前進を止めない）
 
   // ① まちがいノート（その日のうちに直す）
   let cap = nFix;
   st().wrong.forEach(id => push(all.find(q => q.id === id), 'なおし', cap));
 
   // ② 期限のきた復習（古い順＝いちばん忘れかけている順）
-  cap = out.length + nDue;
+  //    ふだんは3割まで。たまっているときは、新しい問題を NEW_MIN 問まで減らして復習を先に消す。
+  //    （3割で固定すると、期日をすぎた問題が何週間も出ずに忘れられ、「済」が中身のない済になる。
+  //      国語の plan と同じ考え方。遅れた分は 3段の流れの逆算で1日の数が増えて取りもどす）
+  cap = Math.max(out.length + nDue, count - nWeak - nPeek - NEW_MIN);
   all.filter(q => { const c = cards[q.id]; return c && c.box > 0 && c.due <= today && !used.has(q.id); })
      .sort((a,b) => cards[a.id].due < cards[b.id].due ? -1 : 1)
      .forEach(q => push(q, 'ふくしゅう', cap));
@@ -247,7 +252,6 @@ function plan(count) {
   //     （prequestion / pretesting 効果: Richland, Kornell & Kao 2009・Pan & Carpenter 2023 の総説）。
   //     ただ読み流すより、答えを出そうとしてから見るほうが効く。のぞいた回数の少ない単元から
   //     順に回すので、1日2問なら約7週で小6・特殊算までをひととおり見る。
-  const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
   if (nPeek && typeof Goal !== 'undefined' && Goal.roadmap) {
     const pk = st().peek || {};
     const ids = [...new Set(Goal.roadmap().stages.flatMap(x => x.units))]

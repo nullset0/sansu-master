@@ -49,8 +49,29 @@ function pOf(q, p0) {
   let p = p0 - 0.06 * ((q.lv || 1) - 1);
   if (!preDone(q.unit)) p -= 0.25;
   p += 0.13 * rep;
+  // FORGET=1 … 忘れる生徒。期日をすぎて放ってある問題ほど当たりにくい（期日の間隔1回ぶん放置で−0.12、最大−0.4）。
+  //   既定の生徒は忘れないので、復習を減らして新規に全部ふると見かけ上いちばん速くなる。
+  //   復習の枠・間隔の長さを比べるときは、こちらで見る。
+  if (FORGET === 1 && c && c.due && c.box) {
+    const over = Store.daysBetween(c.due, Store.today());
+    if (over > 0) p -= Math.min(0.4, 0.12 * over / (Store.BOX_DAYS[c.box] || 1));
+  }
+  // FORGET=2 … 間隔反復の標準の仮定（SuperMemo）: 期日ちょうどで思い出せる確率9割、そこから指数で落ちる。
+  //   最後に解いてからの日数 ÷ その箱の間隔 = 1 で 0.9、2 で 0.81、10 で 0.35。
+  //   「忘れない生徒」(既定) と「少し忘れる生徒」(1) では、復習に枠を使う値打ちが出ない。
+  if (FORGET === 2 && c && c.last && c.box) {
+    const since = Store.daysBetween(c.last, Store.today());
+    const iv = Store.BOX_DAYS[c.box] || 1;
+    p *= Math.pow(0.9, since / iv);
+  }
+  // FORGET=3 … 期日までは忘れない。期日をすぎた分だけ指数で落ちる（期日の間隔1回ぶん遅れるごとに×0.8）。
+  if (FORGET === 3 && c && c.due && c.box) {
+    const over = Store.daysBetween(c.due, Store.today());
+    if (over > 0) p *= Math.pow(0.8, over / (Store.BOX_DAYS[c.box] || 1));
+  }
   return Math.max(0.05, Math.min(0.97, p));
 }
+const FORGET = Number(process.env.FORGET || 0);
 
 function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
                 goal = null, auto = false } = {}) {
