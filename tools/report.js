@@ -32,7 +32,7 @@ sandbox.window = sandbox; sandbox.globalThis = sandbox;
 // 日付は上で TZ=Asia/Tokyo にしたので、端末(iPhone)の Store.today()/addDays と同じ作り方（端末の暦）。手計算の+9hは使わない
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const addD = (iso, n) => { const t = new Date(iso + 'T00:00:00'); t.setDate(t.getDate() + n); return ymd(t); };
-const jstDay = iso => ymd(new Date(iso));
+const jstDay = iso => { const d = new Date(iso); if (isNaN(d.getTime())) throw new Error('bad time ' + iso); return ymd(d); };   // 壊れた時刻の行は catch で捨てる
 const since = addD(ymd(new Date()), -(DAYS - 1));
 const evDir = path.join(DIR, 'events'), stDir = path.join(DIR, 'state');
 const byDev = {};

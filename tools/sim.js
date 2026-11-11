@@ -1,6 +1,7 @@
 /* 算数マスターの進度シミュレーション（Node版・ヘッドレス）
    ブラウザ版 _simtest.html と同じモデル。1日の問題数を振って比較する。 */
 'use strict';
+process.env.TZ = 'Asia/Tokyo';   // Store.today() は端末の暦。どのホストで動かしても同じ日付になるよう固定
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const APP = path.join(__dirname, '..');   // このファイルは <アプリ>/tools/ に置く
 

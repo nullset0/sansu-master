@@ -231,7 +231,8 @@ function plan(count) {
   //    ①と合わせて、弱点・さきどり・新しい問題(NEW_MIN)の枠を除いた残り全部まで入れる。
   //    （以前は3割で固定。期日をすぎた問題が何週間も出ずに忘れられ、「済」が中身のない済になっていた。
   //      国語の plan と同じ考え方。遅れた分は 3段の流れの逆算で1日の数が増えて取りもどす）
-  cap = count - nWeak - nPeek - NEW_MIN;
+  //    1日の数が少ない設定（5〜8問）では枠が1問になり、なおし1問で復習が0になるので、なおしの後に最低1問（3割）は残す
+  cap = Math.max(out.length + Math.max(1, Math.floor(count * 0.3)), count - nWeak - nPeek - NEW_MIN);
   all.filter(q => { const c = cards[q.id]; return c && c.box > 0 && c.due <= today && !used.has(q.id); })
      .sort((a,b) => cards[a.id].due < cards[b.id].due ? -1 : 1)
      .forEach(q => push(q, 'ふくしゅう', cap));
