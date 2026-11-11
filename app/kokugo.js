@@ -15,8 +15,9 @@ const K = () => {
   const k = s.kokugo, t = Store.today();
   // 既定は15問。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
   // 入れ切るのが入試の4か月前（2028年夏）になる。15問なら1年近く前倒しできる。
-  // 保護者が自分で決めた数（dailySet）はそのまま
-  if (!k.dailySet && k.daily === 10) k.daily = DAILY_DEFAULT;
+  // 保護者が自分で決めた数（dailySet）はそのまま。10のままの端末は、前の版（2026-11-10 配備・1日だけ）の
+  // 既定が入っただけなので15へ上げる（1回きりの引き上げ）
+  if (!k.dailySet && k.daily === 10) { k.daily = DAILY_DEFAULT; k.dailySet = true; Store.save(); }
   if (k.day.date !== t) {
     if (k.day.date && k.day.done) k.hist.push({ d: k.day.date, done: k.day.done, correct: k.day.correct });
     if (k.hist.length > 400) k.hist = k.hist.slice(-400);
@@ -52,7 +53,7 @@ function plan(n) {
     .sort((a, b) => (cards[a].due < cards[b].due ? -1 : 1));
   // 期日のきた復習は ふだん6割まで。たまっているときは新しい問題を2問まで減らして復習を先に消す
   //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）
-  const nDue = Math.max(Math.ceil(n * 0.6), n - 2);
+  const nDue = Math.max(Math.ceil(n * 0.6), n - Math.max(3, Math.round(n * 0.25)));   // 新しい字は最低25%（3問）。算数の plan と同じ下限
   due.slice(0, nDue).forEach(id => push(itemById(id)));
   // ② 書き: 読みができた字のうち、まだ書きをやっていない字
   const newW = writeIds().filter(it => !cards[it.id] && (cards['ky:' + it.x.k] || {}).box >= 2 && !used.has('ky:' + it.x.k));
@@ -91,7 +92,7 @@ function grade(id, ok, retry) {
   }
   const c = k.cards[id] || (k.cards[id] = { box: 0, due: null, seen: 0, ok: 0, ng: 0 });
   c.seen++; c.last = Store.today();
-  if (ok) { c.ok++; c.box = Math.min(Store.MAX_BOX || 6, Math.max(2, c.box + 1)); c.due = Store.addDays(Store.today(), Store.BOX_DAYS[c.box] || 1); }
+  if (ok) { c.ok++; c.box = Math.min(Store.MAX_BOX, Math.max(2, c.box + 1)); c.due = Store.addDays(Store.today(), Store.BOX_DAYS[c.box] || 1); }
   else { c.ng++; c.box = 1; c.due = Store.today(); }
   k.day.done++; if (ok) k.day.correct++;
   const gain = ok ? 6 : 1;

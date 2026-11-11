@@ -40,6 +40,10 @@ SRC.forEach(f => vm.runInContext(fs.readFileSync(path.join(APP, f), 'utf8'), san
 
 const { Store, DATA, Graph, Mastery, Goal } = sandbox;
 
+// ---- 環境変数（先に読む。pOf から参照する）
+// FORGET=1/2/3 … 忘れる生徒（pOf 参照）。既定(0)は忘れない生徒
+const FORGET = Number(process.env.FORGET || 0);
+
 // ---- 生徒モデル（_simtest.html と同一）
 const rng = seed => { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
 const preDone = id => Graph.pre(id).every(p => Store.state.units[p] && Store.state.units[p].everDone);
@@ -56,8 +60,9 @@ function pOf(q, p0) {
     const over = Store.daysBetween(c.due, Store.today());
     if (over > 0) p -= Math.min(0.4, 0.12 * over / (Store.BOX_DAYS[c.box] || 1));
   }
-  // FORGET=2 … 間隔反復の標準の仮定（SuperMemo）: 期日ちょうどで思い出せる確率9割、そこから指数で落ちる。
-  //   最後に解いてからの日数 ÷ その箱の間隔 = 1 で 0.9、2 で 0.81、10 で 0.35。
+  // FORGET=2 … 間隔反復の標準の仮定（SuperMemo の記憶保持率）を「解ける確率」に掛ける:
+  //   保持率 R = 0.9^(最後に解いてからの日数 ÷ その箱の間隔)。期日ちょうどで 0.9、2倍で 0.81、10倍で 0.35。
+  //   p = 素の解ける確率 × R なので、期日ちょうどでも p0=0.8 の生徒は 0.72。かなり辛めのモデル。
   //   「忘れない生徒」(既定) と「少し忘れる生徒」(1) では、復習に枠を使う値打ちが出ない。
   if (FORGET === 2 && c && c.last && c.box) {
     const since = Store.daysBetween(c.last, Store.today());
@@ -71,7 +76,6 @@ function pOf(q, p0) {
   }
   return Math.max(0.05, Math.min(0.97, p));
 }
-const FORGET = Number(process.env.FORGET || 0);
 
 function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
                 goal = null, auto = false } = {}) {

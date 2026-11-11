@@ -16,11 +16,14 @@ const MAX_BOX = BOX_DAYS.length - 1;
 
 const clone = o => (typeof structuredClone === 'function'
   ? structuredClone(o) : JSON.parse(JSON.stringify(o)));   // 古いiOS Safari対策
-const today = () => new Date().toISOString().slice(0,10);
-// 日付の足し引きは UTC でそろえる。today() が UTC の日付なのに、ここだけ端末の時刻（日本時間）で
-// 足していたので、toISOString に戻すと1日前にずれていた＝「1日後」の復習がその日のうちに出て、
-// どの箱も1日ずつ短くなっていた。
-const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+d); return t.toISOString().slice(0,10); };
+// 日付は端末の暦（日本時間）でそろえる。
+// 以前は today() が UTC の日付（朝9時まで前の日）で、addDays だけ端末時刻で足して UTC に戻していたので
+// 1日前にずれていた＝「1日後」の復習がその日のうちに出て、どの箱も1日短く、連続日数も伸びなかった。
+// 朝7時に解いた分が前の日に積まれる問題も同じ原因。週報（tools/report.js）は日本時間の日付で数えている。
+const pad = n => String(n).padStart(2, '0');
+const fmt = t => `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+const today = () => fmt(new Date());
+const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+d); return fmt(t); };
 const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000);
 
 const DEFAULTS = {
