@@ -220,7 +220,7 @@ function stats() {
 }
 function setDaily(n) { const k = K(); k.daily = n; k.dailySet = true; Store.save(); }
 
-// 状態の移行（読み込み時に1回だけ。K() は読むだけにしておく）
+// 状態の移行（K() が v<2 を見たときに1回だけ。復元(importJSON)で古い状態が入っても効く）
 // v2: 既定を10→15問に。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
 //     入れ切るのが入試の4か月前（2028年夏）になる。前の版（2026-11-10 配備・1日だけ）で10のまま入った端末を
 //     1回だけ15へ上げる。その版で保護者が10を選んでいた場合は見分けられない（選べる日が1日しかなかったので許容）
@@ -229,7 +229,6 @@ function migrate(k) {
   if (k.daily === 10 && !k.dailySet) k.daily = DAILY_DEFAULT;
   k.v = 2; Store.save();
 }
-migrate(Store.state.kokugo);
 
 return { start, plan, grade, stats, setDaily, kana };
 })();

@@ -76,8 +76,12 @@ function rollDay() {
   const t = today();
   if (S.day.date !== t) {
     if (S.day.done > 0) {
-      S.history.push({ d:S.day.date, done:S.day.done, correct:S.day.correct,
-                       ms:S.day.ms || 0, units:S.day.units || 0, score:S.day.score });
+      // 同じ日付の行がすでにあれば足し込む（lastDays は find で最初の1行しか見ないので、2行目は消えてしまう）
+      const prev = S.history.find(h => h.d === S.day.date);
+      if (prev) { prev.done += S.day.done; prev.correct += S.day.correct; prev.ms = (prev.ms || 0) + (S.day.ms || 0);
+                  prev.units = Math.max(prev.units || 0, S.day.units || 0); if (S.day.score != null) prev.score = S.day.score; }
+      else S.history.push({ d:S.day.date, done:S.day.done, correct:S.day.correct,
+                            ms:S.day.ms || 0, units:S.day.units || 0, score:S.day.score });
       if (S.history.length > 400) S.history = S.history.slice(-400);
     }
     S.day = { date:t, done:0, correct:0, coins:0, ms:0, units:S.day.units || 0 };   // 予想点は前日を持ちこさない
