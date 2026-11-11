@@ -15,6 +15,8 @@ const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35, 70, 150, 300];   // index = box(1..9)
 const MAX_BOX = BOX_DAYS.length - 1;
 // 1日の出題のうち、復習がたまっていても新しい問題に残す数（25%・最低3問）。算数(mastery.plan)と国語(kokugo.plan)で同じ
 const newMin = n => Math.max(3, Math.round(n * 0.25));
+// 予想点で「放ってある＝忘れかけ」とみなす期日超過の上限（日）。箱の間隔1回ぶんが基本だが、箱7〜9は70〜300日と長いのでここで頭打ち
+const STALE_CAP_DAYS = 35;
 
 const clone = o => (typeof structuredClone === 'function'
   ? structuredClone(o) : JSON.parse(JSON.stringify(o)));   // 古いiOS Safari対策
@@ -238,7 +240,7 @@ function buildSession(pool, count, opts = {}) {
     // ④ それでも足りなければ、箱の低いものから
     if (picked.length < count) {
       pool.filter(q => !used.has(q.id))
-        .sort((a,b) => (S.cards[a.id]?.box||9) - (S.cards[b.id]?.box||9))
+        .sort((a,b) => (S.cards[a.id]?.box||(MAX_BOX+1)) - (S.cards[b.id]?.box||(MAX_BOX+1)))   // 未記録は最後尾
         .forEach(q => { if (picked.length < count) push(q); });
     }
   }
@@ -370,7 +372,7 @@ function importJSON(t) { try { S = Object.assign(clone(DEFAULTS), JSON.parse(t))
 
 return {
   get state(){ return S; },
-  save, rollDay, card, isDue, onRecord, BOX_DAYS, MAX_BOX, newMin, isNew, grade, buildSession, boxCounts,
+  save, rollDay, card, isDue, onRecord, BOX_DAYS, MAX_BOX, newMin, STALE_CAP_DAYS, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
   addMock, removeMock,

@@ -146,8 +146,8 @@ function unitAbility(id) {
       let r = Math.min(1, (c.box || 0) / 4);
       const over = c.due ? Store.daysBetween(c.due, today) : 0;
       // 長く放ってある＝忘れかけ。期日を「その箱の間隔1回ぶん」すぎたら半分。ただし箱が大きい（70〜300日）と
-      // 1回ぶんが長すぎるので、35日を上限にする（箱9なら期日＋35日で半分に数える）
-      if (over > Math.min(35, (Store.BOX_DAYS || [])[c.box] || 1)) r *= 0.5;
+      // 1回ぶんが長すぎるので Store.STALE_CAP_DAYS（35日）で頭打ち（箱9なら期日＋35日で半分に数える）
+      if (over > Math.min(Store.STALE_CAP_DAYS || 35, (Store.BOX_DAYS || [])[c.box] || 1)) r *= 0.5;
       keep += r;
     }
   });

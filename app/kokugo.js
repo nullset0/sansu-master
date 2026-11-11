@@ -47,12 +47,13 @@ function itemById(id) {
 function plan(n) {
   const k = K(), cards = k.cards, today = Store.today(), used = new Set(), out = [];
   const push = it => { if (it && !used.has(it.id) && out.length < n) { used.add(it.id); out.push(it); } };
-  // ① 期限のきた復習（いちばん忘れかけている順）。全体の6割まで
+  // ① 期限のきた復習（いちばん忘れかけている順）。新しい問題の枠（Store.newMin）を除いた残りまで
   const due = Object.keys(cards).filter(id => cards[id].box > 0 && cards[id].due <= today)
     .sort((a, b) => (cards[a].due < cards[b].due ? -1 : 1));
-  // 期日のきた復習は ふだん6割まで。たまっているときは新しい問題を Store.newMin（25%・最低3問）まで減らして復習を先に消す
-  //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）。算数の plan と同じ下限
-  const nDue = Math.max(Math.ceil(n * 0.6), n - Store.newMin(n));
+  // 期日のきた復習は、新しい問題の枠 Store.newMin（25%・最低3問）を除いた残りまで（15問なら11問）。
+  //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）。算数の plan と同じ下限。
+  //  5問のときだけ新しい問題3問を守るため、復習は2問
+  const nDue = Math.max(1, n - Store.newMin(n));
   due.slice(0, nDue).forEach(id => push(itemById(id)));
   // ② 書き: 読みができた字のうち、まだ書きをやっていない字
   const newW = writeIds().filter(it => !cards[it.id] && (cards['ky:' + it.x.k] || {}).box >= 2 && !used.has('ky:' + it.x.k));

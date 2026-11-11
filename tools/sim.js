@@ -44,7 +44,7 @@ const { Store, DATA, Graph, Mastery, Goal } = sandbox;
 // FORGET=1/2/3 … 忘れる生徒（pOf 参照）。既定(0)は忘れない生徒
 const FORGET = Number(process.env.FORGET || 0);
 
-// ---- 生徒モデル（_simtest.html と同一）
+// ---- 生徒モデル（忘れない生徒は _simtest.html と同一。忘れる生徒 FORGET=1/2/3 は Node 版だけ）
 const rng = seed => { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
 const preDone = id => Graph.pre(id).every(p => Store.state.units[p] && Store.state.units[p].everDone);
 function pOf(q, p0) {

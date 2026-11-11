@@ -197,10 +197,11 @@ function weakUnits(max = 5) {
 
 /* ---------- きょうの出題プラン ----------------------------
    ① まちがいノート（その日のうちに直す）    …最大 20%
-   ② 期限のきた復習（忘れかけ）              …ふだん 30%。たまっているときは ③④を除いた残り全部
+   ② 期限のきた復習（忘れかけ）              …①と合わせて、③③'④の枠を除いた残り全部（25問なら最大14問）
    ③ 弱点・格下げされた単元                  …15%（最低1問）
    ③' さきどり（まだ開いていない先の単元）   …1日1〜2問
    ④ フロンティアの「次のフェーズ」          …残り（復習がたまっていても 25%・最低3問は残す）
+   復習は期日のきた分しか入らないので、たまっていない日は②が小さく、その分④が増える
    それぞれに理由タグをつけて返す
 ------------------------------------------------------------ */
 function plan(count) {
@@ -218,7 +219,6 @@ function plan(count) {
   // 枠を先に決める。復習と弱点で全部うまってしまい、
   // 「新しいことに進む枠」が無くなる（＝いつまでも先へ行けない）のを防ぐ。
   const nFix  = Math.min(st().wrong.length, Math.ceil(count * 0.2));
-  const nDue  = Math.floor(count * 0.3);
   const nWeak = Math.max(1, Math.floor(count * 0.15));
   const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
   const NEW_MIN = Store.newMin(count);   // 復習がたまっていても、新しい問題はこれだけ残す（国語と共通）。先に進む問題が無ければ⑤で復習が入る
@@ -228,10 +228,10 @@ function plan(count) {
   st().wrong.forEach(id => push(all.find(q => q.id === id), 'なおし', cap));
 
   // ② 期限のきた復習（古い順＝いちばん忘れかけている順）
-  //    ふだんは3割まで。たまっているときは、新しい問題を NEW_MIN 問まで減らして復習を先に消す。
-  //    （3割で固定すると、期日をすぎた問題が何週間も出ずに忘れられ、「済」が中身のない済になる。
+  //    ①と合わせて、弱点・さきどり・新しい問題(NEW_MIN)の枠を除いた残り全部まで入れる。
+  //    （以前は3割で固定。期日をすぎた問題が何週間も出ずに忘れられ、「済」が中身のない済になっていた。
   //      国語の plan と同じ考え方。遅れた分は 3段の流れの逆算で1日の数が増えて取りもどす）
-  cap = Math.max(out.length + nDue, count - nWeak - nPeek - NEW_MIN);
+  cap = count - nWeak - nPeek - NEW_MIN;
   all.filter(q => { const c = cards[q.id]; return c && c.box > 0 && c.due <= today && !used.has(q.id); })
      .sort((a,b) => cards[a.id].due < cards[b.id].due ? -1 : 1)
      .forEach(q => push(q, 'ふくしゅう', cap));

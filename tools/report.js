@@ -29,14 +29,17 @@ const sandbox = {
 sandbox.window = sandbox; sandbox.globalThis = sandbox;
 
 // ---- 1問ごとの記録（直近 DAYS 日・日本時間の日付）。端末ごとに読む
-const jstDay = iso => new Date(new Date(iso).getTime() + 9 * 3600e3).toISOString().slice(0, 10);
-const since = jstDay(new Date(Date.now() - (DAYS - 1) * 86400e3).toISOString());
+// 日付は上で TZ=Asia/Tokyo にしたので、端末(iPhone)の Store.today()/addDays と同じ作り方（端末の暦）。手計算の+9hは使わない
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addD = (iso, n) => { const t = new Date(iso + 'T00:00:00'); t.setDate(t.getDate() + n); return ymd(t); };
+const jstDay = iso => ymd(new Date(iso));
+const since = addD(ymd(new Date()), -(DAYS - 1));
 const evDir = path.join(DIR, 'events'), stDir = path.join(DIR, 'state');
 const byDev = {};
 if (fs.existsSync(evDir)) for (const dev of fs.readdirSync(evDir)) {
   const seen = new Set(), list = byDev[dev] = [];
   // ファイル名は受信日。期間より2日以上前のファイルは読まない（日付の境目ぶん余裕をみる）
-  const floor = new Date(new Date(since + 'T00:00:00Z').getTime() - 2 * 86400e3).toISOString().slice(0, 10);
+  const floor = addD(since, -2);
   for (const f of fs.readdirSync(path.join(evDir, dev)).filter(f => f.slice(0, 10) >= floor)) {
     for (const line of fs.readFileSync(path.join(evDir, dev, f), 'utf8').split('\n')) {
       if (!line.trim()) continue;
