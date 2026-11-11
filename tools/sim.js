@@ -158,7 +158,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
    例:    node tools/sim.js 5,10,20 1080 0.65 g2                       */
 const rows = [];
 const P0 = Number(process.argv[4] || 0.80);
-const PLACE = process.argv[5] || 'g3';
+const PLACE = process.argv[5] === 'none' ? null : (process.argv[5] || 'g3');   // none＝1年生からまっさら（PER_UNIT の較正に使う）
 for (const perDay of (process.argv[2] || '3,5,8,10,15').split(',').map(Number)) {
   const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE,
                   goal: process.env.GOAL || null, auto: process.env.AUTO === '1',
