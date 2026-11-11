@@ -13,6 +13,7 @@ const K = () => {
   const s = Store.state;
   if (!s.kokugo) s.kokugo = { cards: {}, day: { date: null, done: 0, correct: 0 }, hist: [], daily: DAILY_DEFAULT, v: 2 };
   const k = s.kokugo, t = Store.today();
+  if (!(k.v >= 2)) migrate(k);   // 保護者画面の復元(importJSON)で古い状態が入ったときも1回だけ
   if (k.day.date !== t) {
     if (k.day.date && k.day.done) k.hist.push({ d: k.day.date, done: k.day.done, correct: k.day.correct });
     if (k.hist.length > 400) k.hist = k.hist.slice(-400);
@@ -223,12 +224,12 @@ function setDaily(n) { const k = K(); k.daily = n; k.dailySet = true; Store.save
 // v2: 既定を10→15問に。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
 //     入れ切るのが入試の4か月前（2028年夏）になる。前の版（2026-11-10 配備・1日だけ）で10のまま入った端末を
 //     1回だけ15へ上げる。その版で保護者が10を選んでいた場合は見分けられない（選べる日が1日しかなかったので許容）
-(function migrate() {
-  const k = Store.state.kokugo;
+function migrate(k) {
   if (!k || k.v >= 2) return;
   if (k.daily === 10 && !k.dailySet) k.daily = DAILY_DEFAULT;
   k.v = 2; Store.save();
-})();
+}
+migrate(Store.state.kokugo);
 
 return { start, plan, grade, stats, setDaily, kana };
 })();

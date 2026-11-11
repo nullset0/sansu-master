@@ -28,7 +28,7 @@ const pad = n => String(n).padStart(2, '0');
 const fmt = t => `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
 const today = () => fmt(new Date());
 const addDays = (iso, d) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+d); return fmt(t); };
-const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000);
+const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000);   // today/addDays と同じ端末の暦
 
 const DEFAULTS = {
   v: 2,
