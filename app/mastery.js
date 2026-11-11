@@ -196,9 +196,13 @@ function weakUnits(max = 5) {
 }
 
 /* ---------- きょうの出題プラン ----------------------------
-   ① 期限のきた復習（忘れかけ）        …最大 45%
-   ② 弱点・格下げされた単元            …最大 25%
-   ③ フロンティアの「次のフェーズ」    …残り
+   ① まちがいノート（その日のうちに直す）    …最大 20%
+   ② 期限のきた復習（忘れかけ）              …①と合わせて、③③'④の枠を除いた残り全部（25問なら最大14問）
+   ③ 弱点・格下げされた単元                  …15%（最低1問）
+   ③' さきどり（まだ開いていない先の単元）   …1日1〜2問
+   ④ フロンティアの「次のフェーズ」          …残り（10問以上なら、復習がたまっていても 25%・最低3問は残す。
+                                                 5〜8問の設定では枠が足りないので なおし＋復習1問を優先し、新しい問題は1〜3問）
+   復習は期日のきた分しか入らないので、たまっていない日は②が小さく、その分④が増える
    それぞれに理由タグをつけて返す
 ------------------------------------------------------------ */
 function plan(count) {
@@ -216,15 +220,20 @@ function plan(count) {
   // 枠を先に決める。復習と弱点で全部うまってしまい、
   // 「新しいことに進む枠」が無くなる（＝いつまでも先へ行けない）のを防ぐ。
   const nFix  = Math.min(st().wrong.length, Math.ceil(count * 0.2));
-  const nDue  = Math.floor(count * 0.3);
   const nWeak = Math.max(1, Math.floor(count * 0.15));
+  const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
+  const NEW_MIN = Store.newMin(count);   // 復習がたまっていても、新しい問題はこれだけ残す（国語と共通・10問以上で効く）。先に進む問題が無ければ⑤で復習が入る
 
   // ① まちがいノート（その日のうちに直す）
   let cap = nFix;
   st().wrong.forEach(id => push(all.find(q => q.id === id), 'なおし', cap));
 
   // ② 期限のきた復習（古い順＝いちばん忘れかけている順）
-  cap = out.length + nDue;
+  //    ①と合わせて、弱点・さきどり・新しい問題(NEW_MIN)の枠を除いた残り全部まで入れる。
+  //    （以前は3割で固定。期日をすぎた問題が何週間も出ずに忘れられ、「済」が中身のない済になっていた。
+  //      国語の plan と同じ考え方。遅れた分は 3段の流れの逆算で1日の数が増えて取りもどす）
+  //    1日の数が少ない設定（5〜8問）では枠が1問になり、なおし1問で復習が0になるので、なおしの後に最低1問（3割）は残す
+  cap = Math.max(out.length + Math.max(1, Math.floor(count * 0.3)), count - nWeak - nPeek - NEW_MIN);
   all.filter(q => { const c = cards[q.id]; return c && c.box > 0 && c.due <= today && !used.has(q.id); })
      .sort((a,b) => cards[a.id].due < cards[b.id].due ? -1 : 1)
      .forEach(q => push(q, 'ふくしゅう', cap));
@@ -247,7 +256,6 @@ function plan(count) {
   //     （prequestion / pretesting 効果: Richland, Kornell & Kao 2009・Pan & Carpenter 2023 の総説）。
   //     ただ読み流すより、答えを出そうとしてから見るほうが効く。のぞいた回数の少ない単元から
   //     順に回すので、1日2問なら約7週で小6・特殊算までをひととおり見る。
-  const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
   if (nPeek && typeof Goal !== 'undefined' && Goal.roadmap) {
     const pk = st().peek || {};
     const ids = [...new Set(Goal.roadmap().stages.flatMap(x => x.units))]

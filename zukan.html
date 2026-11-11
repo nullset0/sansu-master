@@ -25,7 +25,7 @@
 
   <div class="card">
     <h2>📦 おぼえ箱</h2>
-    <p class="muted" style="margin-bottom:10px">まちがえると1に戻り、正解するたび右へ。5に入れば「おぼえた」です。</p>
+    <p class="muted" style="margin-bottom:10px">まちがえると1に戻り、正解するたび右へ。5に入れば「おぼえた」です（そのあとも 35日→70日→150日→300日 と間をあけて出ます）。</p>
     <div class="boxes" id="boxes"></div>
   </div>
 
@@ -102,7 +102,7 @@
 
   // ---- おぼえ箱 ----
   const b = Store.boxCounts(DATA.all());
-  const labels = [['1','まちがえた'],['2','1日後'],['3','3日後'],['4','1週間後'],['5','おぼえた']];
+  const labels = [['1','まちがえた'],['2','1日後'],['3','3日後'],['4','1週間後'],['5+','おぼえた']];
   document.getElementById('boxes').innerHTML = labels.map(([n,l],i) =>
     `<div class="box b${i+1}"><div class="n">${[b.b1,b.b2,b.b3,b.b4,b.b5][i]}</div><div class="l">箱${n}<br>${l}</div></div>`).join('');
 

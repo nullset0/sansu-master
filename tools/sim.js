@@ -1,6 +1,7 @@
 /* 算数マスターの進度シミュレーション（Node版・ヘッドレス）
    ブラウザ版 _simtest.html と同じモデル。1日の問題数を振って比較する。 */
 'use strict';
+process.env.TZ = 'Asia/Tokyo';   // Store.today() は端末の暦。どのホストで動かしても同じ日付になるよう固定
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const APP = path.join(__dirname, '..');   // このファイルは <アプリ>/tools/ に置く
 
@@ -40,7 +41,11 @@ SRC.forEach(f => vm.runInContext(fs.readFileSync(path.join(APP, f), 'utf8'), san
 
 const { Store, DATA, Graph, Mastery, Goal } = sandbox;
 
-// ---- 生徒モデル（_simtest.html と同一）
+// ---- 環境変数（先に読む。pOf から参照する）
+// FORGET=1/2/3 … 忘れる生徒（pOf 参照）。既定(0)は忘れない生徒
+const FORGET = Number(process.env.FORGET || 0);
+
+// ---- 生徒モデル（忘れない生徒は _simtest.html と同一。忘れる生徒 FORGET=1/2/3 は Node 版だけ）
 const rng = seed => { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
 const preDone = id => Graph.pre(id).every(p => Store.state.units[p] && Store.state.units[p].everDone);
 function pOf(q, p0) {
@@ -49,6 +54,27 @@ function pOf(q, p0) {
   let p = p0 - 0.06 * ((q.lv || 1) - 1);
   if (!preDone(q.unit)) p -= 0.25;
   p += 0.13 * rep;
+  // FORGET=1 … 忘れる生徒。期日をすぎて放ってある問題ほど当たりにくい（期日の間隔1回ぶん放置で−0.12、最大−0.4）。
+  //   既定の生徒は忘れないので、復習を減らして新規に全部ふると見かけ上いちばん速くなる。
+  //   復習の枠・間隔の長さを比べるときは、こちらで見る。
+  if (FORGET === 1 && c && c.due && c.box) {
+    const over = Store.daysBetween(c.due, Store.today());
+    if (over > 0) p -= Math.min(0.4, 0.12 * over / (Store.BOX_DAYS[c.box] || 1));
+  }
+  // FORGET=2 … 間隔反復の標準の仮定（SuperMemo の記憶保持率）を「解ける確率」に掛ける:
+  //   保持率 R = 0.9^(最後に解いてからの日数 ÷ その箱の間隔)。期日ちょうどで 0.9、2倍で 0.81、10倍で 0.35。
+  //   p = 素の解ける確率 × R なので、期日ちょうどでも p0=0.8 の生徒は 0.72。かなり辛めのモデル。
+  //   「忘れない生徒」(既定) と「少し忘れる生徒」(1) では、復習に枠を使う値打ちが出ない。
+  if (FORGET === 2 && c && c.last && c.box) {
+    const since = Store.daysBetween(c.last, Store.today());
+    const iv = Store.BOX_DAYS[c.box] || 1;
+    p *= Math.pow(0.9, since / iv);
+  }
+  // FORGET=3 … 期日までは忘れない。期日をすぎた分だけ指数で落ちる（期日の間隔1回ぶん遅れるごとに×0.8）。
+  if (FORGET === 3 && c && c.due && c.box) {
+    const over = Store.daysBetween(c.due, Store.today());
+    if (over > 0) p *= Math.pow(0.8, over / (Store.BOX_DAYS[c.box] || 1));
+  }
   return Math.max(0.05, Math.min(0.97, p));
 }
 
@@ -132,7 +158,7 @@ function run({ days = 365, perDay = 5, p0 = 0.80, seed = 7, placeAt = 'g3',
    例:    node tools/sim.js 5,10,20 1080 0.65 g2                       */
 const rows = [];
 const P0 = Number(process.argv[4] || 0.80);
-const PLACE = process.argv[5] || 'g3';
+const PLACE = process.argv[5] === 'none' ? null : (process.argv[5] || 'g3');   // none＝1年生からまっさら（PER_UNIT の較正に使う）
 for (const perDay of (process.argv[2] || '3,5,8,10,15').split(',').map(Number)) {
   const r = run({ days: Number(process.argv[3] || 1080), perDay, p0: P0, placeAt: PLACE,
                   goal: process.env.GOAL || null, auto: process.env.AUTO === '1',

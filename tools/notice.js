@@ -21,7 +21,9 @@ const text = args.filter(a => !a.startsWith('--') &&
   args[args.indexOf(a) - 1] !== '--emoji' && args[args.indexOf(a) - 1] !== '--color' &&
   args[args.indexOf(a) - 1] !== '--days').join(' ');
 
-const iso = d => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
+// 期限は端末(iPhone)の暦＝日本時間で作る（app/notice.js は Store.today() と比べる）
+process.env.TZ = 'Asia/Tokyo';
+const iso = d => { const t = new Date(Date.now() + d * 86400000); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
 
 let notice;
 if (args.includes('--clear') || !text) {

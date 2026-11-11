@@ -87,7 +87,7 @@
       <a class="btn ghost sm" href="train.html?mode=placement">診断する</a></div>
     <div class="row"><div><div class="lbl">くわしく測る</div><div class="hint">診断は各学年3問なので、うっかりミス1つでも低く出ます。1学年6問ずつ・ヒント無しで測り直します</div></div>
       <a class="btn ghost sm" href="sokutei.html">くわしく測る</a></div>
-    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint" id="goal-auto-hint"></div><div class="hint">中受範囲(60単元)を一周するまでの目安。<b>だいたい解ける（正答率8割）</b>なら 5問=約28ヶ月／10問=約15ヶ月／20問=約8ヶ月。<b>つまずきがある（正答率5〜6割）</b>なら 5問では3年かけても届かず、10問=20〜27ヶ月／20問=11〜16ヶ月。★<b>苦手なほど必要な総量は増えます</b>（8割の子は約4,300問／5割台の子は約8,700問）。穴をふさいで正答率が上がると、必要量そのものが半分になります。ただし<b>続かないと意味がない</b>ので、続く量を選んでください</div></div>
+    <div class="row"><div><div class="lbl">1日の問題数</div><div class="hint" id="goal-auto-hint"></div><div class="hint">「おまかせ」は入試日までの残りと最近の正答率から、1日の数を毎日はじき直します（上限25問）。★<b>苦手なほど必要な総量は増えます</b>。穴をふさいで正答率が上がると、必要量そのものが減ります。ただし<b>続かないと意味がない</b>ので、手で決めるなら続く量を選んでください</div></div>
       <div class="seg" id="set-goal"></div></div>
     <div class="row"><div><div class="lbl">効果音</div></div><div class="seg" id="set-sound"></div></div>
     <div class="row"><div><div class="lbl">問題の自動よみあげ</div><div class="hint">音読すると記憶に残りやすくなります</div></div>
@@ -118,10 +118,10 @@
 
   <div class="card">
     <h2>🧠 このアプリの設計</h2>
-    <div class="note b"><strong>間隔反復：</strong>正解するたび 1日後 → 3日後 → 1週間後 → 16日後 → 35日後 と、忘れかけたころに再出題します。まちがえたら箱1に戻り、その日のうちにもう一度出ます。</div>
+    <div class="note b"><strong>間隔反復：</strong>正解するたび 1日後 → 3日後 → 1週間後 → 16日後 → 35日後 → 70日後 → 150日後 → 300日後 と、忘れかけたころに再出題します（入試まで覚えておくため、間隔は倍々でのびます）。まちがえたら箱1に戻り、その日のうちにもう一度出ます。</div>
     <div class="note c"><strong>想起テスト：</strong>選択肢だけでなく【数値入力】を混ぜています。選ぶより思い出すほうが、記憶が強く残ります。</div>
     <div class="note"><strong>インターリービング：</strong>同じ単元を続けて出しません。まざっているほうが、実力としての定着が良くなります。</div>
-    <div class="note d"><strong>ベストタイミングは寝る前30分。</strong>睡眠中に記憶が整理されます。1日5問で十分です。</div>
+    <div class="note d"><strong>ベストタイミングは寝る前30分。</strong>睡眠中に記憶が整理されます。1日の量は「おまかせ」が入試日から逆算します（まとめてやるより、毎日やるほうが効きます）。</div>
   </div>
 
   <div class="card">
