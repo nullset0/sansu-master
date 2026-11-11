@@ -11,13 +11,12 @@ const Kokugo = (() => {
 const DAILY_DEFAULT = 15;
 const K = () => {
   const s = Store.state;
-  if (!s.kokugo) s.kokugo = { cards: {}, day: { date: null, done: 0, correct: 0 }, hist: [], daily: DAILY_DEFAULT };
+  if (!s.kokugo) s.kokugo = { cards: {}, day: { date: null, done: 0, correct: 0 }, hist: [], daily: DAILY_DEFAULT, v: 2 };
   const k = s.kokugo, t = Store.today();
-  // 既定は15問。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
-  // 入れ切るのが入試の4か月前（2028年夏）になる。15問なら1年近く前倒しできる。
-  // 保護者が自分で決めた数（dailySet）はそのまま。10のままの端末は、前の版（2026-11-10 配備・1日だけ）の
-  // 既定が入っただけなので15へ上げる（1回きりの引き上げ）
-  if (!k.dailySet && k.daily === 10) { k.daily = DAILY_DEFAULT; k.dailySet = true; Store.save(); }
+  // v2: 既定を10→15問に。10問だと復習が6割を占めるので新しい字は1日2問になり、586字×読み書き＋語句117を
+  // 入れ切るのが入試の4か月前（2028年夏）になる。前の版（2026-11-10 配備・1日だけ）で10のまま入った端末を
+  // 1回だけ15へ上げる。その版で保護者が10を選んでいた場合は見分けられない（選べる日が1日しかなかったので許容）
+  if (!(k.v >= 2)) { if (k.daily === 10 && !k.dailySet) k.daily = DAILY_DEFAULT; k.v = 2; Store.save(); }
   if (k.day.date !== t) {
     if (k.day.date && k.day.done) k.hist.push({ d: k.day.date, done: k.day.done, correct: k.day.correct });
     if (k.hist.length > 400) k.hist = k.hist.slice(-400);
@@ -51,9 +50,9 @@ function plan(n) {
   // ① 期限のきた復習（いちばん忘れかけている順）。全体の6割まで
   const due = Object.keys(cards).filter(id => cards[id].box > 0 && cards[id].due <= today)
     .sort((a, b) => (cards[a].due < cards[b].due ? -1 : 1));
-  // 期日のきた復習は ふだん6割まで。たまっているときは新しい問題を2問まで減らして復習を先に消す
-  //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）
-  const nDue = Math.max(Math.ceil(n * 0.6), n - Math.max(3, Math.round(n * 0.25)));   // 新しい字は最低25%（3問）。算数の plan と同じ下限
+  // 期日のきた復習は ふだん6割まで。たまっているときは新しい問題を Store.newMin（25%・最低3問）まで減らして復習を先に消す
+  //（新しい問題ばかり足すと、期日をすぎた字が何週間も出ずに忘れられる）。算数の plan と同じ下限
+  const nDue = Math.max(Math.ceil(n * 0.6), n - Store.newMin(n));
   due.slice(0, nDue).forEach(id => push(itemById(id)));
   // ② 書き: 読みができた字のうち、まだ書きをやっていない字
   const newW = writeIds().filter(it => !cards[it.id] && (cards['ky:' + it.x.k] || {}).box >= 2 && !used.has('ky:' + it.x.k));

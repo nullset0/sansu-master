@@ -13,6 +13,8 @@ const Store = (() => {
 const KEY = 'sansu-v2';
 const BOX_DAYS = [0, 0, 1, 3, 7, 16, 35, 70, 150, 300];   // index = box(1..9)
 const MAX_BOX = BOX_DAYS.length - 1;
+// 1日の出題のうち、復習がたまっていても新しい問題に残す数（25%・最低3問）。算数(mastery.plan)と国語(kokugo.plan)で同じ
+const newMin = n => Math.max(3, Math.round(n * 0.25));
 
 const clone = o => (typeof structuredClone === 'function'
   ? structuredClone(o) : JSON.parse(JSON.stringify(o)));   // 古いiOS Safari対策
@@ -368,7 +370,7 @@ function importJSON(t) { try { S = Object.assign(clone(DEFAULTS), JSON.parse(t))
 
 return {
   get state(){ return S; },
-  save, rollDay, card, isDue, onRecord, BOX_DAYS, MAX_BOX, isNew, grade, buildSession, boxCounts,
+  save, rollDay, card, isDue, onRecord, BOX_DAYS, MAX_BOX, newMin, isNew, grade, buildSession, boxCounts,
   masteredCount, totalCorrect, touchStreak, unitStats, unitMastery,
   BADGES, checkBadges, UNLOCKS, checkUnlocks, set, get, last14, lastDays, weakUnits,
   addMock, removeMock,

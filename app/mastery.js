@@ -221,7 +221,7 @@ function plan(count) {
   const nDue  = Math.floor(count * 0.3);
   const nWeak = Math.max(1, Math.floor(count * 0.15));
   const nPeek = count >= 15 ? 2 : count >= 8 ? 1 : 0;
-  const NEW_MIN = Math.max(3, Math.round(count * 0.25));   // 復習がたまっていても、新しい問題はこれだけ入れる（前進を止めない）
+  const NEW_MIN = Store.newMin(count);   // 復習がたまっていても、新しい問題はこれだけ残す（国語と共通）。先に進む問題が無ければ⑤で復習が入る
 
   // ① まちがいノート（その日のうちに直す）
   let cap = nFix;

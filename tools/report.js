@@ -13,6 +13,7 @@
      ⑤ ヒントに頼っている単元
 */
 'use strict';
+process.env.TZ = 'Asia/Tokyo';   // 端末(iPhone)の暦に合わせる。Store.today() が日本時間の日付になる（VPSはUTC）
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const APP = path.join(__dirname, '..');
 const DIR = process.argv[2];
